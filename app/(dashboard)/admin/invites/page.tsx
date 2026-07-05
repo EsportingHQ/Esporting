@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import InviteOrganiserClient from './InviteOrganiserClient';
+import InviteOrganiserClient, { OrganiserRow } from './InviteOrganiserClient';
 
 export default async function AdminInvitesPage() {
 	const cookieStore = await cookies();
@@ -26,26 +26,35 @@ export default async function AdminInvitesPage() {
 
 	if (!roles.includes('super_admin')) redirect('/dashboard-redirect');
 
+	// Get the organiser role ID first
+	const { data: organiserRole } = await supabase
+		.from('roles')
+		.select('id')
+		.eq('name', 'organiser')
+		.single();
+
 	// Fetch all users with organiser role
-	const { data: organiserAssignments } = await supabase
+	const { data: organiserAssignments, error: orgError } = await supabase
 		.from('user_role_assignments')
-		.select('user_id, granted_at, profiles(username, display_name)')
-		.eq(
-			'role_id',
-			(
-				await supabase
-					.from('roles')
-					.select('id')
-					.eq('name', 'organiser')
-					.single()
-			).data?.id,
+		.select(
+			'user_id, granted_at, profiles!user_role_assignments_user_id_fkey(username, display_name)',
 		)
+		.eq('role_id', organiserRole?.id ?? 0)
 		.is('revoked_at', null)
 		.order('granted_at', { ascending: false });
 
 	return (
 		<InviteOrganiserClient
-			existingOrganisers={organiserAssignments ?? []}
+			existingOrganisers={
+				(organiserAssignments ?? []) as unknown as {
+					user_id: string;
+					granted_at: string;
+					profiles: {
+						username: string;
+						display_name: string | null;
+					} | null;
+				}[]
+			}
 		/>
 	);
 }
