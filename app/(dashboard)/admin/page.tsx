@@ -1,117 +1,149 @@
 import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
+import { Trophy, Activity, Users, Shield, PlusCircle, UserCheck, Settings } from 'lucide-react';
 
 const stats = (
-	totalComps: number,
-	liveMatches: number,
-	totalTeams: number,
-	totalUsers: number,
+  totalComps: number,
+  liveMatches: number,
+  totalTeams: number,
+  totalUsers: number,
 ) => [
-	{ label: 'Competitions', value: totalComps },
-	{ label: 'Live Matches', value: liveMatches },
-	{ label: 'Teams', value: totalTeams },
-	{ label: 'Users', value: totalUsers },
+  { label: 'Competitions', value: totalComps, icon: Trophy, color: 'text-accent-readout' },
+  { label: 'Live Matches', value: liveMatches, icon: Activity, color: 'text-accent-signal' },
+  { label: 'Teams', value: totalTeams, icon: Shield, color: 'text-state-win' },
+  { label: 'Registered Users', value: totalUsers, icon: Users, color: 'text-text-muted' },
 ];
 
 const actions = [
-	{
-		label: 'Invite Organiser',
-		href: '/admin/invites',
-		description: 'Send an invite to a new organiser',
-	},
-	{
-		label: 'Manage Users',
-		href: '/admin/users',
-		description: 'View and manage user roles',
-	},
-	{
-		label: 'Game Catalogue',
-		href: '/admin/catalogue',
-		description: 'Manage games, maps and modes',
-	},
+  {
+    label: 'Invite Organiser',
+    href: '/admin/invites',
+    description: 'Send invitation credentials to a new tournament organiser',
+    icon: PlusCircle,
+  },
+  {
+    label: 'Manage Users',
+    href: '/admin/users',
+    description: 'Review operational logs and edit user role mappings',
+    icon: UserCheck,
+  },
+  {
+    label: 'Game Catalogue',
+    href: '/admin/catalogue',
+    description: 'Add and manage game titles, maps, and supported modes',
+    icon: Settings,
+  },
 ];
 
 export default async function AdminPage() {
-	const cookieStore = await cookies();
-	const supabase = createClient(cookieStore);
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
 
-	const {
-		data: { user },
-	} = await supabase.auth.getUser();
-	if (!user) redirect('/login');
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
 
-	const { data: roleData } = await supabase
-		.from('user_role_assignments')
-		.select('roles(name)')
-		.eq('user_id', user.id)
-		.is('revoked_at', null)
-		.is('comp_instance_id', null);
+  const { data: roleData } = await supabase
+    .from('user_role_assignments')
+    .select('roles(name)')
+    .eq('user_id', user.id)
+    .is('revoked_at', null)
+    .is('comp_instance_id', null);
 
-	const roles =
-		(roleData as { roles: { name: string } }[] | null)?.map(
-			(r) => r.roles?.name,
-		) ?? [];
+  const roles =
+    (roleData as { roles: { name: string } }[] | null)?.map(
+      (r) => r.roles?.name,
+    ) ?? [];
 
-	if (!roles.includes('super_admin')) redirect('/dashboard-redirect');
+  if (!roles.includes('super_admin')) redirect('/dashboard-redirect');
 
-	const [
-		{ count: totalComps },
-		{ count: liveMatches },
-		{ count: totalTeams },
-		{ count: totalUsers },
-	] = await Promise.all([
-		supabase
-			.from('comp_instances')
-			.select('*', { count: 'exact', head: true }),
-		supabase
-			.from('matches')
-			.select('*', { count: 'exact', head: true })
-			.eq('status', 'live'),
-		supabase.from('teams').select('*', { count: 'exact', head: true }),
-		supabase.from('profiles').select('*', { count: 'exact', head: true }),
-	]);
+  const [
+    { count: totalComps },
+    { count: liveMatches },
+    { count: totalTeams },
+    { count: totalUsers },
+  ] = await Promise.all([
+    supabase
+      .from('comp_instances')
+      .select('*', { count: 'exact', head: true }),
+    supabase
+      .from('matches')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'live'),
+    supabase.from('teams').select('*', { count: 'exact', head: true }),
+    supabase.from('profiles').select('*', { count: 'exact', head: true }),
+  ]);
 
-	return (
-		<div>
-			<h2 className="text-2xl font-bold mb-6">Platform Overview</h2>
+  return (
+    <div className="space-y-8 font-body">
+      <div>
+        <h2 className="font-display font-black text-2xl tracking-wider text-text-primary uppercase">
+          Platform Overview
+        </h2>
+        <p className="text-xs text-text-muted font-data mt-1 uppercase">
+          GLOBAL METRICS MONITOR & ADMINISTRATOR COMMAND DECK
+        </p>
+      </div>
 
-			<div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-				{stats(
-					totalComps ?? 0,
-					liveMatches ?? 0,
-					totalTeams ?? 0,
-					totalUsers ?? 0,
-				).map((stat) => (
-					<div
-						key={stat.label}
-						className="bg-gray-900 border border-gray-800 rounded-xl p-5"
-					>
-						<p className="text-3xl font-bold text-green-400">
-							{stat.value}
-						</p>
-						<p className="text-gray-400 text-sm mt-1">
-							{stat.label}
-						</p>
-					</div>
-				))}
-			</div>
+      {/* Stats Matrix */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {stats(
+          totalComps ?? 0,
+          liveMatches ?? 0,
+          totalTeams ?? 0,
+          totalUsers ?? 0,
+        ).map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <div
+              key={stat.label}
+              className="bg-bg-surface border border-border-line rounded p-5 space-y-2 relative overflow-hidden"
+            >
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-display font-bold text-text-muted uppercase tracking-wider">
+                  {stat.label}
+                </span>
+                <Icon className={`w-4 h-4 ${stat.color}`} />
+              </div>
+              <p className="text-3xl font-data font-black text-text-primary">
+                {stat.value}
+              </p>
+            </div>
+          );
+        })}
+      </div>
 
-			<h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-			<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-				{actions.map((action) => (
-					<a
-						key={action.label}
-						href={action.href}
-						className="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-green-500 transition-colors"
-					>
-						<p className="font-semibold">{action.label}</p>
-						<p className="text-gray-500 text-sm mt-1">
-							{action.description}
-						</p>
-					</a>
-				))}
-			</div>
-		</div>
-	);
+      {/* Quick Actions */}
+      <div className="space-y-4">
+        <h3 className="font-display font-bold text-xs uppercase tracking-widest text-text-muted">
+          Quick Actions
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {actions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <Link
+                key={action.label}
+                href={action.href}
+                className="bg-bg-surface border border-border-line hover:border-accent-readout/30 rounded p-5 transition-all group block"
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <Icon className="w-5 h-5 text-accent-readout group-hover:scale-110 transition-transform" />
+                  <h4 className="font-display font-black text-base text-text-primary group-hover:text-accent-readout uppercase tracking-wide transition-colors">
+                    {action.label}
+                  </h4>
+                </div>
+                <p className="text-xs text-text-muted leading-relaxed">
+                  {action.description}
+                </p>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
 }

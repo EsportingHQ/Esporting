@@ -1,89 +1,85 @@
 import { login } from '@/lib/actions/auth';
 
-export default function LoginPage({
-	searchParams,
+export default async function LoginPage({
+  searchParams,
 }: {
-	searchParams: { error?: string };
+  searchParams: Promise<{ error?: string }>;
 }) {
-	return (
-		<div className="min-h-screen flex items-center justify-center bg-gray-950">
-			<div className="w-full max-w-md">
-				<div className="text-center mb-8">
-					<h1 className="text-3xl font-bold text-white">Esporting</h1>
-					<p className="text-gray-400 mt-2">Dashboard Login</p>
-				</div>
+  const params = await searchParams;
 
-				{searchParams.error && (
-					<div
-						className="bg-red-500/10 border border-red-500/20 text-red-400
-                          rounded-lg px-4 py-3 mb-6 text-sm"
-					>
-						{searchParams.error === 'invite_failed'
-							? 'Invite link expired or invalid. Contact your admin.'
-							: searchParams.error}
-					</div>
-				)}
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-bg-void">
+      <div className="w-full max-w-md px-4">
+        {/* Logo / Branding */}
+        <div className="text-center mb-10">
+          <h1 className="font-display font-black text-4xl tracking-widest uppercase text-text-primary">
+            ESPORTING
+          </h1>
+          <p className="text-xs font-data text-text-muted mt-1 tracking-wider uppercase">
+            BROADCAST CONTROL ACCESS
+          </p>
+        </div>
 
-				<form className="bg-gray-900 rounded-xl border border-gray-800 p-8 space-y-5">
-					<div>
-						<label
-							htmlFor="email"
-							className="block text-sm font-medium text-gray-300 mb-1.5"
-						>
-							Email
-						</label>
-						<input
-							id="email"
-							name="email"
-							type="email"
-							required
-							autoComplete="email"
-							placeholder="you@example.com"
-							className="w-full bg-gray-800 border border-gray-700 rounded-lg
-                         px-4 py-2.5 text-white placeholder-gray-500
-                         focus:outline-none focus:ring-2 focus:ring-green-500
-                         focus:border-transparent text-sm"
-						/>
-					</div>
+        {/* Error Banner */}
+        {params.error && (
+          <div className="bg-state-alert/10 border border-state-alert/30 text-state-alert rounded px-4 py-3 mb-6 text-xs font-body">
+            {params.error === 'invite_failed'
+              ? 'Invite link expired or invalid. Contact your administrator.'
+              : decodeURIComponent(params.error)}
+          </div>
+        )}
 
-					<div>
-						<label
-							htmlFor="password"
-							className="block text-sm font-medium text-gray-300 mb-1.5"
-						>
-							Password
-						</label>
-						<input
-							id="password"
-							name="password"
-							type="password"
-							required
-							autoComplete="current-password"
-							placeholder="••••••••"
-							className="w-full bg-gray-800 border border-gray-700 rounded-lg
-                         px-4 py-2.5 text-white placeholder-gray-500
-                         focus:outline-none focus:ring-2 focus:ring-green-500
-                         focus:border-transparent text-sm"
-						/>
-					</div>
+        {/* Form */}
+        <form className="bg-bg-surface border border-border-line rounded p-8 space-y-5">
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-xs font-display font-bold text-text-muted mb-1.5 uppercase tracking-wider"
+            >
+              Email Address
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              autoComplete="email"
+              placeholder="you@example.com"
+              className="w-full bg-bg-void border border-border-line rounded px-4 py-2.5 text-text-primary placeholder-text-muted/40 focus:outline-none focus:border-accent-readout text-sm font-body transition-colors"
+            />
+          </div>
 
-					<button
-						formAction={login}
-						type="submit"
-						className="w-full bg-green-600 hover:bg-green-500 text-white font-semibold
-                       rounded-lg px-4 py-2.5 text-sm transition-colors
-                       focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
-                       focus:ring-offset-gray-900"
-					>
-						Sign in
-					</button>
-				</form>
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-xs font-display font-bold text-text-muted mb-1.5 uppercase tracking-wider"
+            >
+              Password
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              required
+              autoComplete="current-password"
+              placeholder="••••••••"
+              className="w-full bg-bg-void border border-border-line rounded px-4 py-2.5 text-text-primary placeholder-text-muted/40 focus:outline-none focus:border-accent-readout text-sm font-body transition-colors"
+            />
+          </div>
 
-				<p className="text-center text-gray-600 text-xs mt-6">
-					Access is by invitation only. Contact your administrator for
-					access.
-				</p>
-			</div>
-		</div>
-	);
+          <button
+            formAction={login}
+            type="submit"
+            className="w-full bg-accent-readout hover:bg-accent-readout/80 text-bg-void font-display font-black rounded px-4 py-2.5 text-sm uppercase tracking-widest transition-colors focus:outline-none"
+          >
+            SIGN IN
+          </button>
+        </form>
+
+        <p className="text-center text-text-muted/50 text-xs mt-6 font-body">
+          Access is by invitation only. Contact your administrator for access.
+        </p>
+      </div>
+    </div>
+  );
 }

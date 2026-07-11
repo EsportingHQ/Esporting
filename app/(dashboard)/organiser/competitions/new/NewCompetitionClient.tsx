@@ -1,91 +1,92 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { AlertCircle, Plus, Trash2, Award, Calendar, Layers, Shield } from 'lucide-react';
 
-type Series = { id: string; name: string }
-type GameTitle = { id: string; name: string; slug: string }
+type Series = { id: string; name: string };
+type GameTitle = { id: string; name: string; slug: string };
 
 type Props = {
-  existingSeries: Series[]
-  gameTitles: GameTitle[]
-}
+  existingSeries: Series[];
+  gameTitles: GameTitle[];
+};
 
 type StageInput = {
-  name: string
-  stage_type: string
-  stage_order: number
-  best_of: number
-}
+  name: string;
+  stage_type: string;
+  stage_order: number;
+  best_of: number;
+};
 
 export default function NewCompetitionClient({ existingSeries, gameTitles }: Props) {
-  const router = useRouter()
-  const supabase = createClient()
+  const router = useRouter();
+  const supabase = createClient();
 
-  const [seriesMode, setSeriesMode] = useState<'new' | 'existing'>('new')
-  const [seriesId, setSeriesId] = useState('')
-  const [seriesName, setSeriesName] = useState('')
-  const [seriesDescription, setSeriesDescription] = useState('')
+  const [seriesMode, setSeriesMode] = useState<'new' | 'existing'>('new');
+  const [seriesId, setSeriesId] = useState('');
+  const [seriesName, setSeriesName] = useState('');
+  const [seriesDescription, setSeriesDescription] = useState('');
 
-  const [instanceName, setInstanceName] = useState('')
-  const [editionLabel, setEditionLabel] = useState('')
-  const [format, setFormat] = useState('league')
-  const [prizePool, setPrizePool] = useState('')
-  const [description, setDescription] = useState('')
+  const [instanceName, setInstanceName] = useState('');
+  const [editionLabel, setEditionLabel] = useState('');
+  const [format, setFormat] = useState('league');
+  const [prizePool, setPrizePool] = useState('');
+  const [description, setDescription] = useState('');
 
-  const [selectedGames, setSelectedGames] = useState<string[]>([])
+  const [selectedGames, setSelectedGames] = useState<string[]>([]);
 
   const [stages, setStages] = useState<StageInput[]>([
     { name: 'Group Stage', stage_type: 'group', stage_order: 1, best_of: 1 },
-  ])
+  ]);
 
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   function toggleGame(slug: string) {
     setSelectedGames((prev) =>
       prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
-    )
+    );
   }
 
   function updateStage(index: number, field: keyof StageInput, value: string | number) {
     setStages((prev) =>
       prev.map((s, i) => (i === index ? { ...s, [field]: value } : s))
-    )
+    );
   }
 
   function addStage() {
     setStages((prev) => [
       ...prev,
       { name: '', stage_type: 'knockout', stage_order: prev.length + 1, best_of: 1 },
-    ])
+    ]);
   }
 
   function removeStage(index: number) {
-    setStages((prev) => prev.filter((_, i) => i !== index))
+    setStages((prev) => prev.filter((_, i) => i !== index));
   }
 
   async function handleSubmit() {
-    setError(null)
+    setError(null);
 
     if (!instanceName || selectedGames.length === 0) {
-      setError('Competition name and at least one game are required')
-      return
+      setError('Competition name and at least one game are required');
+      return;
     }
     if (seriesMode === 'new' && !seriesName) {
-      setError('Series name is required')
-      return
+      setError('Series name is required');
+      return;
     }
     if (seriesMode === 'existing' && !seriesId) {
-      setError('Select an existing series')
-      return
+      setError('Select an existing series');
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.access_token) throw new Error('Session expired, please log in again')
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('Session expired, please log in again');
 
       const body: Record<string, unknown> = {
         instance_name: instanceName,
@@ -95,13 +96,13 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
         description: description || null,
         game_title_slugs: selectedGames,
         stages: stages.filter((s) => s.name),
-      }
+      };
 
       if (seriesMode === 'new') {
-        body.series_name = seriesName
-        body.series_description = seriesDescription || null
+        body.series_name = seriesName;
+        body.series_description = seriesDescription || null;
       } else {
-        body.series_id = seriesId
+        body.series_id = seriesId;
       }
 
       const res = await fetch(
@@ -115,195 +116,265 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
           },
           body: JSON.stringify(body),
         }
-      )
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Failed to create competition')
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Failed to create competition');
 
-      router.push(`/organiser/competitions/${data.competition.instance.id}`)
+      router.push(`/organiser/competitions/${data.competition.instance.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
+      setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   return (
-    <div style={{ maxWidth: 700 }}>
-      <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>Create Competition</h2>
+    <div className="max-w-2xl space-y-8 font-body">
+      <div>
+        <h2 className="font-display font-black text-2xl tracking-wider text-text-primary uppercase">
+          Create Competition
+        </h2>
+        <p className="text-xs text-text-muted font-data mt-1 uppercase">
+          REGISTER NEW LEAGUE, KNOCKOUT OR BR CAMPAIGN
+        </p>
+      </div>
 
       {error && (
-        <div style={{ background: '#7f1d1d33', border: '1px solid #7f1d1d', color: '#fca5a5', padding: 10, borderRadius: 8, marginBottom: 16, fontSize: 13 }}>
-          {error}
+        <div className="bg-state-loss/10 border border-state-loss/30 text-state-loss px-4 py-3 rounded text-xs flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
-      <Field label="Competition Series">
-        <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-          <button type="button" onClick={() => setSeriesMode('new')} style={toggleButtonStyle(seriesMode === 'new')}>
-            New Series
-          </button>
-          <button type="button" onClick={() => setSeriesMode('existing')} style={toggleButtonStyle(seriesMode === 'existing')}>
-            Existing Series
-          </button>
-        </div>
-
-        {seriesMode === 'new' ? (
-          <>
-            <input
-              placeholder="e.g. UI eSports League"
-              value={seriesName}
-              onChange={(e) => setSeriesName(e.target.value)}
-              style={inputStyle}
-            />
-            <textarea
-              placeholder="Series description (optional)"
-              value={seriesDescription}
-              onChange={(e) => setSeriesDescription(e.target.value)}
-              style={{ ...inputStyle, marginTop: 8, minHeight: 60 }}
-            />
-          </>
-        ) : (
-          <select value={seriesId} onChange={(e) => setSeriesId(e.target.value)} style={inputStyle}>
-            <option value="">Select a series</option>
-            {existingSeries.map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-          </select>
-        )}
-      </Field>
-
-      <Field label="Competition Name">
-        <input
-          placeholder="e.g. UI eSports League Season 1 2025"
-          value={instanceName}
-          onChange={(e) => setInstanceName(e.target.value)}
-          style={inputStyle}
-        />
-      </Field>
-
-      <Field label="Edition Label (optional)">
-        <input
-          placeholder="e.g. Season 1"
-          value={editionLabel}
-          onChange={(e) => setEditionLabel(e.target.value)}
-          style={inputStyle}
-        />
-      </Field>
-
-      <Field label="Format">
-        <select value={format} onChange={(e) => setFormat(e.target.value)} style={inputStyle}>
-          <option value="league">League</option>
-          <option value="knockout">Knockout</option>
-          <option value="group+knockout">Group + Knockout</option>
-          <option value="ranking">Ranking (BR-style)</option>
-        </select>
-      </Field>
-
-      <Field label="Prize Pool (optional)">
-        <input
-          placeholder="e.g. ₦500,000"
-          value={prizePool}
-          onChange={(e) => setPrizePool(e.target.value)}
-          style={inputStyle}
-        />
-      </Field>
-
-      <Field label="Description (optional)">
-        <textarea value={description} onChange={(e) => setDescription(e.target.value)} style={{ ...inputStyle, minHeight: 80 }} />
-      </Field>
-
-      <Field label="Games Covered">
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {gameTitles.map((g) => (
-            <button key={g.id} type="button" onClick={() => toggleGame(g.slug)} style={toggleButtonStyle(selectedGames.includes(g.slug))}>
-              {g.name}
+      <div className="bg-bg-surface border border-border-line rounded p-6 space-y-6">
+        {/* Series Section */}
+        <div className="space-y-3">
+          <label className="block text-[10px] font-display font-bold text-text-muted uppercase tracking-wider">
+            Competition Series
+          </label>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setSeriesMode('new')}
+              className={`px-4 py-1.5 rounded text-xs font-display font-bold uppercase tracking-wider border transition-colors ${
+                seriesMode === 'new'
+                  ? 'bg-accent-readout border-accent-readout text-bg-void'
+                  : 'bg-bg-void border-border-line text-text-muted hover:text-text-primary'
+              }`}
+            >
+              New Series
             </button>
-          ))}
-        </div>
-      </Field>
-
-      <Field label="Stages">
-        {stages.map((stage, i) => (
-          <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
-            <input
-              placeholder="Stage name"
-              value={stage.name}
-              onChange={(e) => updateStage(i, 'name', e.target.value)}
-              style={{ ...inputStyle, flex: 2 }}
-            />
-            <select value={stage.stage_type} onChange={(e) => updateStage(i, 'stage_type', e.target.value)} style={{ ...inputStyle, flex: 1 }}>
-              <option value="league">League</option>
-              <option value="group">Group</option>
-              <option value="knockout">Knockout</option>
-              <option value="ranking">Ranking</option>
-            </select>
-            <input
-              type="number"
-              min={1}
-              max={15}
-              value={stage.best_of}
-              onChange={(e) => updateStage(i, 'best_of', Number(e.target.value))}
-              style={{ ...inputStyle, width: 60 }}
-              title="Best of"
-            />
-            <button type="button" onClick={() => removeStage(i)} style={buttonStyle('#7f1d1d')}>×</button>
+            <button
+              type="button"
+              onClick={() => setSeriesMode('existing')}
+              className={`px-4 py-1.5 rounded text-xs font-display font-bold uppercase tracking-wider border transition-colors ${
+                seriesMode === 'existing'
+                  ? 'bg-accent-readout border-accent-readout text-bg-void'
+                  : 'bg-bg-void border-border-line text-text-muted hover:text-text-primary'
+              }`}
+            >
+              Existing Series
+            </button>
           </div>
-        ))}
-        <button type="button" onClick={addStage} style={buttonStyle('#333')}>+ Add Stage</button>
-      </Field>
 
-      <button
-        type="button"
-        disabled={loading}
-        onClick={handleSubmit}
-        style={{ ...buttonStyle('#16a34a'), width: '100%', padding: '12px 0', fontSize: 14, marginTop: 12 }}
-      >
-        {loading ? 'Creating...' : 'Create Competition'}
-      </button>
+          {seriesMode === 'new' ? (
+            <div className="space-y-2 pt-1">
+              <input
+                placeholder="Series Name (e.g. UI eSports League)"
+                value={seriesName}
+                onChange={(e) => setSeriesName(e.target.value)}
+                className="w-full bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary placeholder-text-muted/30 focus:outline-none focus:border-accent-readout transition-colors"
+              />
+              <textarea
+                placeholder="Series description / history (optional)"
+                value={seriesDescription}
+                onChange={(e) => setSeriesDescription(e.target.value)}
+                className="w-full bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary placeholder-text-muted/30 focus:outline-none focus:border-accent-readout transition-colors min-h-[60px]"
+              />
+            </div>
+          ) : (
+            <div className="pt-1">
+              <select
+                value={seriesId}
+                onChange={(e) => setSeriesId(e.target.value)}
+                className="w-full bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent-readout transition-colors"
+              >
+                <option value="">Select an existing series</option>
+                {existingSeries.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+
+        {/* Competition Instance Name */}
+        <div className="space-y-1">
+          <label className="block text-[10px] font-display font-bold text-text-muted uppercase tracking-wider">
+            Competition Edition Name
+          </label>
+          <input
+            placeholder="e.g. UI eSports League Season 1 2025"
+            value={instanceName}
+            onChange={(e) => setInstanceName(e.target.value)}
+            className="w-full bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary placeholder-text-muted/30 focus:outline-none focus:border-accent-readout transition-colors"
+          />
+        </div>
+
+        {/* Details Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label className="block text-[10px] font-display font-bold text-text-muted uppercase tracking-wider">
+              Edition Label (optional)
+            </label>
+            <input
+              placeholder="e.g. Season 1"
+              value={editionLabel}
+              onChange={(e) => setEditionLabel(e.target.value)}
+              className="w-full bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary placeholder-text-muted/30 focus:outline-none focus:border-accent-readout transition-colors"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="block text-[10px] font-display font-bold text-text-muted uppercase tracking-wider">
+              Prize Pool (optional)
+            </label>
+            <input
+              placeholder="e.g. ₦500,000"
+              value={prizePool}
+              onChange={(e) => setPrizePool(e.target.value)}
+              className="w-full bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary placeholder-text-muted/30 focus:outline-none focus:border-accent-readout transition-colors"
+            />
+          </div>
+        </div>
+
+        {/* Format */}
+        <div className="space-y-1">
+          <label className="block text-[10px] font-display font-bold text-text-muted uppercase tracking-wider">
+            Tournament Format
+          </label>
+          <select
+            value={format}
+            onChange={(e) => setFormat(e.target.value)}
+            className="w-full bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent-readout transition-colors"
+          >
+            <option value="league">League (Round-Robin with Standings Table)</option>
+            <option value="knockout">Knockout (Bracket Elimination)</option>
+            <option value="group+knockout">Group Stage + Knockout Playoffs</option>
+            <option value="ranking">Ranking (BR Lobby Accumulator)</option>
+          </select>
+        </div>
+
+        {/* Description */}
+        <div className="space-y-1">
+          <label className="block text-[10px] font-display font-bold text-text-muted uppercase tracking-wider">
+            Description (optional)
+          </label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="w-full bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent-readout transition-colors min-h-[80px]"
+          />
+        </div>
+
+        {/* Games Covered */}
+        <div className="space-y-2">
+          <label className="block text-[10px] font-display font-bold text-text-muted uppercase tracking-wider">
+            Games Covered
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {gameTitles.map((g) => {
+              const active = selectedGames.includes(g.slug);
+              return (
+                <button
+                  key={g.id}
+                  type="button"
+                  onClick={() => toggleGame(g.slug)}
+                  className={`px-3 py-1.5 rounded text-xs font-display font-bold uppercase border transition-colors ${
+                    active
+                      ? 'bg-accent-readout border-accent-readout text-bg-void'
+                      : 'bg-bg-void border-border-line text-text-muted hover:text-text-primary'
+                  }`}
+                >
+                  {g.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Stages list */}
+        <div className="space-y-3 pt-2">
+          <label className="block text-[10px] font-display font-bold text-text-muted uppercase tracking-wider">
+            Competition Stages
+          </label>
+          <div className="space-y-2">
+            {stages.map((stage, i) => (
+              <div key={i} className="flex gap-2 items-center">
+                <input
+                  placeholder="Stage name (e.g. Group Stage)"
+                  value={stage.name}
+                  onChange={(e) => updateStage(i, 'name', e.target.value)}
+                  className="bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary placeholder-text-muted/30 focus:outline-none focus:border-accent-readout transition-colors flex-2"
+                />
+                <select
+                  value={stage.stage_type}
+                  onChange={(e) => updateStage(i, 'stage_type', e.target.value)}
+                  className="bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent-readout transition-colors flex-1"
+                >
+                  <option value="league">League</option>
+                  <option value="group">Group</option>
+                  <option value="knockout">Knockout</option>
+                  <option value="ranking">Ranking</option>
+                </select>
+                <div className="flex items-center gap-1.5 bg-bg-void border border-border-line px-2 rounded h-[38px] shrink-0">
+                  <span className="text-[10px] font-data text-text-muted">BO</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={15}
+                    value={stage.best_of}
+                    onChange={(e) => updateStage(i, 'best_of', Number(e.target.value))}
+                    className="w-8 bg-transparent text-text-primary text-sm font-data focus:outline-none text-center"
+                    title="Best of maps"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeStage(i)}
+                  className="bg-state-loss/10 hover:bg-state-loss/20 border border-state-loss/20 text-state-loss p-2 rounded transition-colors shrink-0"
+                  title="Remove Stage"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={addStage}
+            className="inline-flex items-center gap-1 bg-bg-void hover:bg-bg-void/50 border border-border-line hover:border-accent-readout text-xs text-text-primary font-display font-bold uppercase tracking-wider px-3 py-1.5 rounded transition-all cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Stage</span>
+          </button>
+        </div>
+
+        {/* Submit */}
+        <div className="pt-4 border-t border-border-line">
+          <button
+            type="button"
+            disabled={loading}
+            onClick={handleSubmit}
+            className="w-full bg-accent-readout hover:bg-accent-readout/80 disabled:opacity-50 text-bg-void font-display font-black text-sm uppercase tracking-widest py-3 rounded transition-all cursor-pointer"
+          >
+            {loading ? 'CREATING CAMPAIGN DATA...' : 'CREATE COMPETITION'}
+          </button>
+        </div>
+      </div>
     </div>
-  )
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div style={{ marginBottom: 20 }}>
-      <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#aaa', marginBottom: 6 }}>{label}</label>
-      {children}
-    </div>
-  )
-}
-
-function toggleButtonStyle(active: boolean): React.CSSProperties {
-  return {
-    background: active ? '#16a34a' : '#1a1a1a',
-    color: '#fff',
-    border: `1px solid ${active ? '#16a34a' : '#333'}`,
-    borderRadius: 8,
-    padding: '6px 14px',
-    fontSize: 13,
-    cursor: 'pointer',
-  }
-}
-
-function buttonStyle(bg: string): React.CSSProperties {
-  return {
-    background: bg,
-    color: '#fff',
-    border: 'none',
-    borderRadius: 8,
-    padding: '8px 14px',
-    fontSize: 13,
-    fontWeight: 600,
-    cursor: 'pointer',
-  }
-}
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  background: '#1a1a1a',
-  color: '#fff',
-  border: '1px solid #333',
-  borderRadius: 8,
-  padding: '10px 12px',
-  fontSize: 13,
+  );
 }

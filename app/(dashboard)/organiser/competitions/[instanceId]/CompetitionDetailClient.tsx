@@ -1,46 +1,47 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { AlertCircle, Plus, Users, Award, Calendar, Layers, Shield } from 'lucide-react';
 
-type GameTitleWrap = { game_titles: { id: string; name: string; slug: string }[] | null }
-type Stage = { id: string; name: string; stage_type: string; stage_order: number; best_of: number }
+type GameTitleWrap = { game_titles: { id: string; name: string; slug: string }[] | null };
+type Stage = { id: string; name: string; stage_type: string; stage_order: number; best_of: number };
 type Registration = {
-  id: string
-  status: string
-  registered_at: string
-  teams: { id: string; name: string; short_code: string | null; country: string | null }[] | null
-}
-type TeamOption = { id: string; name: string }
+  id: string;
+  status: string;
+  registered_at: string;
+  teams: { id: string; name: string; short_code: string | null; country: string | null }[] | null;
+};
+type TeamOption = { id: string; name: string };
 type Match = {
-  id: string
-  status: string
-  scheduled_at: string | null
-  match_format: string
-  game_titles: { name: string }[] | null
-  home_team: { name: string }[] | null
-  away_team: { name: string }[] | null
-}
+  id: string;
+  status: string;
+  scheduled_at: string | null;
+  match_format: string;
+  game_titles: { name: string }[] | null;
+  home_team: { name: string }[] | null;
+  away_team: { name: string }[] | null;
+};
 type Instance = {
-  id: string
-  name: string
-  slug: string
-  edition_label: string | null
-  format: string
-  status: string
-  prize_pool: string | null
-  description: string | null
-  comp_series: { name: string }[] | null
-}
+  id: string;
+  name: string;
+  slug: string;
+  edition_label: string | null;
+  format: string;
+  status: string;
+  prize_pool: string | null;
+  description: string | null;
+  comp_series: { name: string }[] | null;
+};
 
 type Props = {
-  instance: Instance
-  gameTitles: GameTitleWrap[]
-  stages: Stage[]
-  registrations: Registration[]
-  allTeams: TeamOption[]
-  matches: Match[]
-}
+  instance: Instance;
+  gameTitles: GameTitleWrap[];
+  stages: Stage[];
+  registrations: Registration[];
+  allTeams: TeamOption[];
+  matches: Match[];
+};
 
 export default function CompetitionDetailClient({
   instance,
@@ -50,44 +51,44 @@ export default function CompetitionDetailClient({
   allTeams,
   matches,
 }: Props) {
-  const supabase = createClient()
+  const supabase = createClient();
 
-  const [activeTab, setActiveTab] = useState<'teams' | 'matches' | 'stages'>('teams')
-  const [showAddTeam, setShowAddTeam] = useState(false)
-  const [teamMode, setTeamMode] = useState<'new' | 'existing'>('new')
-  const [teamId, setTeamId] = useState('')
-  const [teamName, setTeamName] = useState('')
-  const [teamShortCode, setTeamShortCode] = useState('')
-  const [teamCountry, setTeamCountry] = useState('NG')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [localRegistrations, setLocalRegistrations] = useState(registrations)
+  const [activeTab, setActiveTab] = useState<'teams' | 'matches' | 'stages'>('teams');
+  const [showAddTeam, setShowAddTeam] = useState(false);
+  const [teamMode, setTeamMode] = useState<'new' | 'existing'>('new');
+  const [teamId, setTeamId] = useState('');
+  const [teamName, setTeamName] = useState('');
+  const [teamShortCode, setTeamShortCode] = useState('');
+  const [teamCountry, setTeamCountry] = useState('NG');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [localRegistrations, setLocalRegistrations] = useState(registrations);
 
   async function handleRegisterTeam() {
-    setError(null)
+    setError(null);
     if (teamMode === 'new' && !teamName) {
-      setError('Team name is required')
-      return
+      setError('Team name is required');
+      return;
     }
     if (teamMode === 'existing' && !teamId) {
-      setError('Select a team')
-      return
+      setError('Select a team');
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.access_token) throw new Error('Session expired')
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('Session expired');
 
       const body: Record<string, unknown> = {
         comp_instance_id: instance.id,
-      }
+      };
       if (teamMode === 'new') {
-        body.team_name = teamName
-        body.team_short_code = teamShortCode || null
-        body.team_country = teamCountry || null
+        body.team_name = teamName;
+        body.team_short_code = teamShortCode || null;
+        body.team_country = teamCountry || null;
       } else {
-        body.team_id = teamId
+        body.team_id = teamId;
       }
 
       const res = await fetch(
@@ -101,61 +102,68 @@ export default function CompetitionDetailClient({
           },
           body: JSON.stringify(body),
         }
-      )
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Failed to register team')
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Failed to register team');
 
       const { data: fresh } = await supabase
         .from('comp_registrations')
         .select('id, status, registered_at, teams(id, name, short_code, country)')
         .eq('comp_instance_id', instance.id)
-        .order('registered_at', { ascending: false })
+        .order('registered_at', { ascending: false });
 
-      setLocalRegistrations((fresh as unknown as Registration[]) ?? [])
-      setShowAddTeam(false)
-      setTeamName('')
-      setTeamShortCode('')
-      setTeamId('')
+      setLocalRegistrations((fresh as unknown as Registration[]) ?? []);
+      setShowAddTeam(false);
+      setTeamName('');
+      setTeamShortCode('');
+      setTeamId('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
+      setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
-  const seriesName = instance.comp_series?.[0]?.name
+  const seriesName = instance.comp_series?.[0]?.name;
 
   return (
-    <div style={{ maxWidth: 900 }}>
+    <div className="max-w-4xl space-y-6 font-body">
+      {/* Header Panel */}
+      <div className="bg-bg-surface border border-border-line rounded p-6 space-y-4">
+        <div>
+          <span className="text-[10px] font-data text-text-muted uppercase tracking-wider block">
+            {seriesName}
+          </span>
+          <h2 className="font-display font-black text-2xl tracking-wider text-text-primary uppercase mt-1">
+            {instance.name}
+          </h2>
+        </div>
 
-      <div style={{ marginBottom: 24 }}>
-        <p style={{ fontSize: 13, color: '#888' }}>{seriesName}</p>
-        <h2 style={{ fontSize: 22, fontWeight: 700, margin: '4px 0' }}>{instance.name}</h2>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, color: '#999' }}>
-          <span>{instance.format}</span>
+        <div className="flex flex-wrap gap-4 text-xs font-data text-text-muted">
+          <span className="flex items-center gap-1">
+            <Layers className="w-3.5 h-3.5" />
+            <span className="uppercase">{instance.format}</span>
+          </span>
           <span>·</span>
-          <span
-            style={{
-              fontSize: 12,
-              fontWeight: 600,
-              padding: '2px 10px',
-              borderRadius: 999,
-              background: instance.status === 'ongoing' ? '#16a34a22' : '#33333322',
-              color: instance.status === 'ongoing' ? '#22c55e' : '#999',
-            }}
-          >
+          <span className={`px-2 py-0.5 rounded-full text-[10px] font-display font-bold uppercase tracking-wider ${
+            instance.status === 'ongoing' ? 'bg-state-win/10 text-state-win border border-state-win/30' : 'bg-bg-void text-text-muted border border-border-line'
+          }`}>
             {instance.status}
           </span>
           {instance.prize_pool && (
             <>
               <span>·</span>
-              <span>{instance.prize_pool}</span>
+              <span className="flex items-center gap-1 text-accent-readout font-bold">
+                <Award className="w-3.5 h-3.5" />
+                <span>{instance.prize_pool}</span>
+              </span>
             </>
           )}
         </div>
-        <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+
+        <div className="flex flex-wrap gap-1.5 pt-1">
           {gameTitles.map((g, i) => (
-            <span key={i} style={{ fontSize: 12, background: '#1a1a1a', padding: '2px 8px', borderRadius: 6 }}>
+            <span key={i} className="text-[10px] font-display font-bold bg-bg-void border border-border-line text-text-primary px-2 py-0.5 rounded uppercase">
               {g.game_titles?.[0]?.name}
             </span>
           ))}
@@ -163,27 +171,23 @@ export default function CompetitionDetailClient({
       </div>
 
       {error && (
-        <div style={{ background: '#7f1d1d33', border: '1px solid #7f1d1d', color: '#fca5a5', padding: 10, borderRadius: 8, marginBottom: 16, fontSize: 13 }}>
-          {error}
+        <div className="bg-state-loss/10 border border-state-loss/30 text-state-loss px-4 py-3 rounded text-xs flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '1px solid #222' }}>
+      {/* Tabs */}
+      <div className="flex border-b border-border-line gap-2">
         {(['teams', 'matches', 'stages'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            style={{
-              background: 'none',
-              border: 'none',
-              borderBottom: activeTab === tab ? '2px solid #22c55e' : '2px solid transparent',
-              color: activeTab === tab ? '#fff' : '#888',
-              padding: '8px 16px',
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: 'pointer',
-              textTransform: 'capitalize',
-            }}
+            className={`bg-transparent border-none border-b-2 px-4 py-2 text-xs font-display font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+              activeTab === tab
+                ? 'border-accent-readout text-text-primary'
+                : 'border-transparent text-text-muted hover:text-text-primary'
+            }`}
           >
             {tab}
             {tab === 'teams' && ` (${localRegistrations.length})`}
@@ -193,46 +197,111 @@ export default function CompetitionDetailClient({
         ))}
       </div>
 
+      {/* Tab Contents */}
       {activeTab === 'teams' && (
-        <div>
-          <button onClick={() => setShowAddTeam((s) => !s)} style={buttonStyle('#16a34a')}>
-            {showAddTeam ? 'Cancel' : '+ Register Team'}
-          </button>
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="font-display font-black text-sm uppercase tracking-wider text-text-muted">
+              Registered Teams
+            </h3>
+            <button
+              onClick={() => setShowAddTeam((s) => !s)}
+              className="bg-accent-readout hover:bg-accent-readout/80 text-bg-void font-display font-black text-xs uppercase tracking-wider px-3 py-1.5 rounded transition-all cursor-pointer"
+            >
+              {showAddTeam ? 'Cancel' : '+ Register Team'}
+            </button>
+          </div>
 
           {showAddTeam && (
-            <div style={{ background: '#111', borderRadius: 10, padding: 16, marginTop: 12, marginBottom: 16 }}>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-                <button onClick={() => setTeamMode('new')} style={toggleButtonStyle(teamMode === 'new')}>New Team</button>
-                <button onClick={() => setTeamMode('existing')} style={toggleButtonStyle(teamMode === 'existing')}>Existing Team</button>
+            <div className="bg-bg-surface border border-border-line rounded p-6 space-y-4">
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTeamMode('new')}
+                  className={`px-3 py-1 rounded text-xs font-display font-bold uppercase border transition-colors ${
+                    teamMode === 'new'
+                      ? 'bg-accent-readout border-accent-readout text-bg-void'
+                      : 'bg-bg-void border-border-line text-text-muted hover:text-text-primary'
+                  }`}
+                >
+                  New Team
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTeamMode('existing')}
+                  className={`px-3 py-1 rounded text-xs font-display font-bold uppercase border transition-colors ${
+                    teamMode === 'existing'
+                      ? 'bg-accent-readout border-accent-readout text-bg-void'
+                      : 'bg-bg-void border-border-line text-text-muted hover:text-text-primary'
+                  }`}
+                >
+                  Existing Team
+                </button>
               </div>
 
               {teamMode === 'new' ? (
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <input placeholder="Team name" value={teamName} onChange={(e) => setTeamName(e.target.value)} style={{ ...inputStyle, flex: 2 }} />
-                  <input placeholder="Short code" value={teamShortCode} onChange={(e) => setTeamShortCode(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
-                  <input placeholder="Country" value={teamCountry} onChange={(e) => setTeamCountry(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  <input
+                    placeholder="Team name"
+                    value={teamName}
+                    onChange={(e) => setTeamName(e.target.value)}
+                    className="w-full bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary placeholder-text-muted/30 focus:outline-none focus:border-accent-readout transition-colors md:col-span-2"
+                  />
+                  <input
+                    placeholder="Short code"
+                    value={teamShortCode}
+                    onChange={(e) => setTeamShortCode(e.target.value)}
+                    className="w-full bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary placeholder-text-muted/30 focus:outline-none focus:border-accent-readout transition-colors"
+                  />
+                  <input
+                    placeholder="Country"
+                    value={teamCountry}
+                    onChange={(e) => setTeamCountry(e.target.value)}
+                    className="w-full bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary placeholder-text-muted/30 focus:outline-none focus:border-accent-readout transition-colors"
+                  />
                 </div>
               ) : (
-                <select value={teamId} onChange={(e) => setTeamId(e.target.value)} style={inputStyle}>
+                <select
+                  value={teamId}
+                  onChange={(e) => setTeamId(e.target.value)}
+                  className="w-full bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent-readout transition-colors"
+                >
                   <option value="">Select a team</option>
                   {allTeams.map((t) => (
-                    <option key={t.id} value={t.id}>{t.name}</option>
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
                   ))}
                 </select>
               )}
 
-              <button disabled={loading} onClick={handleRegisterTeam} style={{ ...buttonStyle('#16a34a'), marginTop: 10 }}>
-                {loading ? 'Registering...' : 'Register'}
+              <button
+                disabled={loading}
+                onClick={handleRegisterTeam}
+                className="bg-accent-readout hover:bg-accent-readout/80 disabled:opacity-50 text-bg-void font-display font-black text-xs uppercase tracking-widest px-4 py-2 rounded transition-all cursor-pointer"
+              >
+                {loading ? 'REGISTERING...' : 'REGISTER TEAM'}
               </button>
             </div>
           )}
 
-          <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {localRegistrations.length === 0 && <p style={{ color: '#666', fontSize: 13 }}>No teams registered yet.</p>}
+          <div className="space-y-2">
+            {localRegistrations.length === 0 && (
+              <p className="text-xs text-text-muted italic">No teams registered yet.</p>
+            )}
             {localRegistrations.map((reg) => (
-              <div key={reg.id} style={{ background: '#111', borderRadius: 8, padding: 12, display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ fontWeight: 600, fontSize: 13 }}>{reg.teams?.[0]?.name}</span>
-                <span style={{ fontSize: 12, color: reg.status === 'approved' ? '#22c55e' : '#999' }}>{reg.status}</span>
+              <div
+                key={reg.id}
+                className="bg-bg-surface border border-border-line rounded p-4 flex justify-between items-center text-xs"
+              >
+                <span className="font-display font-bold text-sm text-text-primary uppercase">
+                  {reg.teams?.[0]?.name}
+                </span>
+                <span className={`px-2 py-0.5 rounded text-[10px] font-display font-bold uppercase tracking-wider ${
+                  reg.status === 'approved' ? 'bg-state-win/10 text-state-win' : 'bg-bg-void text-text-muted'
+                }`}>
+                  {reg.status}
+                </span>
               </div>
             ))}
           </div>
@@ -240,69 +309,52 @@ export default function CompetitionDetailClient({
       )}
 
       {activeTab === 'matches' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {matches.length === 0 && <p style={{ color: '#666', fontSize: 13 }}>No matches scheduled yet.</p>}
+        <div className="space-y-2">
+          {matches.length === 0 && (
+            <p className="text-xs text-text-muted italic">No matches scheduled yet.</p>
+          )}
           {matches.map((m) => (
-            <div key={m.id} style={{ background: '#111', borderRadius: 8, padding: 12 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                <span>
+            <div
+              key={m.id}
+              className="bg-bg-surface border border-border-line rounded p-4 space-y-2 text-xs"
+            >
+              <div className="flex justify-between items-center">
+                <span className="font-display font-black text-sm uppercase tracking-wider text-text-primary">
                   {m.match_format === 'head_to_head'
                     ? `${m.home_team?.[0]?.name ?? 'TBD'} vs ${m.away_team?.[0]?.name ?? 'TBD'}`
-                    : 'Battle Royale'}
+                    : 'Battle Royale Match'}
                 </span>
-                <span style={{ color: '#888' }}>{m.game_titles?.[0]?.name}</span>
+                <span className="font-data text-text-muted">
+                  {m.game_titles?.[0]?.name}
+                </span>
               </div>
-              <span style={{ fontSize: 12, color: m.status === 'live' ? '#22c55e' : '#999' }}>{m.status}</span>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-display font-bold uppercase tracking-wider inline-block ${
+                m.status === 'live' ? 'bg-state-win/10 text-state-win' : 'bg-bg-void text-text-muted border border-border-line'
+              }`}>
+                {m.status}
+              </span>
             </div>
           ))}
         </div>
       )}
 
       {activeTab === 'stages' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div className="space-y-2">
           {stages.map((s) => (
-            <div key={s.id} style={{ background: '#111', borderRadius: 8, padding: 12, display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-              <span>{s.stage_order}. {s.name}</span>
-              <span style={{ color: '#888' }}>{s.stage_type} · Best of {s.best_of}</span>
+            <div
+              key={s.id}
+              className="bg-bg-surface border border-border-line rounded p-4 flex justify-between items-center text-xs"
+            >
+              <span className="font-display font-bold text-sm text-text-primary uppercase">
+                {s.stage_order}. {s.name}
+              </span>
+              <span className="font-data text-text-muted uppercase">
+                {s.stage_type} · BO{s.best_of}
+              </span>
             </div>
           ))}
         </div>
       )}
-
     </div>
-  )
-}
-
-function buttonStyle(bg: string): React.CSSProperties {
-  return {
-    background: bg,
-    color: '#fff',
-    border: 'none',
-    borderRadius: 8,
-    padding: '8px 16px',
-    fontSize: 13,
-    fontWeight: 600,
-    cursor: 'pointer',
-  }
-}
-
-function toggleButtonStyle(active: boolean): React.CSSProperties {
-  return {
-    background: active ? '#16a34a' : '#1a1a1a',
-    color: '#fff',
-    border: `1px solid ${active ? '#16a34a' : '#333'}`,
-    borderRadius: 8,
-    padding: '6px 14px',
-    fontSize: 13,
-    cursor: 'pointer',
-  }
-}
-
-const inputStyle: React.CSSProperties = {
-  background: '#1a1a1a',
-  color: '#fff',
-  border: '1px solid #333',
-  borderRadius: 8,
-  padding: '8px 10px',
-  fontSize: 13,
+  );
 }
