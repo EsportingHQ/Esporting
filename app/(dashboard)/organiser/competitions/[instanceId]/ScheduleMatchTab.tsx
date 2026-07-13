@@ -136,6 +136,13 @@ export default function ScheduleMatchTab({
 		return Array.isArray(team) ? (team[0]?.name ?? 'TBD') : team.name;
 	}
 
+	function getGameTitleName(
+		game: { name: string }[] | { name: string } | null,
+	): string {
+		if (!game) return '';
+		return Array.isArray(game) ? (game[0]?.name ?? '') : game.name;
+	}
+
 	return (
 		<div>
 			{error && (
@@ -355,7 +362,7 @@ export default function ScheduleMatchTab({
 									: 'Battle Royale'}
 							</span>
 							<span style={{ color: '#888' }}>
-								{m.game_titles?.[0]?.name}
+								{getGameTitleName(m.game_titles)}
 							</span>
 						</div>
 						<span
