@@ -1,7 +1,9 @@
 import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { redirect, notFound } from 'next/navigation';
-import CompetitionDetailClient from './CompetitionDetailClient';
+import CompetitionDetailClient, {
+	Registration,
+} from './CompetitionDetailClient';
 
 type PageProps = {
 	params: Promise<{ instanceId: string }>;
@@ -56,15 +58,24 @@ export default async function OrganiserCompetitionDetailPage({
 	}
 
 	// Fetch games covered
-	const { data: gameTitles } = await supabase
+	const { data: gameTitlesRaw } = await supabase
 		.from('comp_game_titles')
-		.select('game_titles(id, name, slug)')
+		.select('game_titles(id, name, slug, game_types(slug))')
 		.eq('comp_instance_id', instanceId);
+
+	const gameTitles = (gameTitlesRaw ?? []) as unknown as {
+		game_titles: {
+			id: string;
+			name: string;
+			slug: string;
+			game_types: { slug: string } | null;
+		} | null;
+	}[];
 
 	// Fetch stages
 	const { data: stages } = await supabase
 		.from('comp_stages')
-		.select('id, name, stage_type, stage_order, best_of')
+		.select('id, name, stage_type, stage_order, best_of, game_title_id')
 		.eq('comp_instance_id', instanceId)
 		.order('stage_order');
 
@@ -103,7 +114,7 @@ export default async function OrganiserCompetitionDetailPage({
 			instance={instance}
 			gameTitles={gameTitles ?? []}
 			stages={stages ?? []}
-			registrations={registrations ?? []}
+			registrations={(registrations ?? []) as unknown as Registration[]}
 			allTeams={allTeams ?? []}
 			matches={matches ?? []}
 		/>

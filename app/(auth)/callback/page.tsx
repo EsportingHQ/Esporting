@@ -1,17 +1,40 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 export default function AuthCallbackPage() {
 	const router = useRouter();
+	const [needsPassword, setNeedsPassword] = useState(false);
+	const [password, setPassword] = useState('');
+	const [confirmPassword, setConfirmPassword] = useState('');
+	const [error, setError] = useState<string | null>(null);
+	const [loading, setLoading] = useState(false);
+	const [roles, setRoles] = useState<string[]>([]);
+
+	const redirectByRole = useCallback(
+		(userRoles: string[]) => {
+			if (userRoles.includes('super_admin')) {
+				router.push('/admin');
+			} else if (userRoles.includes('organiser')) {
+				router.push('/organiser');
+			} else if (userRoles.includes('contributor')) {
+				router.push('/contributor');
+			} else {
+				router.push('/');
+			}
+		},
+		[router],
+	);
 
 	useEffect(() => {
 		const supabase = createClient();
 
 		supabase.auth.onAuthStateChange(async (event, session) => {
 			if (event === 'SIGNED_IN' && session) {
+				const isInvite = window.location.hash.includes('type=invite');
+
 				const { data: roleData } = await supabase
 					.from('user_role_assignments')
 					.select('roles(name)')
@@ -19,27 +42,184 @@ export default function AuthCallbackPage() {
 					.is('revoked_at', null)
 					.is('comp_instance_id', null);
 
-				const roles =
+				const userRoles =
 					(roleData as { roles: { name: string } }[] | null)?.map(
 						(r) => r.roles?.name,
 					) ?? [];
 
-				if (roles.includes('super_admin')) {
-					router.push('/admin');
-				} else if (roles.includes('organiser')) {
-					router.push('/organiser');
-				} else if (roles.includes('contributor')) {
-					router.push('/contributor');
-				} else {
-					router.push('/');
+				setRoles(userRoles as string[]);
+
+				if (isInvite) {
+					setNeedsPassword(true);
+					return;
 				}
+
+				redirectByRole(userRoles as string[]);
 			}
 		});
-	}, [router]);
+	}, [redirectByRole]);
+
+	async function handleSetPassword() {
+		setError(null);
+
+		if (password.length < 8) {
+			setError('Password must be at least 8 characters');
+			return;
+		}
+		if (password !== confirmPassword) {
+			setError('Passwords do not match');
+			return;
+		}
+
+		setLoading(true);
+		try {
+			const supabase = createClient();
+			const { error: updateError } = await supabase.auth.updateUser({
+				password,
+			});
+			if (updateError) throw updateError;
+
+			redirectByRole(roles);
+		} catch (err) {
+			setError(
+				err instanceof Error ? err.message : 'Failed to set password',
+			);
+		} finally {
+			setLoading(false);
+		}
+	}
+
+	if (needsPassword) {
+		return (
+			<div
+				style={{
+					minHeight: '100vh',
+					display: 'flex',
+					alignItems: 'center',
+					justifyContent: 'center',
+					background: '#0a0a0a',
+				}}
+			>
+				<div style={{ width: '100%', maxWidth: 380 }}>
+					<h1
+						style={{
+							fontSize: 22,
+							fontWeight: 700,
+							color: '#fff',
+							marginBottom: 6,
+						}}
+					>
+						Welcome to Esporting
+					</h1>
+					<p
+						style={{
+							fontSize: 13,
+							color: '#888',
+							marginBottom: 24,
+						}}
+					>
+						Set a password to finish creating your account.
+					</p>
+
+					{error && (
+						<div
+							style={{
+								background: '#7f1d1d33',
+								border: '1px solid #7f1d1d',
+								color: '#fca5a5',
+								padding: 10,
+								borderRadius: 8,
+								marginBottom: 16,
+								fontSize: 13,
+							}}
+						>
+							{error}
+						</div>
+					)}
+
+					<div style={{ marginBottom: 12 }}>
+						<label
+							style={{
+								display: 'block',
+								fontSize: 13,
+								color: '#aaa',
+								marginBottom: 6,
+							}}
+						>
+							Password
+						</label>
+						<input
+							type="password"
+							value={password}
+							onChange={(e) => setPassword(e.target.value)}
+							style={inputStyle}
+							placeholder="At least 8 characters"
+						/>
+					</div>
+
+					<div style={{ marginBottom: 20 }}>
+						<label
+							style={{
+								display: 'block',
+								fontSize: 13,
+								color: '#aaa',
+								marginBottom: 6,
+							}}
+						>
+							Confirm Password
+						</label>
+						<input
+							type="password"
+							value={confirmPassword}
+							onChange={(e) => setConfirmPassword(e.target.value)}
+							style={inputStyle}
+						/>
+					</div>
+
+					<button
+						disabled={loading}
+						onClick={handleSetPassword}
+						style={{
+							width: '100%',
+							background: '#16a34a',
+							color: '#fff',
+							border: 'none',
+							borderRadius: 8,
+							padding: '12px 0',
+							fontSize: 14,
+							fontWeight: 600,
+							cursor: 'pointer',
+						}}
+					>
+						{loading ? 'Setting up...' : 'Set Password & Continue'}
+					</button>
+				</div>
+			</div>
+		);
+	}
 
 	return (
-		<div className="flex items-center justify-center min-h-screen">
+		<div
+			style={{
+				display: 'flex',
+				alignItems: 'center',
+				justifyContent: 'center',
+				minHeight: '100vh',
+				background: '#0a0a0a',
+				color: '#888',
+			}}
+		>
 			<p>Setting up your account...</p>
 		</div>
 	);
 }
+
+const inputStyle: React.CSSProperties = {
+	width: '100%',
+	background: '#1a1a1a',
+	color: '#fff',
+	border: '1px solid #333',
+	borderRadius: 8,
+	padding: '10px 12px',
+	fontSize: 13,
+};
