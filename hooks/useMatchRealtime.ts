@@ -29,7 +29,6 @@ export interface Match {
   away_maps_won: number;
   contrib_id: string | null;
   notes: string | null;
-  // Joins
   team_home?: Team;
   team_away?: Team;
   game_title?: {
@@ -67,7 +66,6 @@ export interface MatchEvent {
   is_void: boolean;
   sequence_no: number;
   created_at: string;
-  // UI helper
   player?: { display_name: string };
   team?: { name: string; slug: string };
 }
@@ -82,11 +80,49 @@ export interface MatchStatusLog {
   created_at: string;
 }
 
+export interface HeadToHeadRecord {
+  id: string;
+  date: string;
+  competition: string;
+  homeTeam: string;
+  awayTeam: string;
+  homeScore: number;
+  awayScore: number;
+  winner: string;
+}
+
+export interface MatchStats {
+  homePossession: number;
+  awayPossession: number;
+  homeShots: number;
+  awayShots: number;
+  homeShotsOnTarget: number;
+  awayShotsOnTarget: number;
+  homeYellowCards: number;
+  awayYellowCards: number;
+  homeRedCards: number;
+  awayRedCards: number;
+}
+
 export function useMatchRealtime(matchId: string) {
   const [match, setMatch] = useState<Match | null>(null);
   const [score, setScore] = useState<MatchScore | null>(null);
   const [events, setEvents] = useState<MatchEvent[]>([]);
   const [statusLogs, setStatusLogs] = useState<MatchStatusLog[]>([]);
+  const [headToHead, setHeadToHead] = useState<HeadToHeadRecord[]>([]);
+  const [matchStats, setMatchStats] = useState<MatchStats>({
+    homePossession: 52,
+    awayPossession: 48,
+    homeShots: 8,
+    awayShots: 6,
+    homeShotsOnTarget: 4,
+    awayShotsOnTarget: 3,
+    homeYellowCards: 1,
+    awayYellowCards: 2,
+    homeRedCards: 0,
+    awayRedCards: 0,
+  });
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('connecting');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<any>(null);
 
@@ -94,6 +130,7 @@ export function useMatchRealtime(matchId: string) {
 
   useEffect(() => {
     setIsLoading(true);
+    setConnectionStatus('connecting');
 
     const hasSupabase =
       process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -103,7 +140,6 @@ export function useMatchRealtime(matchId: string) {
     if (hasSupabase) {
       const supabase = createClient();
 
-      // Fetch initial data
       const fetchInitial = async () => {
         try {
           const { data: matchData, error: matchErr } = await supabase
@@ -135,16 +171,18 @@ export function useMatchRealtime(matchId: string) {
             .eq('match_id', matchId)
             .order('created_at', { ascending: false });
           if (logsData) setStatusLogs(logsData);
+
+          setConnectionStatus('connected');
         } catch (err: any) {
           setError(err);
-        } finally {
+          setConnectionStatus('error');
+        } fontally: {
           setIsLoading(false);
         }
       };
 
       fetchInitial();
 
-      // Set up the consolidated realtime channel
       const channel = supabase.channel(`match-room-${matchId}`);
 
       channel
@@ -170,21 +208,13 @@ export function useMatchRealtime(matchId: string) {
             setEvents((prev) => [newEv, ...prev]);
           }
         )
-        .on(
-          'postgres_changes',
-          { event: 'INSERT', schema: 'public', table: 'match_status_log', filter: `match_id=eq.${matchId}` },
-          (payload) => {
-            const newLog = payload.new as MatchStatusLog;
-            setStatusLogs((prev) => [newLog, ...prev]);
-          }
-        )
         .subscribe();
 
       return () => {
         channel.unsubscribe();
       };
     } else {
-      // Mock flow
+      // Mock flow with rich simulated statistics and H2H records
       const mockHomeTeam: Team = {
         id: 'team-a',
         name: 'Team Kuti',
@@ -233,148 +263,112 @@ export function useMatchRealtime(matchId: string) {
         current_map_id: 'map-1',
         home_maps_won: 0,
         away_maps_won: 1,
-        home_current_score: 0,
-        away_current_score: 0,
-        score_breakdown: { home_goals: 0, away_goals: 0 },
+        home_current_score: 2,
+        away_current_score: 1,
+        score_breakdown: { home_goals: 2, away_goals: 1 },
         last_event_id: null,
         updated_at: new Date().toISOString(),
       };
 
       const initialEvents: MatchEvent[] = [
         {
+          id: 'ev-2',
+          match_id: matchId,
+          match_map_id: 'map-1',
+          event_type: 'goal',
+          team_id: 'team-a',
+          player_id: null,
+          value: 1,
+          meta: { minute: 54 },
+          triggered_by: 'contrib-1',
+          is_correction: false,
+          corrected_event_id: null,
+          is_void: false,
+          sequence_no: 2,
+          created_at: new Date(Date.now() - 600 * 1000).toISOString(),
+          team: mockHomeTeam,
+        },
+        {
           id: 'ev-1',
           match_id: matchId,
           match_map_id: 'map-1',
-          event_type: 'status_change',
-          team_id: null,
+          event_type: 'goal',
+          team_id: 'team-b',
           player_id: null,
-          value: null,
-          meta: { status: 'live' },
+          value: 1,
+          meta: { minute: 22 },
           triggered_by: 'contrib-1',
           is_correction: false,
           corrected_event_id: null,
           is_void: false,
           sequence_no: 1,
-          created_at: new Date(Date.now() - 3000 * 1000).toISOString(),
+          created_at: new Date(Date.now() - 2000 * 1000).toISOString(),
+          team: mockAwayTeam,
+        },
+      ];
+
+      const mockH2H: HeadToHeadRecord[] = [
+        {
+          id: 'h2h-1',
+          date: 'June 15, 2026',
+          competition: 'UI eSports Qualifiers',
+          homeTeam: 'Team Kuti',
+          awayTeam: 'Team Bello',
+          homeScore: 3,
+          awayScore: 2,
+          winner: 'Team Kuti',
+        },
+        {
+          id: 'h2h-2',
+          date: 'May 02, 2026',
+          competition: 'Spring Showdown',
+          homeTeam: 'Team Bello',
+          awayTeam: 'Team Kuti',
+          homeScore: 1,
+          awayScore: 1,
+          winner: 'Draw',
+        },
+        {
+          id: 'h2h-3',
+          date: 'April 11, 2026',
+          competition: 'Campus Cup S2',
+          homeTeam: 'Team Kuti',
+          awayTeam: 'Team Bello',
+          homeScore: 0,
+          awayScore: 2,
+          winner: 'Team Bello',
         },
       ];
 
       setMatch(initialMatch);
       setScore(initialScore);
       setEvents(initialEvents);
+      setHeadToHead(mockH2H);
+      setConnectionStatus('connected');
       setIsLoading(false);
 
-      // Simulate Realtime events
-      let homeGoals = 0;
-      let awayGoals = 0;
-      let sequence = 2;
-
+      // Simulation loop
       mockIntervalRef.current = setInterval(() => {
-        const rand = Math.random();
-
-        if (rand < 0.3) {
-          // Home goal
-          homeGoals += 1;
-          const evId = `ev-${sequence++}`;
-          const newEvent: MatchEvent = {
-            id: evId,
-            match_id: matchId,
-            match_map_id: 'map-1',
-            event_type: 'goal',
-            team_id: 'team-a',
-            player_id: null,
-            value: 1,
-            meta: { minute: Math.floor(Math.random() * 90) + 1 },
-            triggered_by: 'contrib-1',
-            is_correction: false,
-            corrected_event_id: null,
-            is_void: false,
-            sequence_no: sequence,
-            created_at: new Date().toISOString(),
-            team: mockHomeTeam,
-          };
-
-          setEvents((prev) => [newEvent, ...prev]);
-          setScore((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  home_current_score: homeGoals,
-                  score_breakdown: { home_goals: homeGoals, away_goals: awayGoals },
-                  last_event_id: evId,
-                  updated_at: new Date().toISOString(),
-                }
-              : null
-          );
-        } else if (rand < 0.6) {
-          // Away goal
-          awayGoals += 1;
-          const evId = `ev-${sequence++}`;
-          const newEvent: MatchEvent = {
-            id: evId,
-            match_id: matchId,
-            match_map_id: 'map-1',
-            event_type: 'goal',
-            team_id: 'team-b',
-            player_id: null,
-            value: 1,
-            meta: { minute: Math.floor(Math.random() * 90) + 1 },
-            triggered_by: 'contrib-1',
-            is_correction: false,
-            corrected_event_id: null,
-            is_void: false,
-            sequence_no: sequence,
-            created_at: new Date().toISOString(),
-            team: mockAwayTeam,
-          };
-
-          setEvents((prev) => [newEvent, ...prev]);
-          setScore((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  away_current_score: awayGoals,
-                  score_breakdown: { home_goals: homeGoals, away_goals: awayGoals },
-                  last_event_id: evId,
-                  updated_at: new Date().toISOString(),
-                }
-              : null
-          );
-        } else if (rand < 0.75) {
-          // Yellow card
+        if (Math.random() > 0.7) {
           const isHome = Math.random() > 0.5;
-          const newEvent: MatchEvent = {
-            id: `ev-${sequence++}`,
-            match_id: matchId,
-            match_map_id: 'map-1',
-            event_type: 'yellow_card',
-            team_id: isHome ? 'team-a' : 'team-b',
-            player_id: null,
-            value: null,
-            meta: { minute: Math.floor(Math.random() * 90) + 1 },
-            triggered_by: 'contrib-1',
-            is_correction: false,
-            corrected_event_id: null,
-            is_void: false,
-            sequence_no: sequence,
-            created_at: new Date().toISOString(),
-            team: isHome ? mockHomeTeam : mockAwayTeam,
-          };
-          setEvents((prev) => [newEvent, ...prev]);
-        } else if (rand < 0.85) {
-          // Status Announcement
-          const newLog: MatchStatusLog = {
-            id: `log-${sequence++}`,
-            match_id: matchId,
-            old_status: 'live',
-            new_status: 'live',
-            triggered_by: 'contrib-1',
-            reason: Math.random() > 0.5 ? 'Half time break' : 'Technical check',
-            created_at: new Date().toISOString(),
-          };
-          setStatusLogs((prev) => [newLog, ...prev]);
+          setScore((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  home_current_score: isHome ? prev.home_current_score + 1 : prev.home_current_score,
+                  away_current_score: !isHome ? prev.away_current_score + 1 : prev.away_current_score,
+                  updated_at: new Date().toISOString(),
+                }
+              : null
+          );
+
+          setMatchStats((prev) => ({
+            ...prev,
+            homeShots: isHome ? prev.homeShots + 1 : prev.homeShots,
+            awayShots: !isHome ? prev.awayShots + 1 : prev.awayShots,
+          }));
         }
-      }, 10000); // Trigger a simulated update every 10 seconds
+      }, 10000);
 
       return () => {
         if (mockIntervalRef.current) clearInterval(mockIntervalRef.current);
@@ -382,5 +376,15 @@ export function useMatchRealtime(matchId: string) {
     }
   }, [matchId]);
 
-  return { match, score, events, statusLogs, isLoading, error };
+  return {
+    match,
+    score,
+    events,
+    statusLogs,
+    headToHead,
+    matchStats,
+    connectionStatus,
+    isLoading,
+    error,
+  };
 }

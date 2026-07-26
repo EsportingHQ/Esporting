@@ -3,6 +3,10 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { PublicNav } from '@/components/layout/public-nav';
+import { SearchInput } from '@/components/ui/SearchInput';
+import { FavoriteStar } from '@/components/broadcast/FavoriteStar';
+import { StatusDot } from '@/components/broadcast/StatusDot';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Trophy, Calendar, Users, Filter, CheckCircle2, PlayCircle, PlusCircle } from 'lucide-react';
 
 interface Competition {
@@ -15,9 +19,11 @@ interface Competition {
   prizePool: string;
   startDate: string;
   teamCount: number;
+  liveMatchesCount?: number;
 }
 
 export default function CompetitionsPage() {
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedGame, setSelectedGame] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
 
@@ -32,6 +38,7 @@ export default function CompetitionsPage() {
       prizePool: '₦500,000',
       startDate: 'July 1, 2026',
       teamCount: 16,
+      liveMatchesCount: 2,
     },
     {
       id: 'c2',
@@ -43,6 +50,7 @@ export default function CompetitionsPage() {
       prizePool: '₦200,000 + Trophy',
       startDate: 'July 5, 2026',
       teamCount: 20,
+      liveMatchesCount: 1,
     },
     {
       id: 'c3',
@@ -54,6 +62,7 @@ export default function CompetitionsPage() {
       prizePool: '₦350,000',
       startDate: 'July 25, 2026',
       teamCount: 12,
+      liveMatchesCount: 0,
     },
     {
       id: 'c4',
@@ -65,19 +74,26 @@ export default function CompetitionsPage() {
       prizePool: 'Trophy Only',
       startDate: 'June 10, 2026',
       teamCount: 8,
+      liveMatchesCount: 0,
     },
   ]);
 
-  // Filtering logic
+  // Search & Filter Logic
   const filteredComps = competitions.filter((comp) => {
-    const gameMatch =
+    const matchesSearch =
+      !searchQuery ||
+      comp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      comp.gameTitles.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    const matchesGame =
       selectedGame === 'all' ||
-      (selectedGame === 'football' && comp.gameTitles.some((t) => t.includes('FC') || t.includes('FIFA'))) ||
-      (selectedGame === 'shooter' && comp.gameTitles.some((t) => t.includes('CODM') || t.includes('PUBG') || t.includes('Royale')));
+      (selectedGame === 'fc26' && comp.gameTitles.some((t) => t.includes('FC 26'))) ||
+      (selectedGame === 'codm' && comp.gameTitles.some((t) => t.includes('CODM'))) ||
+      (selectedGame === 'pubg' && comp.gameTitles.some((t) => t.includes('PUBG')));
 
-    const statusMatch = selectedStatus === 'all' || comp.status === selectedStatus;
+    const matchesStatus = selectedStatus === 'all' || comp.status === selectedStatus;
 
-    return gameMatch && statusMatch;
+    return matchesSearch && matchesGame && matchesStatus;
   });
 
   const getStatusIcon = (status: string) => {
@@ -118,33 +134,46 @@ export default function CompetitionsPage() {
               COMPETITION REGISTRY
             </h1>
             <p className="text-xs text-text-muted font-data mt-1">
-              ALL REGISTERED TOURNAMENTS, LEAGUES, AND EVENT SERIES
+              BROWSE ALL LEAGUES, TOURNAMENTS, AND EVENT SERIES
             </p>
+          </div>
+
+          <div className="w-full md:w-80">
+            <SearchInput
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="SEARCH COMPETITIONS OR GAMES..."
+            />
           </div>
         </div>
 
-        {/* Filter controls panel */}
-        <div className="bg-bg-surface border border-border-line rounded p-4 flex flex-wrap items-center gap-6 text-xs">
+        {/* Filter console panel */}
+        <div className="bg-bg-surface border border-border-line rounded p-4 flex flex-wrap items-center gap-6 text-xs select-none">
           <div className="flex items-center gap-2 text-text-muted uppercase font-display font-bold">
             <Filter className="w-3.5 h-3.5" />
             <span>Filter Console</span>
           </div>
 
-          {/* Game category filter */}
+          {/* Game title pills */}
           <div className="flex items-center gap-2">
-            <span className="text-text-muted">Game Type:</span>
+            <span className="text-text-muted">Game Title:</span>
             <div className="flex border border-border-line rounded overflow-hidden">
-              {['all', 'football', 'shooter'].map((type) => (
+              {[
+                { id: 'all', label: 'ALL' },
+                { id: 'fc26', label: 'FC 26' },
+                { id: 'codm', label: 'CODM' },
+                { id: 'pubg', label: 'PUBG' },
+              ].map((g) => (
                 <button
-                  key={type}
-                  onClick={() => setSelectedGame(type)}
+                  key={g.id}
+                  onClick={() => setSelectedGame(g.id)}
                   className={`px-3 py-1 font-display font-bold tracking-wider uppercase transition-colors ${
-                    selectedGame === type
+                    selectedGame === g.id
                       ? 'bg-accent-readout text-bg-void'
                       : 'bg-bg-void hover:bg-bg-void/50 text-text-muted hover:text-text-primary'
                   }`}
                 >
-                  {type}
+                  {g.label}
                 </button>
               ))}
             </div>
@@ -154,7 +183,7 @@ export default function CompetitionsPage() {
           <div className="flex items-center gap-2">
             <span className="text-text-muted">Status:</span>
             <div className="flex border border-border-line rounded overflow-hidden">
-              {['all', 'registration', 'ongoing', 'completed'].map((status) => (
+              {['all', 'ongoing', 'registration', 'completed'].map((status) => (
                 <button
                   key={status}
                   onClick={() => setSelectedStatus(status)}
@@ -180,30 +209,48 @@ export default function CompetitionsPage() {
           {filteredComps.map((comp) => (
             <div
               key={comp.id}
-              className="bg-bg-surface border border-border-line hover:border-accent-readout/30 rounded p-6 flex flex-col justify-between transition-all"
+              className="bg-bg-surface border border-border-line hover:border-accent-readout/40 rounded p-6 flex flex-col justify-between transition-all group hover:shadow-lg"
             >
               <div className="space-y-4">
-                {/* Status and Type labels */}
+                {/* Header row: Format label + Star + Status */}
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-data text-accent-readout font-bold tracking-wide uppercase">
-                    {getFormatLabel(comp.format)}
-                  </span>
-                  <div className="flex items-center gap-1.5 text-xs">
-                    {getStatusIcon(comp.status)}
-                    <span className="font-display font-bold tracking-wider uppercase text-[10px] text-text-muted">
-                      {comp.status}
+                  <div className="flex items-center gap-2">
+                    <FavoriteStar
+                      entityType="competition"
+                      entityId={comp.id}
+                      entityName={comp.name}
+                      size="sm"
+                    />
+                    <span className="text-[10px] font-data text-accent-readout font-bold tracking-wide uppercase">
+                      {getFormatLabel(comp.format)}
                     </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {comp.liveMatchesCount && comp.liveMatchesCount > 0 ? (
+                      <span className="text-[9px] font-data text-accent-signal flex items-center gap-1.5 bg-accent-signal/10 px-2 py-0.5 rounded border border-accent-signal/30 font-semibold">
+                        <StatusDot status="live" size="sm" />
+                        <span>{comp.liveMatchesCount} LIVE</span>
+                      </span>
+                    ) : null}
+
+                    <div className="flex items-center gap-1.5 text-xs">
+                      {getStatusIcon(comp.status)}
+                      <span className="font-display font-bold tracking-wider uppercase text-[10px] text-text-muted">
+                        {comp.status}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Competition title */}
+                {/* Title */}
                 <Link href={`/competitions/${comp.slug}`}>
-                  <h3 className="font-display font-black text-xl hover:text-accent-readout transition-colors leading-tight uppercase">
+                  <h2 className="font-display font-black text-xl text-text-primary group-hover:text-accent-readout transition-colors leading-tight uppercase">
                     {comp.name}
-                  </h3>
+                  </h2>
                 </Link>
 
-                {/* Games tag row */}
+                {/* Game tags */}
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {comp.gameTitles.map((title) => (
                     <span
@@ -244,12 +291,18 @@ export default function CompetitionsPage() {
           ))}
 
           {filteredComps.length === 0 && (
-            <div className="col-span-full py-16 text-center bg-bg-surface border border-border-line rounded text-text-muted">
-              <Trophy className="w-8 h-8 mx-auto text-text-muted/40 mb-3" />
-              <p className="font-display font-bold tracking-wide uppercase text-sm">
-                No active competitions match filters
-              </p>
-              <p className="text-xs font-data mt-1">Adjust your filters to see more leagues.</p>
+            <div className="col-span-full">
+              <EmptyState
+                icon={Trophy}
+                title="NO COMPETITIONS MATCH FILTERS"
+                description="Try clearing your search query or adjusting status and game title filters."
+                actionLabel="CLEAR ALL FILTERS"
+                onAction={() => {
+                  setSearchQuery('');
+                  setSelectedGame('all');
+                  setSelectedStatus('all');
+                }}
+              />
             </div>
           )}
         </div>
