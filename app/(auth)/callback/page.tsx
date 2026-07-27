@@ -31,32 +31,52 @@ export default function AuthCallbackPage() {
 	useEffect(() => {
 		const supabase = createClient();
 
-		supabase.auth.onAuthStateChange(async (event, session) => {
-			if (event === 'SIGNED_IN' && session) {
-				const isInvite = window.location.hash.includes('type=invite');
+		async function handleCallback() {
+			const hash = window.location.hash.substring(1); // remove leading '#'
+			const params = new URLSearchParams(hash);
 
-				const { data: roleData } = await supabase
-					.from('user_role_assignments')
-					.select('roles(name)')
-					.eq('user_id', session.user.id)
-					.is('revoked_at', null)
-					.is('comp_instance_id', null);
+			const accessToken = params.get('access_token');
+			const refreshToken = params.get('refresh_token');
+			const isInvite = hash.includes('type=invite');
 
-				const userRoles =
-					(roleData as { roles: { name: string } }[] | null)?.map(
-						(r) => r.roles?.name,
-					) ?? [];
-
-				setRoles(userRoles as string[]);
-
-				if (isInvite) {
-					setNeedsPassword(true);
-					return;
-				}
-
-				redirectByRole(userRoles as string[]);
+			if (!accessToken || !refreshToken) {
+				// No token in URL — nothing to do, maybe already logged in
+				return;
 			}
-		});
+
+			const { data, error: setSessionError } =
+				await supabase.auth.setSession({
+					access_token: accessToken,
+					refresh_token: refreshToken,
+				});
+
+			if (setSessionError || !data.session) {
+				setError('This invite link is invalid or has expired.');
+				return;
+			}
+
+			const { data: roleData } = await supabase
+				.from('user_role_assignments')
+				.select('roles(name)')
+				.eq('user_id', data.session.user.id)
+				.is('revoked_at', null);
+
+			const userRoles =
+				(roleData as { roles: { name: string } }[] | null)?.map(
+					(r) => r.roles?.name,
+				) ?? [];
+
+			setRoles(userRoles as string[]);
+
+			if (isInvite) {
+				setNeedsPassword(true);
+				return;
+			}
+
+			redirectByRole(userRoles as string[]);
+		}
+
+		handleCallback();
 	}, [redirectByRole]);
 
 	async function handleSetPassword() {

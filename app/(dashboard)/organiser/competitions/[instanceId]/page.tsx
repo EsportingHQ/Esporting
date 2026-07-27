@@ -25,8 +25,7 @@ export default async function OrganiserCompetitionDetailPage({
 		.from('user_role_assignments')
 		.select('roles(name)')
 		.eq('user_id', user.id)
-		.is('revoked_at', null)
-		.is('comp_instance_id', null);
+		.is('revoked_at', null);
 
 	const roles =
 		(roleData as { roles: { name: string } }[] | null)?.map(

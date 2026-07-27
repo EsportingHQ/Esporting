@@ -1,17 +1,21 @@
-import { createClient } from '@/lib/supabase/server';
-import { cookies } from 'next/headers';
-
-export default async function Page() {
-	const cookieStore = await cookies();
-	const supabase = createClient(cookieStore);
-
-	const { data: todos } = await supabase.from('todos').select();
-
+export default function HomePage() {
 	return (
-		<ul>
-			{todos?.map((todo) => (
-				<li key={todo.id}>{todo.name}</li>
-			))}
-		</ul>
+		<div
+			style={{
+				minHeight: '100vh',
+				display: 'flex',
+				alignItems: 'center',
+				justifyContent: 'center',
+				background: '#0a0a0a',
+				color: '#fff',
+			}}
+		>
+			<div style={{ textAlign: 'center' }}>
+				<h1 style={{ fontSize: 32, fontWeight: 700 }}>Esporting</h1>
+				<p style={{ color: '#888', marginTop: 8 }}>
+					Live eSports Scores & Results
+				</p>
+			</div>
+		</div>
 	);
 }

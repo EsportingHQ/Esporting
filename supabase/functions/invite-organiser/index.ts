@@ -71,11 +71,12 @@ serve(async (req: Request) => {
       )
     }
 
-    // 5. Check if user already exists in auth
+   // 5. Check if user already exists in auth
     const { data: existingUsers } = await adminClient.auth.admin.listUsers()
-    const alreadyExists = existingUsers?.users?.some((u: { email?: string }) => u.email === email)
+    const existingUser = existingUsers?.users?.find((u: { email?: string }) => u.email === email)
+    const isConfirmed = existingUser?.email_confirmed_at != null
 
-    if (alreadyExists) {
+    if (existingUser && isConfirmed) {
       return new Response(
         JSON.stringify({
           error: `A user with email '${email}' already exists`,
@@ -85,16 +86,45 @@ serve(async (req: Request) => {
       )
     }
 
+    if (existingUser && !isConfirmed) {
+      // Resend the invite to this same pending user
+      const { error: resendError } = await adminClient
+        .auth.admin.inviteUserByEmail(email, {
+          data: {
+            display_name: display_name ?? null,
+            organisation: organisation ?? null,
+            invited_as: 'organiser',
+            invited_by: user.id
+          },
+          redirectTo: 'http://localhost:3000/callback'
+        })
+
+      if (resendError) {
+        throw resendError
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          mode: 'invite_resent',
+          message: `A new invite link was sent to ${email}`,
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    
+
     // 6. Send the invite email via Supabase Auth
     const { data: inviteData, error: inviteError } = await adminClient
-      .auth.admin.inviteUserByEmail(email, {
+    .auth.admin.inviteUserByEmail(email, {
         data: {
-          display_name: display_name ?? null,
-          organisation: organisation ?? null,
-          invited_as:   'organiser',
-          invited_by:   user.id
-        }
-      })
+        display_name: display_name ?? null,
+        organisation: organisation ?? null,
+        invited_as:   'organiser',
+        invited_by:   user.id
+        },
+        redirectTo: 'http://localhost:3000/callback'
+    })
 
     if (inviteError) {
       // Handle rate limit
