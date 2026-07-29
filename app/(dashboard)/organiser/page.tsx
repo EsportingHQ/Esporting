@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 
 type CompInstance = {
 	id: string;
@@ -8,7 +9,7 @@ type CompInstance = {
 	status: string;
 	format: string;
 	starts_at: string | null;
-	comp_series: { name: string }[] | null;
+	comp_series: { name: string }[] | { name: string } | null;
 };
 
 function statusBadge(status: string): string {
@@ -16,6 +17,13 @@ function statusBadge(status: string): string {
 	if (status === 'registration') return 'bg-blue-500 text-white';
 	if (status === 'completed') return 'bg-gray-500 text-white';
 	return 'bg-yellow-500 text-white';
+}
+
+function getSeriesName(
+	series: { name: string }[] | { name: string } | null,
+): string {
+	if (!series) return '';
+	return Array.isArray(series) ? (series[0]?.name ?? '') : series.name;
 }
 
 export default async function OrganiserPage() {
@@ -55,12 +63,12 @@ export default async function OrganiserPage() {
 		<div>
 			<div className="flex items-center justify-between mb-6">
 				<h2 className="text-2xl font-bold">My Competitions</h2>
-				<a
+				<Link
 					href="/organiser/competitions/new"
 					className="bg-green-600 hover:bg-green-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
 				>
 					+ New Competition
-				</a>
+				</Link>
 			</div>
 
 			{comps.length > 0 ? (
@@ -75,7 +83,7 @@ export default async function OrganiserPage() {
 								<div>
 									<p className="font-semibold">{comp.name}</p>
 									<p className="text-gray-500 text-sm mt-1">
-										{comp.comp_series?.[0]?.name} ·{' '}
+										{getSeriesName(comp.comp_series)} ·{' '}
 										{comp.format}
 									</p>
 								</div>
@@ -91,12 +99,12 @@ export default async function OrganiserPage() {
 			) : (
 				<div className="bg-gray-900 border border-gray-800 rounded-xl p-10 text-center">
 					<p className="text-gray-400">No competitions yet.</p>
-					<a
+					<Link
 						href="/organiser/competitions/new"
 						className="text-green-400 hover:text-green-300 text-sm mt-2 inline-block"
 					>
 						Create your first competition →
-					</a>
+					</Link>
 				</div>
 			)}
 		</div>
