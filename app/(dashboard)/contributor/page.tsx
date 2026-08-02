@@ -20,6 +20,30 @@ type Match = {
 	comp_instances: CompInstance | null;
 };
 
+function getTeamName(
+	team: { name: string }[] | { name: string } | null,
+): string {
+	if (!team) return 'TBD';
+	return Array.isArray(team) ? (team[0]?.name ?? 'TBD') : team.name;
+}
+
+function getGameTitleName(
+	game:
+		| { name: string; slug: string }[]
+		| { name: string; slug: string }
+		| null,
+): string {
+	if (!game) return '';
+	return Array.isArray(game) ? (game[0]?.name ?? '') : game.name;
+}
+
+function getCompInstanceName(
+	comp: { name: string }[] | { name: string } | null,
+): string {
+	if (!comp) return '';
+	return Array.isArray(comp) ? (comp[0]?.name ?? '') : comp.name;
+}
+
 export default async function ContributorPage() {
 	const cookieStore = await cookies();
 	const supabase = createClient(cookieStore);
@@ -83,22 +107,26 @@ export default async function ContributorPage() {
 							<div className="flex justify-between items-start mb-4">
 								<div>
 									<span className="text-[10px] font-data text-text-muted uppercase tracking-wider block">
-										{match.comp_instances?.[0]?.name}
+										{getCompInstanceName(
+											match.comp_instances,
+										)}
 									</span>
 									<h4 className="font-display font-black text-lg text-text-primary group-hover:text-accent-readout uppercase tracking-wide mt-1 transition-colors">
 										{match.match_format ===
 										'head_to_head' ? (
 											<>
 												<span>
-													{match.home_team?.[0]
-														?.name ?? 'TBD'}
+													{getTeamName(
+														match.home_team,
+													)}
 												</span>
 												<span className="text-text-muted mx-2 font-body font-normal lowercase">
 													vs
 												</span>
 												<span>
-													{match.away_team?.[0]
-														?.name ?? 'TBD'}
+													{getTeamName(
+														match.away_team,
+													)}
 												</span>
 											</>
 										) : (
@@ -126,7 +154,9 @@ export default async function ContributorPage() {
 							<div className="flex items-center gap-4 text-xs font-data text-text-muted border-t border-border-line pt-3 mt-3">
 								<span className="flex items-center gap-1.5 uppercase">
 									<Shield className="w-3.5 h-3.5" />
-									<span>{match.game_titles?.[0]?.name}</span>
+									<span>
+										{getGameTitleName(match.game_titles)}
+									</span>
 								</span>
 								{match.scheduled_at && (
 									<span className="flex items-center gap-1.5">
