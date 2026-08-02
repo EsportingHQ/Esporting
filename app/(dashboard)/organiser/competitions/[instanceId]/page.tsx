@@ -87,7 +87,7 @@ export default async function OrganiserCompetitionDetailPage({
 		.eq('comp_instance_id', instanceId)
 		.order('registered_at', { ascending: false });
 
-	// Fetch all teams (for the register-team dropdown, existing teams to select from)
+	// Fetch all teams
 	const { data: allTeams } = await supabase
 		.from('teams')
 		.select('id, name')

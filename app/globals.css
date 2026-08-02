@@ -1,53 +1,126 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-/* :root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-bg-void: #0B0F14;
+  --color-bg-surface: #131922;
+  --color-bg-elevated: #1A2332;
+  --color-border-line: #232B36;
+  --color-accent-signal: #FF4B3E;
+  --color-accent-readout: #00D4FF;
+  --color-accent-favorite: #FBBF24;
+  --color-state-win: #4ADE80;
+  --color-state-alert: #F87171;
+  --color-text-primary: #E8ECEF;
+  --color-text-muted: #8A94A3;
+  --color-bg-skeleton: #1E2A3A;
+  --color-bg-skeleton-highlight: #253344;
+
+  --font-display: "Rajdhani", "Impact", "Arial Black", sans-serif;
+  --font-body: "Inter", system-ui, Arial, sans-serif;
+  --font-data: "JetBrains Mono", "Courier New", monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Dimmed Alternative Theme Tokens */
+[data-theme="dimmed"] {
+  --color-bg-void: #161D27;
+  --color-bg-surface: #1F2836;
+  --color-bg-elevated: #283446;
+  --color-border-line: #334155;
+  --color-text-primary: #F1F5F9;
+  --color-text-muted: #94A3B8;
+  --color-bg-skeleton: #273548;
+  --color-bg-skeleton-highlight: #33455E;
+}
+
+@layer base {
+  html, body {
+    background-color: var(--color-bg-void, #0B0F14);
+    color: var(--color-text-primary, #E8ECEF);
+    font-family: var(--font-body), sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 }
 
-html {
-  height: 100%;
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+/* Custom animations & helpers */
+@keyframes tally-breath {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(0.95);
   }
-} */
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+.tally-pulse {
+  animation: tally-breath 1.5s ease-in-out infinite;
+}
+
+@keyframes score-flash {
+  0% {
+    background-color: var(--color-accent-signal);
+    color: #ffffff;
+    transform: scale(1.05);
+  }
+  100% {
+    background-color: transparent;
+    color: inherit;
+    transform: scale(1);
+  }
+}
+
+.score-flash {
+  animation: score-flash 0.6s ease-out;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-skeleton, #1E2A3A) 25%,
+    var(--color-bg-skeleton-highlight, #253344) 50%,
+    var(--color-bg-skeleton, #1E2A3A) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid var(--color-accent-readout);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tally-pulse, .score-flash, .skeleton-shimmer {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* Scrollbar styling for a dense broadcast package */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg-void, #0B0F14);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-line, #232B36);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted, #8A94A3);
+}

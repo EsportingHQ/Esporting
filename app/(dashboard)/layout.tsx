@@ -2,27 +2,59 @@ import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { logout } from '@/lib/actions/auth';
+import Link from 'next/link';
+import {
+	Shield,
+	Activity,
+	Users,
+	Settings,
+	LogOut,
+	Layout,
+} from 'lucide-react';
 
 type NavItem = {
 	label: string;
 	href: string;
+	icon: React.ComponentType<{ className?: string }>;
 };
 
 const adminNav: NavItem[] = [
-	{ label: 'Overview', href: '/admin' },
-	{ label: 'Invite Organiser', href: '/admin/invites' },
-	{ label: 'Manage Users', href: '/admin/users' },
-	{ label: 'Game Catalogue', href: '/admin/catalogue' },
+	{ label: 'Overview', href: '/admin', icon: Layout },
+	{ label: 'Invite Organiser', href: '/admin/invites', icon: Users },
+	{ label: 'Manage Users', href: '/admin/users', icon: Settings },
+	{ label: 'Game Catalogue', href: '/admin/catalogue', icon: Shield },
 ];
 
 const organiserNav: NavItem[] = [
-	{ label: 'My Competitions', href: '/organiser' },
-	{ label: 'New Competition', href: '/organiser/competitions/new' },
+	{ label: 'My Competitions', href: '/organiser', icon: Layout },
+	{
+		label: 'New Competition',
+		href: '/organiser/competitions/new',
+		icon: PlusIcon,
+	},
 ];
 
 const contributorNav: NavItem[] = [
-	{ label: 'Assigned Matches', href: '/contributor' },
+	{ label: 'Assigned Matches', href: '/contributor', icon: Activity },
 ];
+
+function PlusIcon({ className }: { className?: string }) {
+	return (
+		<svg
+			className={className}
+			fill="none"
+			viewBox="0 0 24 24"
+			stroke="currentColor"
+		>
+			<path
+				strokeLinecap="round"
+				strokeLinejoin="round"
+				strokeWidth={2}
+				d="M12 4v16m8-8H4"
+			/>
+		</svg>
+	);
+}
 
 function getNav(roles: string[]): {
 	nav: NavItem[];
@@ -72,26 +104,30 @@ export default async function DashboardLayout({
 	const { nav, title } = getNav(roles);
 
 	return (
-		<div className="min-h-screen bg-gray-950 text-white flex flex-col">
+		<div className="min-h-screen bg-bg-void text-text-primary flex flex-col font-body antialiased">
 			{/* Top header */}
-			<header className="border-b border-gray-800 px-6 py-4 flex items-center justify-between shrink-0">
+			<header className="bg-bg-void border-b border-border-line px-6 py-4 flex items-center justify-between shrink-0">
 				<div className="flex items-center gap-6">
-					<span className="text-lg font-bold text-white">
-						Esporting
-					</span>
-					<span className="text-gray-600 text-sm">
-						{title} Dashboard
+					<Link
+						href="/"
+						className="font-display font-black text-xl tracking-widest text-text-primary uppercase hover:text-accent-readout transition-colors"
+					>
+						ESPORTING
+					</Link>
+					<span className="bg-accent-readout/10 border border-accent-readout/30 px-2.5 py-0.5 rounded text-[10px] font-display font-bold uppercase tracking-wider text-accent-readout">
+						{title} DECK
 					</span>
 				</div>
-				<div className="flex items-center gap-4">
-					<span className="text-gray-500 text-sm">{user.email}</span>
+				<div className="flex items-center gap-4 text-xs font-data text-text-muted">
+					<span>{user.email}</span>
 					<form>
 						<button
 							formAction={logout}
 							type="submit"
-							className="text-sm text-gray-400 hover:text-white transition-colors"
+							className="text-text-muted hover:text-state-loss flex items-center gap-1.5 transition-colors cursor-pointer font-display font-bold uppercase tracking-wider text-[11px]"
 						>
-							Sign out
+							<LogOut className="w-3.5 h-3.5" />
+							<span>Sign out</span>
 						</button>
 					</form>
 				</div>
@@ -99,22 +135,26 @@ export default async function DashboardLayout({
 
 			<div className="flex flex-1 overflow-hidden">
 				{/* Sidebar */}
-				<aside className="w-56 border-r border-gray-800 px-4 py-6 shrink-0">
+				<aside className="w-60 bg-bg-surface border-r border-border-line px-4 py-6 shrink-0">
 					<nav className="space-y-1">
-						{nav.map((item) => (
-							<a
-								key={item.href}
-								href={item.href}
-								className="block px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
-							>
-								{item.label}
-							</a>
-						))}
+						{nav.map((item) => {
+							const Icon = item.icon;
+							return (
+								<Link
+									key={item.href}
+									href={item.href}
+									className="flex items-center gap-3 px-3 py-2.5 rounded text-xs font-display font-bold uppercase tracking-wider text-text-muted hover:text-text-primary hover:bg-bg-void border border-transparent hover:border-border-line transition-all"
+								>
+									<Icon className="w-4 h-4 text-accent-readout" />
+									<span>{item.label}</span>
+								</Link>
+							);
+						})}
 					</nav>
 				</aside>
 
 				{/* Page content */}
-				<main className="flex-1 overflow-y-auto px-8 py-8">
+				<main className="flex-1 overflow-y-auto px-8 py-8 bg-bg-void">
 					{children}
 				</main>
 			</div>

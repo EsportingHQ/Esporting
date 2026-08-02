@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "app/(dashboard)/contributor/matches/[matchId]/page.tsx",
+    "app/(dashboard)/contributor/matches/[matchId]/MatchRoomClient.tsx",
+    "next-env.d.ts"
+  ],
+  "exclude": []
+}

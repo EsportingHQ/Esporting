@@ -1,0 +1,292 @@
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import { PublicNav } from '@/components/layout/public-nav';
+import { BroadcastTicker } from '@/components/broadcast/broadcast-ticker';
+import { MatchCard } from '@/components/broadcast/match-card';
+import { MatchCardSkeleton } from '@/components/broadcast/MatchCardSkeleton';
+import { LeagueSection } from '@/components/broadcast/LeagueSection';
+import { StatusDot } from '@/components/broadcast/StatusDot';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ScoreToast } from '@/components/ui/ScoreToast';
+import { useLiveFeed } from '@/hooks/useLiveFeed';
+import { useFavorites } from '@/hooks/useFavorites';
+import { Calendar, Filter, Newspaper, ArrowRight, Star, Flame, Trophy } from 'lucide-react';
+
+export default function HomeClient() {
+  const { tickerMatches, groups, liveCount, isLoading, toasts, dismissToast } = useLiveFeed();
+  const { favorites } = useFavorites();
+
+  const [statusFilter, setStatusFilter] = useState<'all' | 'live' | 'upcoming' | 'finished'>('all');
+  const [gameFilter, setGameFilter] = useState<string>('all');
+
+  // Filter groups and matches
+  const filteredGroups = groups
+    .map((group) => {
+      // Filter matches within group
+      const matches = group.matches.filter((match) => {
+        // Status filter
+        if (statusFilter === 'live' && match.status !== 'live') return false;
+        if (statusFilter === 'upcoming' && match.status !== 'scheduled' && match.status !== 'delayed') return false;
+        if (statusFilter === 'finished' && match.status !== 'completed' && match.status !== 'cancelled' && match.status !== 'walkover') return false;
+
+        // Game category filter
+        if (gameFilter === 'football' && match.gameType !== 'football') return false;
+        if (gameFilter === 'shooter' && match.gameType !== 'shooter') return false;
+        if (gameFilter === 'br' && match.gameType !== 'br') return false;
+
+        return true;
+      });
+
+      const liveCountInGroup = matches.filter((m) => m.status === 'live').length;
+
+      return {
+        ...group,
+        matches,
+        liveCount: liveCountInGroup,
+      };
+    })
+    .filter((group) => group.matches.length > 0);
+
+  // Pin starred competitions to top
+  const starredCompIds = favorites.filter((f) => f.type === 'competition').map((f) => f.id);
+  const sortedGroups = [...filteredGroups].sort((a, b) => {
+    const aStarred = starredCompIds.includes(a.id);
+    const bStarred = starredCompIds.includes(b.id);
+    if (aStarred && !bStarred) return -1;
+    if (!aStarred && bStarred) return 1;
+    return b.liveCount - a.liveCount;
+  });
+
+  const newsItems = [
+    {
+      id: 'n1',
+      title: 'UI eSports League Season 1 prize pool announced',
+      slug: 'ui-esports-league-prize-pool',
+      published_at: '2 hours ago',
+      summary: 'Organisers reveal a ₦500,000 prize pool and exclusive physical trophy for the champions.',
+      tag: 'LEAGUE',
+    },
+    {
+      id: 'n2',
+      title: 'CODM Mobile battle royale map rotation changes',
+      slug: 'codm-br-map-rotation',
+      published_at: '5 hours ago',
+      summary: 'Isolated and Isolated Night are officially added to the official competitive schedule.',
+      tag: 'CODM MOBILE',
+    },
+    {
+      id: 'n3',
+      title: 'Team Kuti clinches crucial victory in FC 26 group opener',
+      slug: 'team-kuti-victory-fc-26',
+      published_at: '1 day ago',
+      summary: 'Kuti beats Bello in a dramatic 2-1 head-to-head match to secure initial group points.',
+      tag: 'MATCH RECAP',
+    },
+  ];
+
+  return (
+    <div className="flex-1 flex flex-col bg-bg-void text-text-primary">
+      <PublicNav />
+      <BroadcastTicker matches={tickerMatches} />
+
+      {/* Live Toasts Overlay */}
+      <ScoreToast toasts={toasts} onDismiss={dismissToast} />
+
+      <main className="max-w-7xl w-full mx-auto px-4 py-8 flex-1 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Feed Column (2 cols wide on desktop) */}
+        <section className="lg:col-span-2 space-y-6">
+          {/* Header & Status Filter Bar */}
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border-line pb-3">
+              <div className="flex items-center gap-3">
+                <Calendar className="w-5 h-5 text-accent-readout" />
+                <h1 className="font-display font-bold text-xl uppercase tracking-wider">
+                  LIVE MATCH FEED & SCHEDULE
+                </h1>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-data text-text-muted flex items-center gap-1.5 bg-bg-surface px-2.5 py-1 rounded border border-border-line">
+                  <StatusDot status="live" size="sm" />
+                  <span className="font-semibold text-accent-signal">{liveCount} LIVE NOW</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Filter Controls Row */}
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-bg-surface border border-border-line p-3 rounded">
+              {/* Status Filter Tabs */}
+              <div className="flex border border-border-line rounded overflow-hidden text-xs font-display font-bold">
+                {[
+                  { id: 'all', label: 'ALL' },
+                  { id: 'live', label: `LIVE (${liveCount})` },
+                  { id: 'upcoming', label: 'UPCOMING' },
+                  { id: 'finished', label: 'FINISHED' },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setStatusFilter(tab.id as any)}
+                    className={`px-3 py-1.5 uppercase transition-colors ${
+                      statusFilter === tab.id
+                        ? 'bg-accent-readout text-bg-void font-extrabold'
+                        : 'bg-bg-void hover:bg-bg-void/50 text-text-muted hover:text-text-primary'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Game Category Pills */}
+              <div className="flex items-center gap-1 text-[11px] font-display font-bold">
+                {['all', 'football', 'shooter', 'br'].map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setGameFilter(cat)}
+                    className={`px-2.5 py-1 rounded uppercase border transition-colors ${
+                      gameFilter === cat
+                        ? 'bg-accent-readout/20 text-accent-readout border-accent-readout/40'
+                        : 'bg-bg-void border-border-line text-text-muted hover:text-text-primary'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Matches List (Grouped by League) */}
+          {isLoading ? (
+            <div className="space-y-4">
+              <MatchCardSkeleton count={3} />
+            </div>
+          ) : sortedGroups.length > 0 ? (
+            <div className="space-y-6">
+              {sortedGroups.map((group) => (
+                <LeagueSection
+                  key={group.id}
+                  competitionId={group.id}
+                  competitionName={group.name}
+                  competitionSlug={group.slug}
+                  gameTitle={group.gameTitle}
+                  liveCount={group.liveCount}
+                  totalCount={group.matches.length}
+                >
+                  {group.matches.map((match) => (
+                    <MatchCard
+                      key={match.id}
+                      {...match}
+                      href={`/competitions/${group.slug}/matches/${match.id}`}
+                    />
+                  ))}
+                </LeagueSection>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={Calendar}
+              title="NO MATCHES FOUND"
+              description="No live, upcoming, or finished matches match your selected filters."
+              actionLabel="RESET FILTERS"
+              onAction={() => {
+                setStatusFilter('all');
+                setGameFilter('all');
+              }}
+            />
+          )}
+        </section>
+
+        {/* Right Sidebar Column */}
+        <section className="space-y-6">
+          {/* Favorites Quick List */}
+          {favorites.length > 0 && (
+            <div className="bg-bg-surface border border-border-line rounded p-4 space-y-3">
+              <div className="flex items-center gap-2 border-b border-border-line pb-2">
+                <Star className="w-4 h-4 text-accent-favorite fill-accent-favorite" />
+                <h3 className="font-display font-bold text-xs tracking-wider uppercase">
+                  YOUR STARRED FAVORITES
+                </h3>
+              </div>
+
+              <div className="space-y-1.5 text-xs font-body">
+                {favorites.map((fav) => (
+                  <div
+                    key={`${fav.type}-${fav.id}`}
+                    className="p-2 bg-bg-void border border-border-line rounded flex items-center justify-between"
+                  >
+                    <span className="font-semibold truncate">{fav.name}</span>
+                    <span className="text-[9px] font-data text-text-muted uppercase bg-bg-surface px-1.5 rounded">
+                      {fav.type}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <Link
+                href="/favorites"
+                className="block text-center text-[10px] font-display font-bold text-accent-readout hover:underline pt-1"
+              >
+                GO TO FAVORITES FEED →
+              </Link>
+            </div>
+          )}
+
+          {/* Broadcast Bulletin */}
+          <div className="bg-bg-surface border border-border-line rounded p-4 space-y-4">
+            <div className="flex items-center gap-2 border-b border-border-line pb-2">
+              <Newspaper className="w-4 h-4 text-accent-readout" />
+              <h3 className="font-display font-bold text-sm tracking-wider uppercase">
+                BROADCAST BULLETIN
+              </h3>
+            </div>
+
+            <div className="divide-y divide-border-line">
+              {newsItems.map((item) => (
+                <article key={item.id} className="py-3 first:pt-0 last:pb-0 space-y-2">
+                  <div className="flex items-center justify-between text-[9px] font-data">
+                    <span className="text-accent-readout font-bold tracking-wider">
+                      {item.tag}
+                    </span>
+                    <span className="text-text-muted">{item.published_at}</span>
+                  </div>
+                  <Link href={`/news/${item.slug}`} className="block group">
+                    <h4 className="font-display font-bold text-sm text-text-primary group-hover:text-accent-readout transition-colors leading-tight">
+                      {item.title}
+                    </h4>
+                  </Link>
+                  <p className="text-xs text-text-muted line-clamp-2 leading-relaxed">
+                    {item.summary}
+                  </p>
+                </article>
+              ))}
+            </div>
+
+            <Link
+              href="/news"
+              className="flex items-center justify-center gap-2 w-full py-2 bg-bg-void hover:bg-bg-void/50 border border-border-line hover:border-accent-readout/40 rounded font-display text-xs font-semibold tracking-wider text-text-muted hover:text-text-primary transition-all focus-ring"
+            >
+              <span>VIEW ALL BULLETIN POSTS</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </section>
+      </main>
+
+      {/* Broadcast Footer */}
+      <footer className="bg-bg-surface border-t border-border-line py-4 select-none text-[10px] text-text-muted">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
+          <span className="font-data">© 2026 ESPORTINGHQ. ALL SYSTEM BROADCASTS LIVE.</span>
+          <div className="flex items-center gap-4 font-display font-semibold tracking-wider">
+            <span className="flex items-center gap-1.5">
+              <StatusDot status="completed" size="sm" />
+              <span>NETWORK STATUS: NOMINAL</span>
+            </span>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
