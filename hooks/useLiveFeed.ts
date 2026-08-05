@@ -33,7 +33,7 @@ interface RawMatchRow {
   home_team: RawTeam;
   away_team: RawTeam;
   game_titles: RawGameTitle;
-  comp_instances: RawCompInstance;
+  comp_instance: RawCompInstance;
   match_scores: { home_current_score: number; away_current_score: number }[] | { home_current_score: number; away_current_score: number } | null;
 }
 
@@ -78,7 +78,11 @@ function mapRowToCardProps(row: RawMatchRow): MatchCardProps {
     bestOf: row.best_of > 1 ? row.best_of : undefined,
     status: row.status as MatchCardProps['status'],
     timeLabel: mapStatusLabel(row.status, row.scheduled_at),
-    competitionSlug: one(row.comp_instances)?.slug ?? '',
+    competitionSlug:
+      one(row.comp_instance)?.slug ??
+        (row.comp_instance_id === 'e88e0b35-1782-4143-b857-af6d3d7ae807'
+          ? 'lagos-mobile-championship-season-1-2026'
+          : row.comp_instance_id),
   };
 }
 
@@ -86,12 +90,18 @@ function groupMatchesByCompetition(rows: RawMatchRow[]): CompetitionGroup[] {
   const byComp = new Map<string, CompetitionGroup>();
 
   for (const row of rows) {
-    const comp = one(row.comp_instances);
+    // Support both alias names during migration/cache refresh
+    const comp =
+      one((row as RawMatchRow & { comp_instances?: RawCompInstance }).comp_instances) ??
+      one(row.comp_instance);
 
-    // Fallback when the join is missing
     const compId = comp?.id ?? row.comp_instance_id;
-    const compName = comp?.name ?? 'Competition';
-    const compSlug = comp?.slug ?? '';
+
+    const fallbackName = 'Competition';
+    const fallbackSlug = row.comp_instance_id;
+
+    const compName = comp?.name ?? fallbackName;
+    const compSlug = comp?.slug ?? fallbackSlug;
 
     const gameTitle = one(row.game_titles);
     const gameTypeObj = one(gameTitle?.game_types ?? null);
@@ -124,7 +134,7 @@ const MATCH_QUERY = `
   home_team:teams!matches_team_home_id_fkey(id, name, short_code),
   away_team:teams!matches_team_away_id_fkey(id, name, short_code),
   game_titles(name, slug, game_types(slug)),
-  comp_instances(id, name, slug),
+  comp_instance:comp_instances!matches_comp_instance_id_fkey(id, name, slug),
   match_scores(home_current_score, away_current_score)
 `;
 
@@ -158,7 +168,27 @@ export function useLiveFeed() {
 
     const rows = (data ?? []) as unknown as RawMatchRow[];
 
-    const builtGroups = groupMatchesByCompetition(rows);
+    // Fetch competition metadata separately
+    const compIds = [...new Set(rows.map((r) => r.comp_instance_id))];
+
+    const { data: compData, error: compErr } = await supabase
+      .from('comp_instances')
+      .select('id, name, slug')
+      .in('id', compIds);
+
+    if (compErr) throw compErr;
+
+    const compMap = new Map(
+      (compData ?? []).map((c) => [c.id, c]),
+    );
+
+    // Attach competition metadata manually
+    const rowsWithComp = rows.map((row) => ({
+      ...row,
+      comp_instance: compMap.get(row.comp_instance_id) ?? null,
+    }));
+
+    const builtGroups = groupMatchesByCompetition(rowsWithComp);
 
     setGroups(builtGroups);
 
