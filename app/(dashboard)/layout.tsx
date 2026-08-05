@@ -10,6 +10,7 @@ import {
 	Settings,
 	LogOut,
 	Layout,
+	UserPlus,
 } from 'lucide-react';
 
 type NavItem = {
@@ -21,6 +22,8 @@ type NavItem = {
 const adminNav: NavItem[] = [
 	{ label: 'Overview', href: '/admin', icon: Layout },
 	{ label: 'Invite Organiser', href: '/admin/invites', icon: Users },
+	{ label: 'Invite Contributor', href: '/contributor/new', icon: UserPlus },
+	{ label: 'Match Assignments', href: '/admin/matches', icon: Activity },
 	{ label: 'Manage Users', href: '/admin/users', icon: Settings },
 	{ label: 'Game Catalogue', href: '/admin/catalogue', icon: Shield },
 ];
@@ -32,6 +35,7 @@ const organiserNav: NavItem[] = [
 		href: '/organiser/competitions/new',
 		icon: PlusIcon,
 	},
+	{ label: 'Invite Contributor', href: '/contributor/new', icon: UserPlus },
 ];
 
 const contributorNav: NavItem[] = [

@@ -24,6 +24,18 @@ const actions = [
     icon: PlusCircle,
   },
   {
+    label: 'Invite Contributor',
+    href: '/contributor/new',
+    description: 'Create contributor access scoped to all matches or one competition',
+    icon: Users,
+  },
+  {
+    label: 'Match Assignments',
+    href: '/admin/matches',
+    description: 'Assign contributors to upcoming and live match rooms',
+    icon: Activity,
+  },
+  {
     label: 'Manage Users',
     href: '/admin/users',
     description: 'Review operational logs and edit user role mappings',

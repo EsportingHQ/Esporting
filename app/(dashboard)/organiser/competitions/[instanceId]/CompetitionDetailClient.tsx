@@ -4,12 +4,12 @@ import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import {
 	AlertCircle,
-	Plus,
-	Users,
+	// Plus,
+	// Users,
 	Award,
-	Calendar,
+	// Calendar,
 	Layers,
-	Shield,
+	// Shield,
 } from 'lucide-react';
 import ScheduleMatchTab from './ScheduleMatchTab';
 
