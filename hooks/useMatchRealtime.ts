@@ -99,6 +99,32 @@ export interface MatchStatusLog {
     created_at: string;
 }
 
+export interface MatchMap {
+    id: string;
+    match_id: string;
+    map_number: number;
+    map_id: string | null;
+    mode_id: string | null;
+    home_score: number | null;
+    away_score: number | null;
+    winner_team_id: string | null;
+    status: string;
+    maps?: { name: string } | null;
+    modes?: { name: string } | null;
+}
+
+export interface BRResult {
+    id: string;
+    match_id: string;
+    team_id: string;
+    placement: number;
+    kills: number;
+    placement_points: number;
+    kill_points: number;
+    total_points: number;
+    team?: { name: string; short_code: string | null } | null;
+}
+
 export interface HeadToHeadRecord {
     id: string;
     date: string;
@@ -170,6 +196,8 @@ export function useMatchRealtime(matchId: string) {
     const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('connecting');
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
+    const [matchMaps, setMatchMaps] = useState<MatchMap[]>([]);
+    const [brResults, setBrResults] = useState<BRResult[]>([]);
 
         useEffect(() => {
         const supabase = createClient();
@@ -226,6 +254,29 @@ export function useMatchRealtime(matchId: string) {
             .eq('match_id', matchId)
             .order('created_at', { ascending: false });
             if (logsData) setStatusLogs(logsData);
+
+            const { data: mapsData } = await supabase
+            .from('match_maps')
+            .select(`
+                *,
+                maps(name),
+                modes(name)
+            `)
+            .eq('match_id', matchId)
+            .order('map_number', { ascending: true });
+
+            if (mapsData) setMatchMaps(mapsData as MatchMap[]);
+
+            const { data: brData } = await supabase
+            .from('br_match_results')
+            .select(`
+                *,
+                team:teams(name, short_code)
+            `)
+            .eq('match_id', matchId)
+            .order('placement', { ascending: true });
+
+            if (brData) setBrResults(brData as BRResult[]);
 
             // Head-to-head: past completed matches between the same two teams
             if (matchData?.team_home_id && matchData?.team_away_id) {
@@ -355,5 +406,7 @@ export function useMatchRealtime(matchId: string) {
         connectionStatus,
         isLoading,
         error,
+        matchMaps,
+        brResults,
     };
 }
