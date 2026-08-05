@@ -2,14 +2,20 @@
 
 import { Flame, Clock, Award, ListOrdered } from 'lucide-react';
 import { StatusDot } from '../StatusDot';
-import { MatchEvent, MatchStatusLog } from '@/hooks/useMatchRealtime';
-
+import {
+	MatchEvent,
+	MatchStatusLog,
+	MatchMap,
+	BRResult,
+} from '@/hooks/useMatchRealtime';
 interface TimelineTabProps {
 	events: MatchEvent[];
 	statusLogs: MatchStatusLog[];
 	isLive: boolean;
 	isShooter: boolean;
 	isBR: boolean;
+	matchMaps: MatchMap[];
+	brResults: BRResult[];
 }
 
 export function TimelineTab({
@@ -18,87 +24,9 @@ export function TimelineTab({
 	isLive,
 	isShooter,
 	isBR,
+	matchMaps,
+	brResults,
 }: TimelineTabProps) {
-	// Mock shooter map slots
-	const mockMapSlots = [
-		{
-			number: 1,
-			name: 'Nuketown',
-			mode: 'Hardpoint',
-			homeScore: 150,
-			awayScore: 125,
-			winner: 'home',
-			status: 'completed',
-		},
-		{
-			number: 2,
-			name: 'Crash',
-			mode: 'Search & Destroy',
-			homeScore: 4,
-			awayScore: 6,
-			winner: 'away',
-			status: 'completed',
-		},
-		{
-			number: 3,
-			name: 'Raid',
-			mode: 'Control',
-			homeScore: 110,
-			awayScore: 95,
-			winner: null,
-			status: 'live',
-		},
-	];
-
-	// Mock BR results
-	const mockBrResults = [
-		{
-			rank: 1,
-			name: 'Ares Clan',
-			shortCode: 'ARS',
-			kills: 14,
-			placementPts: 15,
-			killPts: 14,
-			totalPts: 29,
-		},
-		{
-			rank: 2,
-			name: 'Odin Elite',
-			shortCode: 'ODN',
-			kills: 10,
-			placementPts: 12,
-			killPts: 10,
-			totalPts: 22,
-		},
-		{
-			rank: 3,
-			name: 'Venom Esports',
-			shortCode: 'VENM',
-			kills: 8,
-			placementPts: 10,
-			killPts: 8,
-			totalPts: 18,
-		},
-		{
-			rank: 4,
-			name: 'Supra Gaming',
-			shortCode: 'SUPR',
-			kills: 6,
-			placementPts: 8,
-			killPts: 6,
-			totalPts: 14,
-		},
-		{
-			rank: 5,
-			name: 'Apex Raiders',
-			shortCode: 'APEX',
-			kills: 5,
-			placementPts: 6,
-			killPts: 5,
-			totalPts: 11,
-		},
-	];
-
 	const getEventEmoji = (type: string) => {
 		switch (type) {
 			case 'goal':
@@ -245,9 +173,9 @@ export function TimelineTab({
 						</div>
 
 						<div className="space-y-3 text-xs font-data">
-							{mockMapSlots.map((slot) => (
+							{matchMaps.map((slot) => (
 								<div
-									key={slot.number}
+									key={slot.id}
 									className={`p-3 rounded border flex items-center justify-between ${
 										slot.status === 'live'
 											? 'bg-accent-signal/10 border-accent-signal/30'
@@ -256,22 +184,23 @@ export function TimelineTab({
 								>
 									<div>
 										<span className="block font-display font-bold uppercase tracking-wider text-[9px] text-text-muted">
-											MAP 0{slot.number} —{' '}
+											MAP 0{slot.map_number} —{' '}
 											{slot.status.toUpperCase()}
 										</span>
 										<span className="font-body font-semibold text-text-primary">
-											{slot.name}
+											{slot.maps?.name ??
+												`Map ${slot.map_number}`}
 										</span>
 										<span className="block text-[10px] text-accent-readout">
-											{slot.mode}
+											{slot.modes?.name ?? 'Mode'}
 										</span>
 									</div>
 
 									<div className="text-right">
 										{slot.status === 'completed' ? (
 											<div className="font-bold text-text-primary text-base">
-												{slot.homeScore} :{' '}
-												{slot.awayScore}
+												{slot.home_score ?? 0} :{' '}
+												{slot.away_score ?? 0}
 											</div>
 										) : slot.status === 'live' ? (
 											<div className="font-bold text-accent-signal text-base flex items-center gap-1.5 justify-end">
@@ -280,8 +209,8 @@ export function TimelineTab({
 													size="sm"
 												/>
 												<span>
-													{slot.homeScore} :{' '}
-													{slot.awayScore}
+													{slot.home_score ?? 0} :{' '}
+													{slot.away_score ?? 0}
 												</span>
 											</div>
 										) : (
@@ -292,6 +221,14 @@ export function TimelineTab({
 									</div>
 								</div>
 							))}
+
+							{matchMaps.length === 0 && (
+								<div className="py-6 text-center text-text-muted border border-dashed border-border-line rounded">
+									<p className="font-display font-semibold uppercase text-xs tracking-wider">
+										No map results available yet
+									</p>
+								</div>
+							)}
 						</div>
 					</div>
 				)}
@@ -306,17 +243,17 @@ export function TimelineTab({
 						</div>
 
 						<div className="space-y-2 text-xs font-data">
-							{mockBrResults.map((row) => (
+							{brResults.map((row) => (
 								<div
-									key={row.shortCode}
+									key={row.id}
 									className="p-2 bg-bg-void border border-border-line rounded flex items-center justify-between"
 								>
 									<div className="flex items-center gap-2">
 										<span className="w-5 h-5 rounded-full bg-border-line flex items-center justify-center font-bold text-[10px] shrink-0">
-											{row.rank}
+											{row.placement}
 										</span>
 										<span className="font-body font-semibold text-text-primary">
-											{row.name}
+											{row.team?.name ?? 'Team'}
 										</span>
 									</div>
 									<div className="flex items-center gap-3">
@@ -327,11 +264,19 @@ export function TimelineTab({
 											</span>
 										</span>
 										<span className="font-bold text-accent-signal text-sm">
-											{row.totalPts} pts
+											{row.total_points} pts
 										</span>
 									</div>
 								</div>
 							))}
+
+							{brResults.length === 0 && (
+								<div className="py-6 text-center text-text-muted border border-dashed border-border-line rounded">
+									<p className="font-display font-semibold uppercase text-xs tracking-wider">
+										No placement results available yet
+									</p>
+								</div>
+							)}
 						</div>
 					</div>
 				)}
