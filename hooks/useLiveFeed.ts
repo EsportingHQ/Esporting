@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import { MatchCardProps } from '@/components/broadcast/match-card';
 import { TickerMatch } from '@/components/broadcast/broadcast-ticker';
 import { ToastMessage } from '@/components/ui/ScoreToast';
@@ -16,199 +17,220 @@ export interface CompetitionGroup {
   matches: MatchCardProps[];
 }
 
+type RawTeam = { id: string; name: string; short_code: string | null } | { id: string; name: string; short_code: string | null }[] | null;
+type RawGameTitle = { name: string; slug: string; game_types?: { slug: string } | { slug: string }[] | null } | { name: string; slug: string; game_types?: { slug: string } | { slug: string }[] | null }[] | null;
+type RawCompInstance = { id: string; name: string; slug: string } | { id: string; name: string; slug: string }[] | null;
+
+interface RawMatchRow {
+  id: string;
+  status: string;
+  scheduled_at: string | null;
+  match_format: string;
+  home_maps_won: number | null;
+  away_maps_won: number | null;
+  best_of: number;
+  comp_instance_id: string;
+  home_team: RawTeam;
+  away_team: RawTeam;
+  game_titles: RawGameTitle;
+  comp_instances: RawCompInstance;
+  match_scores: { home_current_score: number; away_current_score: number }[] | { home_current_score: number; away_current_score: number } | null;
+}
+
+function one<T>(value: T | T[] | null | undefined): T | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
+}
+
+function mapGameType(gameTypeSlug: string | undefined): 'football' | 'shooter' | 'br' {
+  if (gameTypeSlug === 'football') return 'football';
+  if (gameTypeSlug?.includes('br')) return 'br';
+  return 'shooter';
+}
+
+function mapStatusLabel(status: string, scheduledAt: string | null): string {
+  if (status === 'live') return 'LIVE NOW';
+  if (status === 'completed') return 'Finished';
+  if (status === 'delayed') return 'Delayed';
+  if (status === 'scheduled' && scheduledAt) {
+    return new Date(scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  return status;
+}
+
+function mapRowToCardProps(row: RawMatchRow): MatchCardProps {
+  const home = one(row.home_team);
+  const away = one(row.away_team);
+  const gameTitle = one(row.game_titles);
+  const gameTypeObj = one(gameTitle?.game_types ?? null);
+  const scoreRow = one(row.match_scores);
+
+  return {
+    id: row.id,
+    gameType: mapGameType(gameTypeObj?.slug),
+    gameTitle: gameTitle?.name ?? '',
+    homeTeam: { id: home?.id ?? '', name: home?.name ?? 'TBD', shortCode: home?.short_code ?? '' },
+    awayTeam: { id: away?.id ?? '', name: away?.name ?? 'TBD', shortCode: away?.short_code ?? '' },
+    homeScore: scoreRow?.home_current_score ?? 0,
+    awayScore: scoreRow?.away_current_score ?? 0,
+    homeMapsWon: row.home_maps_won ?? undefined,
+    awayMapsWon: row.away_maps_won ?? undefined,
+    bestOf: row.best_of > 1 ? row.best_of : undefined,
+    status: row.status as MatchCardProps['status'],
+    timeLabel: mapStatusLabel(row.status, row.scheduled_at),
+    competitionSlug: one(row.comp_instances)?.slug ?? '',
+  };
+}
+
+function groupMatchesByCompetition(rows: RawMatchRow[]): CompetitionGroup[] {
+  const byComp = new Map<string, CompetitionGroup>();
+
+  for (const row of rows) {
+    const comp = one(row.comp_instances);
+    if (!comp) continue;
+
+    const gameTitle = one(row.game_titles);
+    const gameTypeObj = one(gameTitle?.game_types ?? null);
+    const gameType = mapGameType(gameTypeObj?.slug);
+
+    if (!byComp.has(comp.id)) {
+      byComp.set(comp.id, {
+        id: comp.id,
+        name: comp.name,
+        slug: comp.slug,
+        gameTitle: gameTitle?.name ?? '',
+        gameType,
+        liveCount: 0,
+        matches: [],
+      });
+    }
+
+    const group = byComp.get(comp.id)!;
+    const cardProps = mapRowToCardProps(row);
+    group.matches.push(cardProps);
+    if (row.status === 'live') group.liveCount += 1;
+  }
+
+  return Array.from(byComp.values());
+}
+
+const MATCH_QUERY = `
+  id, status, scheduled_at, match_format, home_maps_won, away_maps_won, best_of, comp_instance_id,
+  home_team:teams!matches_team_home_id_fkey(id, name, short_code),
+  away_team:teams!matches_team_away_id_fkey(id, name, short_code),
+  game_titles(name, slug, game_types(slug)),
+  comp_instances(id, name, slug),
+  match_scores(home_current_score, away_current_score)
+`;
+
 export function useLiveFeed() {
   const [tickerMatches, setTickerMatches] = useState<TickerMatch[]>([]);
   const [groups, setGroups] = useState<CompetitionGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<any>(null);
+  const [error, setError] = useState<Error | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const { prefs } = useNotificationPrefs();
 
-  const addToast = (toast: Omit<ToastMessage, 'id'>) => {
+  const addToast = useCallback((toast: Omit<ToastMessage, 'id'>) => {
     const id = `toast-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
     setToasts((prev) => [...prev, { ...toast, id }]);
-  };
+  }, []);
 
-  const dismissToast = (id: string) => {
+  const dismissToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
+  }, []);
 
-  // Mock initial data setup & simulation interval
+  const refetchGroups = useCallback(async (supabase: ReturnType<typeof createClient>) => {
+    const { data, error: fetchErr } = await supabase
+      .from('matches')
+      .select(MATCH_QUERY)
+      .in('status', ['live', 'scheduled', 'delayed', 'completed'])
+      .is('deleted_at', null)
+      .order('scheduled_at', { ascending: true, nullsFirst: false })
+      .limit(50);
+
+    if (fetchErr) throw fetchErr;
+
+    const rows = (data ?? []) as unknown as RawMatchRow[];
+    setGroups(groupMatchesByCompetition(rows));
+
+    const liveRows = rows.filter((r) => r.status === 'live').slice(0, 6);
+    const ticker: TickerMatch[] = liveRows.map((row) => {
+      const home = one(row.home_team);
+      const away = one(row.away_team);
+      const gameTitle = one(row.game_titles);
+      const scoreRow = one(row.match_scores);
+
+      return {
+        id: row.id,
+        gameCode: gameTitle?.name ?? '',
+        homeTeam: home?.short_code ?? home?.name ?? 'TBD',
+        awayTeam: away?.short_code ?? away?.name ?? 'TBD',
+        homeScore: scoreRow?.home_current_score ?? 0,
+        awayScore: scoreRow?.away_current_score ?? 0,
+        status: 'live',
+      };
+    });
+    setTickerMatches(ticker);
+  }, []);
+
   useEffect(() => {
-    setIsLoading(true);
+    const supabase = createClient();
 
-    const initialTicker: TickerMatch[] = [
-      { id: '1', gameCode: 'FC26', homeTeam: 'KUTI', awayTeam: 'BELLO', homeScore: 2, awayScore: 1, status: 'live' },
-      { id: '2', gameCode: 'CODM-MP', homeTeam: 'SUPRA', awayTeam: 'VENOM', homeScore: 1, awayScore: 2, status: 'live' },
-      { id: '3', gameCode: 'PUBG', homeTeam: 'REBEL', awayTeam: 'APEX', homeScore: 45, awayScore: 38, status: 'live' },
-      { id: '4', gameCode: 'FC26', homeTeam: 'NEXUS', awayTeam: 'ECHO', homeScore: 0, awayScore: 0, status: 'scheduled', timeLabel: '18:00' },
-    ];
+    const load = async () => {
+      setIsLoading(true);
+      try {
+        await refetchGroups(supabase);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error(String(err)));
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    const initialGroups: CompetitionGroup[] = [
-      {
-        id: 'c1',
-        name: 'UI eSports League Season 1',
-        slug: 'ui-esports-league',
-        gameTitle: 'FC 26 & CODM MP',
-        gameType: 'football',
-        liveCount: 2,
-        matches: [
-          {
-            id: '1',
-            gameType: 'football',
-            gameTitle: 'FC 26 — Group Stage',
-            homeTeam: { id: '1', name: 'Team Kuti', shortCode: 'KUTI' },
-            awayTeam: { id: '2', name: 'Team Bello', shortCode: 'BELLO' },
-            homeScore: 2,
-            awayScore: 1,
-            status: 'live',
-            timeLabel: 'LIVE NOW',
-            competitionSlug: 'ui-esports-league',
-          },
-          {
-            id: '2',
-            gameType: 'shooter',
-            gameTitle: 'CODM Multiplayer — Quarter Finals',
-            homeTeam: { id: '3', name: 'Supra Gaming', shortCode: 'SUPRA' },
-            awayTeam: { id: '4', name: 'Venom Esports', shortCode: 'VENOM' },
-            homeScore: 1,
-            awayScore: 2,
-            homeMapsWon: 1,
-            awayMapsWon: 2,
-            bestOf: 5,
-            status: 'live',
-            timeLabel: 'MAP 4',
-            competitionSlug: 'ui-esports-league',
-          },
-          {
-            id: '4',
-            gameType: 'football',
-            gameTitle: 'FC 26 — Group Stage',
-            homeTeam: { id: '5', name: 'Nexus Club', shortCode: 'NEXUS' },
-            awayTeam: { id: '6', name: 'Echo Esports', shortCode: 'ECHO' },
-            homeScore: 0,
-            awayScore: 0,
-            status: 'scheduled',
-            timeLabel: 'Starts in 10m',
-            competitionSlug: 'ui-esports-league',
-          },
-        ],
-      },
-      {
-        id: 'c2',
-        name: 'CODM Battle Royale Arena',
-        slug: 'codm-br-arena',
-        gameTitle: 'CODM BR',
-        gameType: 'br',
-        liveCount: 1,
-        matches: [
-          {
-            id: '3',
-            gameType: 'br',
-            gameTitle: 'CODM Battle Royale — Lobby Match 3',
-            homeTeam: { id: '7', name: 'Ares Clan', shortCode: 'ARS' },
-            awayTeam: { id: '8', name: 'Odin Elite', shortCode: 'ODN' },
-            homeScore: 45,
-            awayScore: 38,
-            status: 'live',
-            timeLabel: 'ROUND 3',
-            competitionSlug: 'codm-br-arena',
-          },
-        ],
-      },
-      {
-        id: 'c4',
-        name: 'FC Mobile Cup',
-        slug: 'fc-mobile-cup',
-        gameTitle: 'FC Mobile',
-        gameType: 'football',
-        liveCount: 0,
-        matches: [
-          {
-            id: '12',
-            gameType: 'football',
-            gameTitle: 'FC Mobile — Cup Final',
-            homeTeam: { id: '9', name: 'Eagles Soccer', shortCode: 'EAG' },
-            awayTeam: { id: '10', name: 'Falcons FC', shortCode: 'FLC' },
-            homeScore: 1,
-            awayScore: 2,
-            status: 'completed',
-            timeLabel: 'Finished yesterday',
-            competitionSlug: 'fc-mobile-cup',
-          },
-        ],
-      },
-    ];
+    load();
 
-    setTickerMatches(initialTicker);
-    setGroups(initialGroups);
-    setIsLoading(false);
-
-    // Live simulation interval
-    const interval = setInterval(() => {
-      // Random score updates
-      setGroups((prevGroups) =>
-        prevGroups.map((group) => {
-          let updatedLiveCount = 0;
-
-          const updatedMatches = group.matches.map((m) => {
-            if (m.status === 'live') {
-              updatedLiveCount += 1;
-              const shouldScore = Math.random() > 0.75;
-              if (shouldScore) {
-                const isHome = Math.random() > 0.5;
-                const newHomeScore = isHome ? m.homeScore + 1 : m.homeScore;
-                const newAwayScore = !isHome ? m.awayScore + 1 : m.awayScore;
-
-                // Trigger in-app toast if notification prefs allow goalScored
-                if (prefs.goalScored) {
-                  addToast({
-                    gameCode: m.gameType === 'football' ? 'FC26' : 'CODM',
-                    homeTeam: m.homeTeam.shortCode,
-                    awayTeam: m.awayTeam.shortCode,
-                    newScore: `${newHomeScore} - ${newAwayScore}`,
-                    eventType: isHome ? `${m.homeTeam.name} scored!` : `${m.awayTeam.name} scored!`,
-                    matchId: m.id,
-                    competitionSlug: group.slug,
-                  });
-                }
-
-                return {
-                  ...m,
-                  homeScore: newHomeScore,
-                  awayScore: newAwayScore,
-                };
-              }
-            }
-            return m;
-          });
-
-          return {
-            ...group,
-            liveCount: updatedLiveCount,
-            matches: updatedMatches,
-          };
-        })
-      );
-
-      // Ticker matches update
-      setTickerMatches((prev) =>
-        prev.map((t) => {
-          if (t.status === 'live' && Math.random() > 0.75) {
-            const isHome = Math.random() > 0.5;
-            return {
-              ...t,
-              homeScore: isHome ? t.homeScore + 1 : t.homeScore,
-              awayScore: !isHome ? t.awayScore + 1 : t.awayScore,
-            };
+    // Subscribe to live score and status changes across all matches.
+    // On any relevant change, refetch the grouped feed — simplest
+    // correct approach given matches span many competitions at once.
+    const channel = supabase
+      .channel('public-live-feed')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'match_scores' },
+        () => {
+          refetchGroups(supabase).catch((err) =>
+            setError(err instanceof Error ? err : new Error(String(err))),
+          );
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'matches' },
+        (payload) => {
+          const newRow = payload.new as { status?: string; id?: string };
+          if (newRow.status === 'live' && prefs.matchStart) {
+            addToast({
+              gameCode: '',
+              homeTeam: '',
+              awayTeam: '',
+              newScore: '',
+              eventType: 'Match is now live',
+              matchId: newRow.id ?? '',
+              competitionSlug: '',
+            });
           }
-          return t;
-        })
-      );
-    }, 6000);
+          refetchGroups(supabase).catch((err) =>
+            setError(err instanceof Error ? err : new Error(String(err))),
+          );
+        },
+      )
+      .subscribe();
 
-    return () => clearInterval(interval);
-  }, [prefs.goalScored]);
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [refetchGroups, prefs.matchStart, addToast]);
 
   const liveCount = groups.reduce((acc, g) => acc + g.liveCount, 0);
 
