@@ -87,17 +87,21 @@ function groupMatchesByCompetition(rows: RawMatchRow[]): CompetitionGroup[] {
 
   for (const row of rows) {
     const comp = one(row.comp_instances);
-    if (!comp) continue;
+
+    // Fallback when the join is missing
+    const compId = comp?.id ?? row.comp_instance_id;
+    const compName = comp?.name ?? 'Competition';
+    const compSlug = comp?.slug ?? '';
 
     const gameTitle = one(row.game_titles);
     const gameTypeObj = one(gameTitle?.game_types ?? null);
     const gameType = mapGameType(gameTypeObj?.slug);
 
-    if (!byComp.has(comp.id)) {
-      byComp.set(comp.id, {
-        id: comp.id,
-        name: comp.name,
-        slug: comp.slug,
+    if (!byComp.has(compId)) {
+      byComp.set(compId, {
+        id: compId,
+        name: compName,
+        slug: compSlug,
         gameTitle: gameTitle?.name ?? '',
         gameType,
         liveCount: 0,
@@ -105,9 +109,10 @@ function groupMatchesByCompetition(rows: RawMatchRow[]): CompetitionGroup[] {
       });
     }
 
-    const group = byComp.get(comp.id)!;
+    const group = byComp.get(compId)!;
     const cardProps = mapRowToCardProps(row);
     group.matches.push(cardProps);
+
     if (row.status === 'live') group.liveCount += 1;
   }
 
@@ -141,8 +146,6 @@ export function useLiveFeed() {
   }, []);
 
   const refetchGroups = useCallback(async (supabase: ReturnType<typeof createClient>) => {
-    console.log('SUPABASE URL', process.env.NEXT_PUBLIC_SUPABASE_URL);
-
     const { data, error: fetchErr } = await supabase
       .from('matches')
       .select(MATCH_QUERY)
@@ -151,12 +154,13 @@ export function useLiveFeed() {
       .order('scheduled_at', { ascending: true, nullsFirst: false })
       .limit(50);
 
-      console.log('LIVE FEED RAW', data);
-
     if (fetchErr) throw fetchErr;
 
     const rows = (data ?? []) as unknown as RawMatchRow[];
-    setGroups(groupMatchesByCompetition(rows));
+
+    const builtGroups = groupMatchesByCompetition(rows);
+
+    setGroups(builtGroups);
 
     const liveRows = rows.filter((r) => r.status === 'live').slice(0, 6);
     const ticker: TickerMatch[] = liveRows.map((row) => {
