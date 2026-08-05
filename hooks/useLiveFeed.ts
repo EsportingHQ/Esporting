@@ -141,6 +141,8 @@ export function useLiveFeed() {
   }, []);
 
   const refetchGroups = useCallback(async (supabase: ReturnType<typeof createClient>) => {
+    console.log('SUPABASE URL', process.env.NEXT_PUBLIC_SUPABASE_URL);
+
     const { data, error: fetchErr } = await supabase
       .from('matches')
       .select(MATCH_QUERY)
@@ -148,6 +150,8 @@ export function useLiveFeed() {
       .is('deleted_at', null)
       .order('scheduled_at', { ascending: true, nullsFirst: false })
       .limit(50);
+
+      console.log('LIVE FEED RAW', data);
 
     if (fetchErr) throw fetchErr;
 
