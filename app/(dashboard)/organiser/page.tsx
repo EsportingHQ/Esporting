@@ -13,13 +13,6 @@ type CompInstance = {
 	comp_series: { name: string }[] | { name: string } | null;
 };
 
-function statusBadge(status: string): string {
-	if (status === 'ongoing') return 'bg-green-500 text-white';
-	if (status === 'registration') return 'bg-blue-500 text-white';
-	if (status === 'completed') return 'bg-gray-500 text-white';
-	return 'bg-yellow-500 text-white';
-}
-
 function getSeriesName(
 	series: { name: string }[] | { name: string } | null,
 ): string {
@@ -60,6 +53,25 @@ export default async function OrganiserPage() {
 
 	const comps = (competitions ?? []) as unknown as CompInstance[];
 
+	const ownedCompetitionIds = comps.map((c) => c.id);
+
+	const [{ count: liveMatches }] = await Promise.all([
+		ownedCompetitionIds.length
+			? supabase
+					.from('matches')
+					.select('*', { count: 'exact', head: true })
+					.in('comp_instance_id', ownedCompetitionIds)
+					.eq('status', 'live')
+			: Promise.resolve({ count: 0 } as { count: number }),
+
+		ownedCompetitionIds.length
+			? supabase
+					.from('comp_registrations')
+					.select('*', { count: 'exact', head: true })
+					.in('comp_instance_id', ownedCompetitionIds)
+			: Promise.resolve({ count: 0 } as { count: number }),
+	]);
+
 	return (
 		<div className="space-y-6 font-body">
 			<div className="flex items-center justify-between">
@@ -77,6 +89,26 @@ export default async function OrganiserPage() {
 				>
 					+ NEW COMPETITION
 				</Link>
+			</div>
+
+			<div className="grid grid-cols-2 gap-4">
+				<div className="bg-bg-surface border border-border-line rounded p-4">
+					<p className="text-[10px] font-display uppercase text-text-muted">
+						My Competitions
+					</p>
+					<p className="text-2xl font-data font-black text-text-primary">
+						{comps.length}
+					</p>
+				</div>
+
+				<div className="bg-bg-surface border border-border-line rounded p-4">
+					<p className="text-[10px] font-display uppercase text-text-muted">
+						Live Matches
+					</p>
+					<p className="text-2xl font-data font-black text-text-primary">
+						{liveMatches ?? 0}
+					</p>
+				</div>
 			</div>
 
 			{comps.length > 0 ? (

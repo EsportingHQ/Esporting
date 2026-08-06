@@ -41,9 +41,9 @@ export default async function OrganiserCompetitionDetailPage({
 		.from('comp_instances')
 		.select(
 			`
-    id, name, slug, edition_label, format, status, prize_pool, description,
-    organiser_id, comp_series(name)
-  `,
+			id, name, slug, edition_label, format, status, prize_pool, description,
+			organiser_id, comp_series(name)
+		`,
 		)
 		.eq('id', instanceId)
 		.is('deleted_at', null)
@@ -51,9 +51,10 @@ export default async function OrganiserCompetitionDetailPage({
 
 	if (!instance) notFound();
 
-	// Organisers can only manage their own competitions
-	if (isOrganiser && !isAdmin && instance.organiser_id !== user.id) {
-		redirect('/organiser');
+	// Organisers can only manage their own competitions.
+	// Super admins can access every competition.
+	if (!isAdmin && instance.organiser_id !== user.id) {
+		redirect('/dashboard-redirect');
 	}
 
 	// Fetch games covered
