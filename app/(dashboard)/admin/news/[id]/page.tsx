@@ -210,7 +210,10 @@ export default async function AdminReviewArticlePage({ params }: PageProps) {
 							<Image
 								src={article.cover_url}
 								alt={article.title}
+								width={1200}
+								height={675}
 								className="w-full h-auto object-cover"
+								priority={false}
 							/>
 						</div>
 					)}

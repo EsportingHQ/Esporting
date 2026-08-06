@@ -141,11 +141,15 @@ export default async function AdminNewsPage() {
 			`,
 		)
 		.is('deleted_at', null)
-		.order('updated_at', { ascending: false })
-		.eq('source_type', 'external')
-		.eq('status', 'pending_review');
+		.order('updated_at', { ascending: false });
 
 	const rows = (articles ?? []) as unknown as ArticleRow[];
+
+	const reviewRows = rows.filter(
+		(a) => a.source_type === 'external' && a.status === 'pending_review',
+	);
+
+	const archivedRows = rows.filter((a) => a.status === 'archived');
 
 	return (
 		<div className="space-y-6 font-body">
@@ -168,7 +172,7 @@ export default async function AdminNewsPage() {
 				</Link>
 			</div>
 
-			<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+			<div className="grid grid-cols-1 md:grid-cols-5 gap-4">
 				<div className="bg-bg-surface border border-border-line rounded p-4">
 					<p className="text-[10px] font-display uppercase text-text-muted">
 						Pending Review
@@ -213,6 +217,15 @@ export default async function AdminNewsPage() {
 						}
 					</p>
 				</div>
+
+				<div className="bg-bg-surface border border-border-line rounded p-4">
+					<p className="text-[10px] font-display uppercase text-text-muted">
+						Archived Imports
+					</p>
+					<p className="text-2xl font-data font-black text-text-primary">
+						{rows.filter((a) => a.status === 'archived').length}
+					</p>
+				</div>
 			</div>
 
 			<div className="space-y-3">
@@ -242,7 +255,7 @@ export default async function AdminNewsPage() {
 						</div>
 					</div>
 
-					{rows.map((article) => (
+					{reviewRows.map((article) => (
 						<div
 							key={article.id}
 							className="bg-bg-surface border border-border-line rounded p-5 flex items-start justify-between gap-4"
@@ -336,6 +349,64 @@ export default async function AdminNewsPage() {
 						</div>
 					))}
 				</form>
+			</div>
+
+			<div className="pt-8 space-y-3">
+				<div className="flex items-center justify-between">
+					<h3 className="font-display font-black text-lg uppercase tracking-wide text-text-primary">
+						Archived Imports
+					</h3>
+
+					<span className="text-xs text-text-muted font-data">
+						{archivedRows.length} archived
+					</span>
+				</div>
+
+				{archivedRows.length === 0 ? (
+					<div className="bg-bg-surface border border-border-line rounded p-6 text-sm text-text-muted">
+						No archived imported articles.
+					</div>
+				) : (
+					archivedRows.map((article) => (
+						<div
+							key={article.id}
+							className="bg-bg-surface border border-border-line rounded p-5 flex items-start justify-between gap-4 opacity-80"
+						>
+							<div className="space-y-2 min-w-0">
+								<h4 className="font-display font-black text-base text-text-primary uppercase tracking-wide truncate">
+									{article.title}
+								</h4>
+
+								<div className="flex flex-wrap items-center gap-2 text-xs font-data text-text-muted">
+									<span className="px-2 py-0.5 rounded-full bg-bg-void border border-border-line uppercase tracking-wider">
+										archived
+									</span>
+
+									{article.source_name && (
+										<span className="flex items-center gap-1">
+											<Globe className="w-3 h-3" />
+											{article.source_name}
+										</span>
+									)}
+
+									<span className="flex items-center gap-1">
+										<Clock className="w-3 h-3" />
+										{new Date(
+											article.updated_at,
+										).toLocaleDateString()}
+									</span>
+								</div>
+							</div>
+
+							<Link
+								href={`/admin/news/${article.id}`}
+								className="border border-border-line hover:border-accent-readout/40 text-text-primary hover:text-accent-readout font-display font-bold text-xs uppercase tracking-wider px-3 py-2 rounded transition-all whitespace-nowrap"
+							>
+								View
+							</Link>
+						</div>
+					))
+				)}
 			</div>
 		</div>
 	);

@@ -151,16 +151,18 @@ async function fetchArticleContent(url: string): Promise<{
         .replace(/Updated FR:[\s\S]*?(?=<p|$)/i, '')
 
     const paragraphs = Array.from(
-        cleaned.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi),
+      cleaned.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi),
     )
-        .map((m) => stripHtml(m[1]))
-        .map((p) => p.replace(/\s+/g, ' ').trim())
-        .filter((p) => p.length > 80)
-        .filter((p) => !p.includes('document.getElementById'))
-        .filter((p) => !p.includes('function ()'))
-        .filter((p) => !p.includes('window.'))
-        .filter((p) => !p.includes('cookie'))
-        .slice(0, 20)
+      .map((m) => stripHtml(m[1]))
+      .map((p) => p.replace(/\s+/g, ' ').trim())
+      .filter((p) => p.length > 80)
+      .filter((p) => !p.includes('document.getElementById'))
+      .filter((p) => !p.includes('function ()'))
+      .filter((p) => !p.includes('window.'))
+      .filter((p) => !p.includes('cookie'))
+      .filter((p) => !p.toLowerCase().includes('<script'))
+      .filter((p) => !p.toLowerCase().includes('script'))
+      .slice(0, 20)
 
     return {
         body: paragraphs.join('\n\n'),
