@@ -18,8 +18,13 @@ async function createArticle(formData: FormData) {
 	const title = String(formData.get('title') ?? '').trim();
 	const excerpt = String(formData.get('excerpt') ?? '').trim();
 	const body = String(formData.get('body') ?? '').trim();
-	const compInstanceId =
-		String(formData.get('comp_instance_id') ?? '') || null;
+	const compInstanceId = String(
+		formData.get('comp_instance_id') ?? '',
+	).trim();
+
+	if (!compInstanceId) {
+		throw new Error('Please select a competition');
+	}
 	const gameTitleId = String(formData.get('game_title_id') ?? '') || null;
 
 	if (!title || !body) {
@@ -142,9 +147,10 @@ export default async function NewArticlePage() {
 							</label>
 							<select
 								name="comp_instance_id"
+								required
 								className="w-full bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent-readout"
 							>
-								<option value="">General news</option>
+								<option value="">Select competition</option>
 								{(competitions ?? []).map((comp) => (
 									<option key={comp.id} value={comp.id}>
 										{comp.name}
