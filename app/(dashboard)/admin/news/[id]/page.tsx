@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle2, XCircle, Clock, Globe } from 'lucide-react';
+import Image from 'next/image';
 
 type PageProps = {
 	params: Promise<{ id: string }>;
@@ -63,6 +64,33 @@ async function rejectArticle(formData: FormData) {
 	redirect('/admin/news');
 }
 
+async function archiveArticle(formData: FormData) {
+	'use server';
+
+	const cookieStore = await cookies();
+	const supabase = createClient(cookieStore);
+
+	const {
+		data: { user },
+	} = await supabase.auth.getUser();
+
+	if (!user) redirect('/login');
+
+	const id = String(formData.get('id'));
+
+	const { error } = await supabase
+		.from('news_articles')
+		.update({
+			status: 'archived',
+			updated_at: new Date().toISOString(),
+		})
+		.eq('id', id);
+
+	if (error) throw new Error(error.message);
+
+	redirect('/admin/news');
+}
+
 export default async function AdminReviewArticlePage({ params }: PageProps) {
 	const { id } = await params;
 
@@ -92,10 +120,10 @@ export default async function AdminReviewArticlePage({ params }: PageProps) {
 		.from('news_articles')
 		.select(
 			`
-      *,
-      comp_instances(name),
-      game_titles(name)
-    `,
+    			*,
+			comp_instances(name),
+			game_titles(name)
+			`,
 		)
 		.eq('id', id)
 		.is('deleted_at', null)
@@ -156,6 +184,48 @@ export default async function AdminReviewArticlePage({ params }: PageProps) {
 							{article.excerpt}
 						</p>
 					)}
+
+					{article.source_type === 'external' &&
+						article.source_url && (
+							<div className="bg-bg-void border border-border-line rounded p-4 space-y-2">
+								<p className="text-[10px] font-display uppercase text-text-muted">
+									Imported article
+								</p>
+								<p className="text-sm text-text-primary">
+									Source: {article.source_name}
+								</p>
+								<a
+									href={article.source_url}
+									target="_blank"
+									rel="noreferrer"
+									className="text-sm text-accent-readout hover:underline break-all"
+								>
+									View original article
+								</a>
+							</div>
+						)}
+
+					{article.cover_url && (
+						<div className="border border-border-line rounded overflow-hidden bg-bg-void">
+							<Image
+								src={article.cover_url}
+								alt={article.title}
+								className="w-full h-auto object-cover"
+							/>
+						</div>
+					)}
+
+					{article.source_url && (
+						<a
+							href={article.source_url}
+							target="_blank"
+							rel="noreferrer"
+							className="inline-flex items-center gap-1 text-xs text-accent-readout hover:underline"
+						>
+							<Globe className="w-3 h-3" />
+							View original source
+						</a>
+					)}
 				</div>
 
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -215,6 +285,20 @@ export default async function AdminReviewArticlePage({ params }: PageProps) {
 						</button>
 					</form>
 				)}
+
+				{article.source_type === 'external' &&
+					article.status !== 'archived' && (
+						<form action={archiveArticle}>
+							<input type="hidden" name="id" value={article.id} />
+							<button
+								type="submit"
+								className="border border-border-line hover:border-accent-readout/40 text-text-primary hover:text-accent-readout font-display font-black text-xs uppercase tracking-wider px-5 py-2.5 rounded transition-all inline-flex items-center gap-2"
+							>
+								<Clock className="w-4 h-4" />
+								Archive Import
+							</button>
+						</form>
+					)}
 			</div>
 		</div>
 	);

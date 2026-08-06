@@ -1,4 +1,5 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'jsr:@supabase/supabase-js@2'
+/// <reference lib="deno.ns" />
 
 type FeedConfig = {
   name: string
@@ -94,11 +95,90 @@ function slugify(input: string): string {
     .slice(0, 180)
 }
 
-Deno.serve(async () => {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+const GAME_KEYWORDS: Record<string, string[]> = {
+  valorant: ['valorant', 'vct', 'game changers'],
+  cs2: ['counter-strike', 'cs2', 'cs:go'],
+  'rainbow-six-siege': ['rainbow six siege', 'r6', 'siege'],
+  'codm-mp': ['call of duty', 'black ops', 'multiplayer'],
+  'codm-br': ['warzone', 'battle royale'],
+  'pubg-br': ['pubg mobile', 'pubg'],
+  'freefire-br': ['free fire'],
+};
 
-  const supabase = createClient(supabaseUrl, serviceRoleKey)
+function detectGameSlug(title: string, body: string): string | null {
+  const text = `${title} ${body}`.toLowerCase()
+
+  for (const [slug, keywords] of Object.entries(GAME_KEYWORDS)) {
+    if (keywords.some((k) => text.includes(k))) return slug
+  }
+
+  return null
+}
+
+async function fetchArticleContent(url: string): Promise<{
+  body: string
+  coverUrl: string | null
+}> {
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'EsportingHQ-NewsBot/1.0',
+      },
+    })
+
+    const html = await response.text()
+
+    // Hero image from Open Graph
+    const ogImage =
+      html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)?.[1] ??
+      null
+
+    // Prefer article content
+    const articleMatch =
+        html.match(/<article[^>]*>([\s\S]*?)<\/article>/i) ??
+        html.match(/class=["'][^"']*article-content[^"']*["'][^>]*>([\s\S]*?)<\/div>/i) ??
+        html.match(/class=["'][^"']*entry-content[^"']*["'][^>]*>([\s\S]*?)<\/div>/i) ??
+        html.match(/<main[^>]*>([\s\S]*?)<\/main>/i)
+
+    const source = articleMatch?.[1] ?? ''
+
+    // Remove scripts, styles, and noisy metadata blocks first
+    const cleaned = source
+        .replace(/<script[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[\s\S]*?<\/style>/gi, '')
+        .replace(/<noscript[\s\S]*?<\/noscript>/gi, '')
+        .replace(/Published FR:[\s\S]*?(?=<p|$)/i, '')
+        .replace(/Updated FR:[\s\S]*?(?=<p|$)/i, '')
+
+    const paragraphs = Array.from(
+        cleaned.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi),
+    )
+        .map((m) => stripHtml(m[1]))
+        .map((p) => p.replace(/\s+/g, ' ').trim())
+        .filter((p) => p.length > 80)
+        .filter((p) => !p.includes('document.getElementById'))
+        .filter((p) => !p.includes('function ()'))
+        .filter((p) => !p.includes('window.'))
+        .filter((p) => !p.includes('cookie'))
+        .slice(0, 20)
+
+    return {
+        body: paragraphs.join('\n\n'),
+        coverUrl: ogImage,
+    }
+  } catch {
+    return { body: '', coverUrl: null }
+  }
+}
+
+Deno.serve(async (req: Request) => {
+  const body = await req.json().catch(() => ({}));
+  const refreshExisting = body.refreshExisting === true;
+
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+  const supabase = createClient(supabaseUrl, serviceRoleKey);
 
   const results: { feed: string; inserted: number; skipped: number }[] = []
 
@@ -110,7 +190,6 @@ Deno.serve(async () => {
           Accept: 'application/rss+xml, application/xml, text/xml;q=0.9,*/*;q=0.8',
         },
       })
-
       const xml = await response.text()
 
       console.log(feed.name, 'status', response.status)
@@ -127,36 +206,79 @@ Deno.serve(async () => {
 
       for (const item of items.slice(0, 10)) {
         const { data: existing } = await supabase
-          .from('news_articles')
-          .select('id')
-          .eq('source_url', item.link)
-          .maybeSingle()
+            .from('news_articles')
+            .select('id, body, cover_url, game_title_id')
+            .eq('source_url', item.link)
+            .maybeSingle()
 
-        if (existing) {
-          skipped++
-          continue
+        if (existing && !refreshExisting) {
+            skipped++
+            continue
         }
 
-        const slug = `${slugify(item.title)}-${crypto.randomUUID().slice(0, 8)}`
+        // Fetch full article first
+        const article = await fetchArticleContent(item.link)
 
-       const { error } = await supabase.from('news_articles').insert({
+        // Auto-detect game from title + full body
+        const gameSlug = detectGameSlug(
+            item.title,
+            article.body || item.description,
+        )
+
+        let gameTitleId: string | null = null
+
+        if (gameSlug) {
+            const { data: game } = await supabase
+                .from('game_titles')
+                .select('id')
+                .eq('slug', gameSlug)
+                .maybeSingle()
+
+            gameTitleId = game?.id ?? null
+        }
+
+        const payload = {
             title: item.title,
-            slug,
             excerpt: item.description,
-            body: item.description,
-            author_id: SYSTEM_AUTHOR_ID,
+            body: article.body || item.description,
+            cover_url: article.coverUrl,
             source_type: 'external',
             source_name: feed.name,
             source_url: item.link,
             source_published_at: item.publishedAt,
             ingested_at: new Date().toISOString(),
+            game_title_id: gameTitleId,
+        }
+
+        let error: { message: string } | null = null
+
+        if (existing && refreshExisting) {
+        const result = await supabase
+            .from('news_articles')
+            .update({
+            ...payload,
+            updated_at: new Date().toISOString(),
+            })
+            .eq('id', existing.id)
+
+        error = result.error
+        } else {
+        const slug = `${slugify(item.title)}-${crypto.randomUUID().slice(0, 8)}`
+
+        const result = await supabase.from('news_articles').insert({
+            ...payload,
+            slug,
+            author_id: SYSTEM_AUTHOR_ID,
             status: 'pending_review',
         })
 
+        error = result.error
+        }
+
         if (error) {
-          console.error('Insert failed', feed.name, item.title, error.message)
+        console.error('Upsert failed', feed.name, item.title, error.message)
         } else {
-          inserted++
+        inserted++
         }
       }
 

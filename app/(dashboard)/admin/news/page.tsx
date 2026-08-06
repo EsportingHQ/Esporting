@@ -10,6 +10,7 @@ import {
 	Globe,
 	User,
 } from 'lucide-react';
+import { SelectAllCheckbox } from '@/components/admin/select-all-checkbox';
 
 type ArticleRow = {
 	id: string;
@@ -55,6 +56,53 @@ function sourceBadge(type: string) {
 	}
 }
 
+async function bulkPublishArticles(formData: FormData) {
+	'use server';
+
+	const cookieStore = await cookies();
+	const supabase = createClient(cookieStore);
+
+	const ids = formData.getAll('article_ids').map(String);
+
+	if (ids.length === 0) return;
+
+	const { error } = await supabase
+		.from('news_articles')
+		.update({
+			status: 'published',
+			published_at: new Date().toISOString(),
+			updated_at: new Date().toISOString(),
+		})
+		.in('id', ids);
+
+	if (error) throw new Error(error.message);
+
+	redirect('/admin/news');
+}
+
+async function bulkArchiveArticles(formData: FormData) {
+	'use server';
+
+	const cookieStore = await cookies();
+	const supabase = createClient(cookieStore);
+
+	const ids = formData.getAll('article_ids').map(String);
+
+	if (ids.length === 0) return;
+
+	const { error } = await supabase
+		.from('news_articles')
+		.update({
+			status: 'archived',
+			updated_at: new Date().toISOString(),
+		})
+		.in('id', ids);
+
+	if (error) throw new Error(error.message);
+
+	redirect('/admin/news');
+}
+
 export default async function AdminNewsPage() {
 	const cookieStore = await cookies();
 	const supabase = createClient(cookieStore);
@@ -82,18 +130,20 @@ export default async function AdminNewsPage() {
 		.from('news_articles')
 		.select(
 			`
-      id,
-      title,
-      status,
-      source_type,
-      source_name,
-      updated_at,
-      published_at,
-      comp_instances(name)
-    `,
+				id,
+				title,
+				status,
+				source_type,
+				source_name,
+				updated_at,
+				published_at,
+				comp_instances(name)
+			`,
 		)
 		.is('deleted_at', null)
-		.order('updated_at', { ascending: false });
+		.order('updated_at', { ascending: false })
+		.eq('source_type', 'external')
+		.eq('status', 'pending_review');
 
 	const rows = (articles ?? []) as unknown as ArticleRow[];
 
@@ -166,81 +216,126 @@ export default async function AdminNewsPage() {
 			</div>
 
 			<div className="space-y-3">
-				{rows.map((article) => (
-					<div
-						key={article.id}
-						className="bg-bg-surface border border-border-line rounded p-5 flex items-start justify-between gap-4"
-					>
-						<div className="space-y-2 min-w-0">
-							<div className="flex items-center gap-2">
-								<FileText className="w-4 h-4 text-accent-readout shrink-0" />
-								<h3 className="font-display font-black text-base text-text-primary uppercase tracking-wide truncate">
-									{article.title}
-								</h3>
-							</div>
-
-							<div className="flex flex-wrap items-center gap-2 text-xs font-data text-text-muted">
-								<span>
-									{getCompetitionName(article.comp_instances)}
-								</span>
-
-								<span
-									className={`px-2 py-0.5 rounded-full text-[10px] font-display font-bold uppercase tracking-wider ${statusStyles(article.status)}`}
-								>
-									{article.status.replace('_', ' ')}
-								</span>
-
-								<span
-									className={`px-2 py-0.5 rounded-full text-[10px] font-display font-bold uppercase tracking-wider ${sourceBadge(article.source_type)}`}
-								>
-									{article.source_type}
-								</span>
-
-								{article.source_name && (
-									<span className="flex items-center gap-1">
-										<Globe className="w-3 h-3" />
-										{article.source_name}
-									</span>
-								)}
-
-								{article.source_type === 'organiser' && (
-									<span className="flex items-center gap-1">
-										<User className="w-3 h-3" />
-										Organiser submission
-									</span>
-								)}
-
-								<span className="flex items-center gap-1">
-									<Clock className="w-3 h-3" />
-									{new Date(
-										article.updated_at,
-									).toLocaleDateString()}
-								</span>
-
-								{article.published_at && (
-									<span className="flex items-center gap-1 text-state-win">
-										<CheckCircle2 className="w-3 h-3" />
-										Published
-									</span>
-								)}
-
-								{article.status === 'rejected' && (
-									<span className="flex items-center gap-1 text-state-alert">
-										<AlertCircle className="w-3 h-3" />
-										Rejected
-									</span>
-								)}
-							</div>
+				<form className="space-y-4">
+					<div className="flex flex-wrap items-center justify-between gap-3 bg-bg-surface border border-border-line rounded p-4">
+						<div className="flex items-center gap-3">
+							<SelectAllCheckbox />
+							<p className="text-xs font-data text-text-muted">
+								Select all visible articles
+							</p>
 						</div>
 
-						<Link
-							href={`/admin/news/${article.id}`}
-							className="border border-border-line hover:border-accent-readout/40 text-text-primary hover:text-accent-readout font-display font-bold text-xs uppercase tracking-wider px-3 py-2 rounded transition-all whitespace-nowrap"
-						>
-							Review
-						</Link>
+						<div className="flex flex-wrap gap-2">
+							<button
+								formAction={bulkPublishArticles}
+								className="bg-state-win hover:bg-state-win/80 text-bg-void font-display font-black text-xs uppercase tracking-wider px-4 py-2 rounded transition-all"
+							>
+								Publish Selected
+							</button>
+
+							<button
+								formAction={bulkArchiveArticles}
+								className="border border-border-line hover:border-accent-readout/40 text-text-primary hover:text-accent-readout font-display font-black text-xs uppercase tracking-wider px-4 py-2 rounded transition-all"
+							>
+								Archive Selected
+							</button>
+						</div>
 					</div>
-				))}
+
+					{rows.map((article) => (
+						<div
+							key={article.id}
+							className="bg-bg-surface border border-border-line rounded p-5 flex items-start justify-between gap-4"
+						>
+							<div className="pt-1">
+								<input
+									type="checkbox"
+									name="article_ids"
+									value={article.id}
+									className="h-4 w-4 rounded border-border-line bg-bg-void text-accent-readout focus:ring-accent-readout"
+									aria-label={`Select ${article.title}`}
+								/>
+							</div>
+
+							<div className="flex-1 space-y-2 min-w-0">
+								<div className="flex items-center gap-2">
+									<FileText className="w-4 h-4 text-accent-readout shrink-0" />
+									<h3 className="font-display font-black text-base text-text-primary uppercase tracking-wide truncate">
+										{article.title}
+									</h3>
+								</div>
+
+								<div className="flex flex-wrap items-center gap-2 text-xs font-data text-text-muted">
+									<span>
+										{getCompetitionName(
+											article.comp_instances,
+										)}
+									</span>
+
+									<span
+										className={`px-2 py-0.5 rounded-full text-[10px] font-display font-bold uppercase tracking-wider ${statusStyles(article.status)}`}
+									>
+										{article.status.replace('_', ' ')}
+									</span>
+
+									<span
+										className={`px-2 py-0.5 rounded-full text-[10px] font-display font-bold uppercase tracking-wider ${sourceBadge(article.source_type)}`}
+									>
+										{article.source_type}
+									</span>
+
+									{article.source_name && (
+										<span className="flex items-center gap-1">
+											<Globe className="w-3 h-3" />
+											{article.source_name}
+										</span>
+									)}
+
+									{article.source_type === 'organiser' && (
+										<span className="flex items-center gap-1">
+											<User className="w-3 h-3" />
+											Organiser submission
+										</span>
+									)}
+
+									{article.source_type === 'external' && (
+										<span className="px-2 py-0.5 rounded bg-orange-500/10 text-orange-400 text-[10px] font-bold uppercase">
+											Imported · {article.source_name}
+										</span>
+									)}
+
+									<span className="flex items-center gap-1">
+										<Clock className="w-3 h-3" />
+										{new Date(
+											article.updated_at,
+										).toLocaleDateString()}
+									</span>
+
+									{article.published_at && (
+										<span className="flex items-center gap-1 text-state-win">
+											<CheckCircle2 className="w-3 h-3" />
+											Published
+										</span>
+									)}
+
+									{article.status === 'rejected' && (
+										<span className="flex items-center gap-1 text-state-alert">
+											<AlertCircle className="w-3 h-3" />
+											Rejected
+										</span>
+									)}
+								</div>
+							</div>
+
+							<Link
+								href={`/admin/news/${article.id}`}
+								className="border border-border-line hover:border-accent-readout/40 text-text-primary hover:text-accent-readout font-display font-bold text-xs uppercase tracking-wider px-3 py-2 rounded transition-all whitespace-nowrap"
+							>
+								Review
+							</Link>
+						</div>
+					))}
+				</form>
 			</div>
 		</div>
 	);
