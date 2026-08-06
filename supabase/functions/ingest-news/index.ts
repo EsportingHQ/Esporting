@@ -176,12 +176,12 @@ Deno.serve(async (req: Request) => {
     const refreshExisting = body.refreshExisting === true;
     const limitPerFeed = Number(body.limitPerFeed ?? 10);
 
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-  const supabase = createClient(supabaseUrl, serviceRoleKey);
+    const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-  const results: { feed: string; inserted: number; skipped: number }[] = []
+    const results: { feed: string; inserted: number; skipped: number }[] = []
 
   for (const feed of FEEDS) {
     try {
@@ -202,8 +202,9 @@ Deno.serve(async (req: Request) => {
 
       console.log(feed.name, 'items found', items.length)
 
-      let inserted = 0
-      let skipped = 0
+        let inserted = 0
+        let updated = 0
+        let skipped = 0
 
       for (const item of items.slice(0, limitPerFeed)) {
         const { data: existing } = await supabase
@@ -253,7 +254,7 @@ Deno.serve(async (req: Request) => {
 
         let error: { message: string } | null = null
 
-        if (existing && refreshExisting) {
+       if (existing && refreshExisting) {
         const result = await supabase
             .from('news_articles')
             .update({
@@ -263,6 +264,10 @@ Deno.serve(async (req: Request) => {
             .eq('id', existing.id)
 
         error = result.error
+
+        if (!error) {
+            updated++
+        }
         } else {
         const slug = `${slugify(item.title)}-${crypto.randomUUID().slice(0, 8)}`
 
@@ -277,16 +282,26 @@ Deno.serve(async (req: Request) => {
         }
 
         if (error) {
-        console.error('Upsert failed', feed.name, item.title, error.message)
-        } else {
-        inserted++
+            console.error('Upsert failed', feed.name, item.title, error.message)
+        } else if (!existing) {
+            inserted++
         }
       }
 
-      results.push({ feed: feed.name, inserted, skipped })
+        results.push({
+            feed: feed.name,
+            inserted,
+            updated,
+            skipped,
+        })
     } catch (error) {
-      console.error('Feed failed', feed.name, error)
-      results.push({ feed: feed.name, inserted: 0, skipped: 0 })
+        console.error('Feed failed', feed.name, error)
+        results.push({
+            feed: feed.name,
+            inserted: 0,
+            updated: 0,
+            skipped: 0,
+        })
     }
   }
 
