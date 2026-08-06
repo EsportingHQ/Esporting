@@ -99,13 +99,23 @@ export default async function AdminNewsPage() {
 
 	return (
 		<div className="space-y-6 font-body">
-			<div>
-				<h2 className="font-display font-black text-2xl tracking-wider text-text-primary uppercase">
-					News Review Queue
-				</h2>
-				<p className="text-xs text-text-muted font-data mt-1 uppercase">
-					EDITORIAL MODERATION & PUBLICATION DESK
-				</p>
+			<div className="flex items-center justify-between">
+				<div>
+					<h2 className="font-display font-black text-2xl tracking-wider text-text-primary uppercase">
+						News Review Queue
+					</h2>
+					<p className="text-xs text-text-muted font-data mt-1 uppercase">
+						EDITORIAL MODERATION & PUBLICATION DESK
+					</p>
+				</div>
+
+				<Link
+					href="/admin/news/new"
+					className="bg-accent-readout hover:bg-accent-readout/80 text-bg-void font-display font-black text-xs uppercase tracking-wider px-4 py-2.5 rounded transition-all inline-flex items-center gap-2"
+				>
+					<FileText className="w-4 h-4" />
+					New Article
+				</Link>
 			</div>
 
 			<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
