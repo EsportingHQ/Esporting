@@ -11,6 +11,7 @@ import {
 	LogOut,
 	Layout,
 	UserPlus,
+	Newspaper,
 	FileText,
 } from 'lucide-react';
 
@@ -22,10 +23,10 @@ type NavItem = {
 
 const adminNav: NavItem[] = [
 	{ label: 'Overview', href: '/admin', icon: Layout },
+	{ label: 'News Desk', href: '/admin/news', icon: Newspaper },
 	{ label: 'Invite Organiser', href: '/admin/invites', icon: Users },
 	{ label: 'Invite Contributor', href: '/contributor/new', icon: UserPlus },
 	{ label: 'Match Assignments', href: '/admin/matches', icon: Activity },
-	{ label: 'News Review', href: '/admin/news', icon: FileText },
 	{ label: 'Manage Users', href: '/admin/users', icon: Settings },
 	{ label: 'Game Catalogue', href: '/admin/catalogue', icon: Shield },
 ];
