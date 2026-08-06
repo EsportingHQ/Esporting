@@ -173,7 +173,8 @@ async function fetchArticleContent(url: string): Promise<{
 
 Deno.serve(async (req: Request) => {
   const body = await req.json().catch(() => ({}));
-  const refreshExisting = body.refreshExisting === true;
+    const refreshExisting = body.refreshExisting === true;
+    const limitPerFeed = Number(body.limitPerFeed ?? 10);
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -204,7 +205,7 @@ Deno.serve(async (req: Request) => {
       let inserted = 0
       let skipped = 0
 
-      for (const item of items.slice(0, 10)) {
+      for (const item of items.slice(0, limitPerFeed)) {
         const { data: existing } = await supabase
             .from('news_articles')
             .select('id, body, cover_url, game_title_id')
