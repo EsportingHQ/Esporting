@@ -1,0 +1,173 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+type FeedConfig = {
+  name: string
+  url: string
+}
+
+type ParsedItem = {
+  title: string
+  link: string
+  description: string
+  publishedAt: string | null
+}
+
+const FEEDS: FeedConfig[] = [
+  {
+    name: 'Esports Insider',
+    url: 'https://esportsinsider.com/feed',
+  },
+  {
+    name: 'Dot Esports',
+    url: 'https://dotesports.com/feed',
+  },
+  {
+    name: 'Dexerto Esports',
+    url: 'https://www.dexerto.com/feed/category/esports/',
+  },
+]
+
+const SYSTEM_AUTHOR_ID = '7670ab52-a1cd-4436-bc05-bf26ae806f28'
+
+function stripHtml(input: string): string {
+  return input
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&/g, '&')
+    .replace(/"/g, '"')
+    .replace(/'/g, "'")
+    .trim()
+}
+
+function extractTag(block: string, tag: string): string {
+  const match = block.match(
+    new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${tag}>`, 'i'),
+  )
+  return match?.[1]?.trim() ?? ''
+}
+
+function parseItems(xml: string): ParsedItem[] {
+  const items: ParsedItem[] = []
+
+  // RSS feeds
+  const rssMatches = xml.match(/<item\b[\s\S]*?<\/item>/gi) ?? []
+
+  for (const item of rssMatches) {
+    items.push({
+      title: stripHtml(extractTag(item, 'title')),
+      link: stripHtml(extractTag(item, 'link')),
+      description: stripHtml(
+        extractTag(item, 'description') ||
+          extractTag(item, 'content:encoded'),
+      ).slice(0, 240),
+      publishedAt: extractTag(item, 'pubDate') || null,
+    })
+  }
+
+  // Atom feeds
+  const atomMatches = xml.match(/<entry\b[\s\S]*?<\/entry>/gi) ?? []
+
+  for (const entry of atomMatches) {
+    const hrefMatch = entry.match(/href="([^"]+)"/i)
+
+    items.push({
+      title: stripHtml(extractTag(entry, 'title')),
+      link: hrefMatch?.[1] ?? '',
+      description: stripHtml(
+        extractTag(entry, 'summary') || extractTag(entry, 'content'),
+      ).slice(0, 240),
+      publishedAt:
+        extractTag(entry, 'published') ||
+        extractTag(entry, 'updated') ||
+        null,
+    })
+  }
+
+  return items.filter((item) => item.title.length > 0 && item.link.length > 0)
+}
+
+function slugify(input: string): string {
+  return input
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 180)
+}
+
+Deno.serve(async () => {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+
+  const supabase = createClient(supabaseUrl, serviceRoleKey)
+
+  const results: { feed: string; inserted: number; skipped: number }[] = []
+
+  for (const feed of FEEDS) {
+    try {
+      const response = await fetch(feed.url, {
+        headers: {
+          'User-Agent': 'EsportingHQ-NewsBot/1.0',
+          Accept: 'application/rss+xml, application/xml, text/xml;q=0.9,*/*;q=0.8',
+        },
+      })
+
+      const xml = await response.text()
+
+      console.log(feed.name, 'status', response.status)
+      console.log(feed.name, 'preview', xml.slice(0, 200))
+
+      const items = parseItems(xml)
+
+      console.log(feed.name, 'first item', items[0])
+
+      console.log(feed.name, 'items found', items.length)
+
+      let inserted = 0
+      let skipped = 0
+
+      for (const item of items.slice(0, 10)) {
+        const { data: existing } = await supabase
+          .from('news_articles')
+          .select('id')
+          .eq('source_url', item.link)
+          .maybeSingle()
+
+        if (existing) {
+          skipped++
+          continue
+        }
+
+        const slug = `${slugify(item.title)}-${crypto.randomUUID().slice(0, 8)}`
+
+       const { error } = await supabase.from('news_articles').insert({
+            title: item.title,
+            slug,
+            excerpt: item.description,
+            body: item.description,
+            author_id: SYSTEM_AUTHOR_ID,
+            source_type: 'external',
+            source_name: feed.name,
+            source_url: item.link,
+            source_published_at: item.publishedAt,
+            ingested_at: new Date().toISOString(),
+            status: 'pending_review',
+        })
+
+        if (error) {
+          console.error('Insert failed', feed.name, item.title, error.message)
+        } else {
+          inserted++
+        }
+      }
+
+      results.push({ feed: feed.name, inserted, skipped })
+    } catch (error) {
+      console.error('Feed failed', feed.name, error)
+      results.push({ feed: feed.name, inserted: 0, skipped: 0 })
+    }
+  }
+
+  return new Response(JSON.stringify({ ok: true, results }), {
+    headers: { 'Content-Type': 'application/json' },
+  })
+})
