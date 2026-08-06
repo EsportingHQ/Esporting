@@ -12,7 +12,6 @@ import {
 	Layout,
 	UserPlus,
 	Newspaper,
-	FileText,
 } from 'lucide-react';
 
 type NavItem = {
