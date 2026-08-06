@@ -47,6 +47,13 @@ const stats = (
 
 const actions = [
 	{
+		label: 'News Desk',
+		href: '/admin/news',
+		description:
+			'Review organiser submissions, publish articles, and manage newsroom content',
+		icon: Newspaper,
+	},
+	{
 		label: 'Invite Organiser',
 		href: '/admin/invites',
 		description:
@@ -65,14 +72,6 @@ const actions = [
 		href: '/admin/matches',
 		description: 'Assign contributors to upcoming and live match rooms',
 		icon: Activity,
-	},
-
-	{
-		label: 'News Desk',
-		href: '/admin/news',
-		description:
-			'Review organiser submissions, publish articles, and manage newsroom content',
-		icon: Newspaper,
 	},
 	{
 		label: 'Manage Users',

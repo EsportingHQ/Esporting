@@ -1,26 +1,37 @@
-'use client';
-
-import { useState } from 'react';
 import Link from 'next/link';
 import { PublicNav } from '@/components/layout/public-nav';
+import { createClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
 import { Clock, ArrowRight, Tag } from 'lucide-react';
-import { useNewsArticles } from '@/hooks/useNewsArticles';
 
-export default function NewsPage() {
-	const [selectedTag, setSelectedTag] = useState<string>('all');
+type ArticleRow = {
+	id: string;
+	title: string;
+	slug: string;
+	excerpt: string | null;
+	published_at: string | null;
+	source_type: string | null;
+	comp_instances: { name: string } | { name: string }[] | null;
+	game_titles: { name: string } | { name: string }[] | null;
+};
 
-	const { articles, isLoading, error } = useNewsArticles();
+function first<T>(value: T | T[] | null | undefined): T | null {
+	if (Array.isArray(value)) return value[0] ?? null;
+	return value ?? null;
+}
 
-	if (isLoading) {
-		return (
-			<div className="min-h-screen bg-bg-void text-text-primary">
-				<PublicNav />
-				<main className="max-w-7xl mx-auto px-4 py-12">
-					<p className="text-sm text-text-muted">Loading news...</p>
-				</main>
-			</div>
-		);
-	}
+export default async function NewsPage() {
+	const cookieStore = await cookies();
+	const supabase = createClient(cookieStore);
+
+	const { data, error } = await supabase
+		.from('news_articles')
+		.select(
+			'id, title, slug, excerpt, published_at, source_type, comp_instances(name), game_titles(name)',
+		)
+		.eq('status', 'published')
+		.is('deleted_at', null)
+		.order('published_at', { ascending: false });
 
 	if (error) {
 		return (
@@ -33,62 +44,57 @@ export default function NewsPage() {
 		);
 	}
 
-	const tags = ['all', ...new Set(articles.map((a) => a.tag))];
+	const articles = ((data ?? []) as ArticleRow[]).map((article) => {
+		const competition = first(article.comp_instances)?.name ?? null;
+		const game = first(article.game_titles)?.name ?? null;
 
-	const filteredArticles =
-		selectedTag === 'all'
-			? articles
-			: articles.filter((a) => a.tag === selectedTag);
+		return {
+			id: article.id,
+			title: article.title,
+			slug: article.slug,
+			excerpt: article.excerpt,
+			published_at: article.published_at,
+			source_type: article.source_type,
+			competition,
+			game,
+		};
+	});
 
 	return (
 		<div className="flex-1 flex flex-col bg-bg-void text-text-primary">
 			<PublicNav />
 
 			<main className="max-w-7xl w-full mx-auto px-4 py-8 flex-1 space-y-6">
-				{/* Header */}
 				<div className="border-b border-border-line pb-4">
 					<h1 className="font-display font-black text-3xl tracking-wider uppercase">
 						BROADCAST BULLETIN
 					</h1>
-					<p className="text-xs text-text-muted font-data mt-1">
+					<p className="text-xs text-text-muted font-data mt-1 uppercase">
 						OFFICIAL UPDATES, PRESS RELEASES, AND MATCH RECAPS
 					</p>
 				</div>
 
-				{/* Filters */}
-				<div className="flex flex-wrap gap-2 items-center text-xs">
-					<div className="flex items-center gap-1.5 text-text-muted mr-2 font-display font-bold uppercase">
-						<Tag className="w-3.5 h-3.5" />
-						<span>Category Filters:</span>
-					</div>
-					{tags.map((tag) => (
-						<button
-							key={tag}
-							onClick={() => setSelectedTag(tag)}
-							className={`px-3 py-1 font-display font-bold tracking-wider uppercase rounded transition-colors ${
-								selectedTag === tag
-									? 'bg-accent-readout text-bg-void'
-									: 'bg-bg-surface hover:bg-bg-surface/50 border border-border-line text-text-muted hover:text-text-primary'
-							}`}
-						>
-							{tag}
-						</button>
-					))}
-				</div>
-
-				{/* Articles List */}
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-					{filteredArticles.map((article) => (
+					{articles.map((article) => (
 						<article
 							key={article.id}
 							className="bg-bg-surface border border-border-line hover:border-accent-readout/30 rounded p-6 flex flex-col justify-between transition-all"
 						>
 							<div className="space-y-3">
-								<div className="flex items-center justify-between text-[10px] font-data text-text-muted">
-									<span className="text-accent-readout font-bold uppercase tracking-wider">
-										{article.tag}
-									</span>
-									<span className="flex items-center gap-1">
+								<div className="flex flex-wrap items-center gap-2 text-[10px] font-data text-text-muted">
+									{article.competition && (
+										<span className="px-2 py-0.5 rounded bg-accent-readout/10 border border-accent-readout/30 text-accent-readout uppercase tracking-wider font-bold">
+											{article.competition}
+										</span>
+									)}
+
+									{article.game && (
+										<span className="px-2 py-0.5 rounded bg-bg-void border border-border-line uppercase tracking-wider font-bold">
+											{article.game}
+										</span>
+									)}
+
+									<span className="ml-auto flex items-center gap-1">
 										<Clock className="w-3.5 h-3.5" />
 										<span>
 											{article.published_at
@@ -99,6 +105,7 @@ export default function NewsPage() {
 										</span>
 									</span>
 								</div>
+
 								<Link
 									href={`/news/${article.slug}`}
 									className="block group"
@@ -107,6 +114,7 @@ export default function NewsPage() {
 										{article.title}
 									</h3>
 								</Link>
+
 								<p className="text-xs text-text-muted leading-relaxed font-body">
 									{article.excerpt ?? 'No summary available.'}
 								</p>
@@ -124,6 +132,15 @@ export default function NewsPage() {
 						</article>
 					))}
 				</div>
+
+				{articles.length === 0 && (
+					<div className="border border-dashed border-border-line rounded p-10 text-center text-text-muted">
+						<Tag className="w-5 h-5 mx-auto mb-2" />
+						<p className="font-display font-bold uppercase text-xs tracking-wider">
+							No published news yet
+						</p>
+					</div>
+				)}
 			</main>
 		</div>
 	);
