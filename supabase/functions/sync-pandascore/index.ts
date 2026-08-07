@@ -9,11 +9,19 @@ const supabase = createClient(supabaseUrl, serviceRoleKey);
 
 const PANDASCORE_COMP_INSTANCE_ID =
   '792ac7cf-cef3-4d49-8e5d-9c08846fbd3e';
-const VALORANT_ID = 'fefb9413-9852-4b07-b120-8aba37b810a8';
+const GAME_CONFIG = {
+  valorant: {
+    endpoint: '/valorant/matches/upcoming',
+    gameTitleId: 'fefb9413-9852-4b07-b120-8aba37b810a8',
+  },
+  csgo: {
+    endpoint: '/csgo/matches/upcoming',
+    gameTitleId: '84891a91-f9ac-476d-b893-3576cea58d86',
+  },
+} as const;
 
-async function getUpcomingValorantMatches(limit = 5) {
-  const url =
-    `https://api.pandascore.co/valorant/matches/upcoming?per_page=${limit}`;
+async function getUpcomingMatches(endpoint: string, limit = 5) {
+  const url = `https://api.pandascore.co${endpoint}?per_page=${limit}`;
 
   const response = await fetch(url, {
     headers: {
@@ -86,9 +94,20 @@ function mapStatus(status: string) {
 Deno.serve(async (req: Request) => {
   try {
     const body = await req.json().catch(() => ({}));
+
+    const game = (body.game ?? 'valorant') as keyof typeof GAME_CONFIG;
     const limit = Number(body.limit ?? 5);
 
-    const matches = await getUpcomingValorantMatches(limit);
+    const config = GAME_CONFIG[game];
+
+    if (!config) {
+      return new Response(
+        JSON.stringify({ ok: false, error: 'Unsupported game' }),
+        { status: 400 },
+      );
+    }
+
+    const matches = await getUpcomingMatches(config.endpoint, limit);
 
     let synced = 0;
 
@@ -108,7 +127,7 @@ Deno.serve(async (req: Request) => {
         external_source: 'pandascore',
         external_id: String(match.id),
         comp_instance_id: PANDASCORE_COMP_INSTANCE_ID,
-        game_title_id: VALORANT_ID,
+        game_title_id: config.gameTitleId,
         team_home_id: teamAId,
         team_away_id: teamBId,
         match_format: 'head_to_head',
