@@ -150,6 +150,7 @@ Deno.serve(async (req: Request) => {
     return new Response(
       JSON.stringify({
         ok: true,
+        game,
         synced,
       }),
       {
