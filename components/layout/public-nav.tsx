@@ -37,7 +37,7 @@ export function PublicNav() {
   };
 
   const navLinks = [
-    { href: '/', label: 'LIVE SCORES' },
+    { href: '/feed', label: 'LIVE SCORES' },
     { href: '/competitions', label: 'COMPETITIONS' },
     { href: '/favorites', label: 'FAVORITES', badge: favorites.length },
     { href: '/news', label: 'NEWS' },

@@ -15,9 +15,9 @@
   --color-bg-skeleton: #1E2A3A;
   --color-bg-skeleton-highlight: #253344;
 
-  --font-display: "Rajdhani", "Impact", "Arial Black", sans-serif;
-  --font-body: "Inter", system-ui, Arial, sans-serif;
-  --font-data: "JetBrains Mono", "Courier New", monospace;
+  --font-display: var(--font-geist-sans), "Impact", "Arial Black", sans-serif;
+  --font-body: var(--font-geist-sans), system-ui, Arial, sans-serif;
+  --font-data: var(--font-geist-mono), "Courier New", monospace;
 }
 
 /* Dimmed Alternative Theme Tokens */
@@ -123,4 +123,51 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-text-muted, #8A94A3);
+}
+
+/* Landing Page Animations & Glassmorphism */
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+.animate-scanline {
+  animation: scanline 8s linear infinite;
+}
+
+@keyframes grid-pulse {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.5; }
+}
+.animate-grid-pulse {
+  animation: grid-pulse 4s ease-in-out infinite;
+}
+
+@keyframes glow-breathe {
+  0%, 100% { box-shadow: 0 0 10px 0 var(--color-accent-readout); }
+  50% { box-shadow: 0 0 30px 5px var(--color-accent-readout); }
+}
+.animate-glow-breathe {
+  animation: glow-breathe 3s ease-in-out infinite;
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.animate-gradient-shift {
+  background-size: 200% 200%;
+  animation: gradient-shift 6s ease infinite;
+}
+
+.glass-panel {
+  background: rgba(19, 25, 34, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-panel-hover:hover {
+  background: rgba(19, 25, 34, 0.6);
+  border-color: rgba(0, 212, 255, 0.3);
 }
