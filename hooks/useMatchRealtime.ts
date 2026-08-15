@@ -36,17 +36,29 @@ export interface Match {
     away_maps_won: number;
     contrib_id: string | null;
     notes: string | null;
-    team_home?: Team;
-    team_away?: Team;
+    team_home?: {
+    id: string;
+    name: string;
+    logo_url?: string | null;
+    };
+
+    team_away?: {
+    id: string;
+    name: string;
+    logo_url?: string | null;
+    };
     game_title?: GameTitle;
 }
 
 export interface ScoreBreakdown {
-    home_goals?: number;
-    away_goals?: number;
-    home_score?: number;
-    away_score?: number;
-    [key: string]: number | undefined;
+  games?: Array<{
+    position?: number | null;
+    status?: string | null;
+    winner?: string | null;
+    home_score?: number | null;
+    away_score?: number | null;
+    finished_at?: string | null;
+  }>;
 }
 
 export interface MatchScore {
@@ -86,7 +98,7 @@ export interface MatchEvent {
     sequence_no: number;
     created_at: string;
     player?: { display_name: string };
-team?: { name: string; slug: string };
+    team?: { name: string; slug: string };
 }
 
 export interface MatchStatusLog {
@@ -111,6 +123,16 @@ export interface MatchMap {
     status: string;
     maps?: { name: string } | null;
     modes?: { name: string } | null;
+    score_breakdown?: {
+        games?: Array<{
+            position?: number | null;
+            status?: string | null;
+            winner?: string | null;
+            home_score?: number | null;
+            away_score?: number | null;
+            finished_at?: string | null;
+        }>;
+    } | null;
 }
 
 export interface BRResult {
@@ -214,7 +236,25 @@ export function useMatchRealtime(matchId: string) {
             .single();
 
             if (matchErr) throw matchErr;
-            setMatch(matchData);
+            const normalizedMatch: Match = {
+            ...matchData,
+            team_home: matchData.team_home
+                ? {
+                    id: matchData.team_home.id,
+                    name: matchData.team_home.name,
+                    logo_url: matchData.team_home.logo_url ?? null,
+                }
+                : undefined,
+            team_away: matchData.team_away
+                ? {
+                    id: matchData.team_away.id,
+                    name: matchData.team_away.name,
+                    logo_url: matchData.team_away.logo_url ?? null,
+                }
+                : undefined,
+            };
+
+            setMatch(normalizedMatch);
 
             const { data: scoreData } = await supabase
             .from('match_scores')
@@ -283,11 +323,14 @@ export function useMatchRealtime(matchId: string) {
             const { data: h2hData } = await supabase
                 .from('matches')
                 .select(`
-                id, ended_at, team_home_id, team_away_id,
-                team_home:teams!matches_team_home_id_fkey(name),
-                team_away:teams!matches_team_away_id_fkey(name),
-                comp_instances(name),
-                match_scores(home_current_score, away_current_score)
+                    id,
+                    ended_at,
+                    team_home_id,
+                    team_away_id,
+                    team_home:teams!matches_team_home_id_fkey(id,name,logo_url),
+                    team_away:teams!matches_team_away_id_fkey(id,name,logo_url),
+                    comp_instances(name),
+                    match_scores(home_current_score, away_current_score)
                 `)
                 .eq('status', 'completed')
                 .neq('id', matchId)
@@ -301,8 +344,8 @@ export function useMatchRealtime(matchId: string) {
                 const records: HeadToHeadRecord[] = h2hData.map((row: {
                 id: string;
                 ended_at: string | null;
-                team_home: { name: string }[] | { name: string } | null;
-                team_away: { name: string }[] | { name: string } | null;
+                team_home: { name: string; logo_url: string | null }[] | { name: string; logo_url: string | null } | null;
+                team_away: { name: string; logo_url: string | null }[] | { name: string; logo_url: string | null } | null;
                 comp_instances: { name: string }[] | { name: string } | null;
                 match_scores: { home_current_score: number; away_current_score: number }[] | { home_current_score: number; away_current_score: number } | null;
                 }) => {

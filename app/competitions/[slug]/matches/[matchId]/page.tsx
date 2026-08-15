@@ -172,6 +172,7 @@ export default function MatchDetailPage({
 							isShooter={isShooter}
 							isBR={isBR}
 							matchMaps={matchMaps}
+							scoreBreakdown={score?.score_breakdown}
 							brResults={brResults}
 						/>
 					)}

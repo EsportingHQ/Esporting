@@ -10,6 +10,7 @@ import { LeagueSection } from '@/components/broadcast/LeagueSection';
 import { StatusDot } from '@/components/broadcast/StatusDot';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ScoreToast } from '@/components/ui/ScoreToast';
+import { DateSwitcher } from '@/components/matches/DateSwitcher';
 import { useLiveFeed } from '@/hooks/useLiveFeed';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useNewsArticles } from '@/hooks/useNewsArticles';
@@ -18,6 +19,14 @@ import { Calendar, Newspaper, ArrowRight, Star } from 'lucide-react';
 type StatusFilter = 'all' | 'live' | 'upcoming' | 'finished';
 
 export default function HomeClient() {
+	const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+
+	const [gameFilter, setGameFilter] = useState<string>('all');
+
+	const [selectedDate, setSelectedDate] = useState(() =>
+		new Date().toISOString().slice(0, 10),
+	);
+
 	const {
 		tickerMatches,
 		groups,
@@ -25,12 +34,10 @@ export default function HomeClient() {
 		isLoading,
 		toasts,
 		dismissToast,
-	} = useLiveFeed();
+	} = useLiveFeed(selectedDate);
+
 	const { favorites } = useFavorites();
 	const { articles: newsItems } = useNewsArticles();
-
-	const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-	const [gameFilter, setGameFilter] = useState<string>('all');
 
 	// Filter groups and matches
 	const filteredGroups = groups
@@ -55,12 +62,12 @@ export default function HomeClient() {
 					return false;
 
 				// Game category filter
-				if (gameFilter === 'football' && match.gameType !== 'football')
+				if (
+					gameFilter !== 'all' &&
+					group.gameTitle.toLowerCase() !== gameFilter
+				) {
 					return false;
-				if (gameFilter === 'shooter' && match.gameType !== 'shooter')
-					return false;
-				if (gameFilter === 'br' && match.gameType !== 'br')
-					return false;
+				}
 
 				return true;
 			});
@@ -89,6 +96,21 @@ export default function HomeClient() {
 		return b.liveCount - a.liveCount;
 	});
 
+	const gameTabs = [
+		{ id: 'all', label: 'ALL' },
+		...Array.from(
+			new Map(
+				groups
+					.flatMap((g) => g.matches)
+					.map((m) => [
+						m.gameTitle.toLowerCase(),
+						m.gameTitle === 'Counter-Strike 2'
+							? 'CS2'
+							: m.gameTitle,
+					]),
+			).entries(),
+		).map(([id, label]) => ({ id, label })),
+	];
 	const statusTabs: { id: StatusFilter; label: string }[] = [
 		{ id: 'all', label: 'ALL' },
 		{ id: 'live', label: `LIVE (${liveCount})` },
@@ -109,21 +131,30 @@ export default function HomeClient() {
 				<section className="lg:col-span-2 space-y-6">
 					{/* Header & Status Filter Bar */}
 					<div className="space-y-4">
-						<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border-line pb-3">
-							<div className="flex items-center gap-3">
-								<Calendar className="w-5 h-5 text-accent-readout" />
-								<h1 className="font-display font-bold text-xl uppercase tracking-wider">
-									LIVE MATCH FEED & SCHEDULE
-								</h1>
+						<div className="flex flex-col gap-4 border-b border-border-line pb-4">
+							<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+								<div className="flex items-center gap-3">
+									<Calendar className="w-5 h-5 text-accent-readout" />
+									<h1 className="font-display font-bold text-xl uppercase tracking-wider">
+										LIVE MATCH FEED & SCHEDULE
+									</h1>
+								</div>
+
+								<div className="flex items-center gap-2">
+									<span className="text-[10px] font-data text-text-muted flex items-center gap-1.5 bg-bg-surface px-2.5 py-1 rounded border border-border-line">
+										<StatusDot status="live" size="sm" />
+										<span className="font-semibold text-accent-signal">
+											{liveCount} LIVE NOW
+										</span>
+									</span>
+								</div>
 							</div>
 
-							<div className="flex items-center gap-2">
-								<span className="text-[10px] font-data text-text-muted flex items-center gap-1.5 bg-bg-surface px-2.5 py-1 rounded border border-border-line">
-									<StatusDot status="live" size="sm" />
-									<span className="font-semibold text-accent-signal">
-										{liveCount} LIVE NOW
-									</span>
-								</span>
+							<div className="w-full">
+								<DateSwitcher
+									value={selectedDate}
+									onChange={setSelectedDate}
+								/>
 							</div>
 						</div>
 
@@ -147,22 +178,20 @@ export default function HomeClient() {
 							</div>
 
 							{/* Game Category Pills */}
-							<div className="flex items-center gap-1 text-[11px] font-display font-bold">
-								{['all', 'football', 'shooter', 'br'].map(
-									(cat) => (
-										<button
-											key={cat}
-											onClick={() => setGameFilter(cat)}
-											className={`px-2.5 py-1 rounded uppercase border transition-colors ${
-												gameFilter === cat
-													? 'bg-accent-readout/20 text-accent-readout border-accent-readout/40'
-													: 'bg-bg-void border-border-line text-text-muted hover:text-text-primary'
-											}`}
-										>
-											{cat}
-										</button>
-									),
-								)}
+							<div className="flex flex-wrap items-center gap-1 text-[11px] font-display font-bold">
+								{gameTabs.map((tab) => (
+									<button
+										key={tab.id}
+										onClick={() => setGameFilter(tab.id)}
+										className={`px-3 py-1.5 rounded uppercase border transition-colors ${
+											gameFilter === tab.id
+												? 'bg-accent-readout/20 text-accent-readout border-accent-readout/40'
+												: 'bg-bg-void border-border-line text-text-muted hover:text-text-primary'
+										}`}
+									>
+										{tab.label}
+									</button>
+								))}
 							</div>
 						</div>
 					</div>
@@ -187,8 +216,35 @@ export default function HomeClient() {
 									{group.matches.map((match) => (
 										<MatchCard
 											key={match.id}
-											{...match}
+											id={match.id}
+											gameType={match.gameType}
+											gameTitle={match.gameTitle}
+											status={match.status}
+											timeLabel={match.timeLabel}
+											homeScore={match.homeScore}
+											awayScore={match.awayScore}
+											homeMapsWon={match.homeMapsWon}
+											awayMapsWon={match.awayMapsWon}
+											bestOf={match.bestOf}
 											href={`/competitions/${group.slug}/matches/${match.id}`}
+											homeTeam={{
+												id: match.homeTeam.id,
+												name: match.homeTeam.name,
+												shortCode:
+													match.homeTeam.shortCode,
+												logoUrl:
+													match.homeTeam.logoUrl ??
+													null,
+											}}
+											awayTeam={{
+												id: match.awayTeam.id,
+												name: match.awayTeam.name,
+												shortCode:
+													match.awayTeam.shortCode,
+												logoUrl:
+													match.awayTeam.logoUrl ??
+													null,
+											}}
 										/>
 									))}
 								</LeagueSection>

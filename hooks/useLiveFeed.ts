@@ -17,7 +17,20 @@ export interface CompetitionGroup {
   matches: MatchCardProps[];
 }
 
-type RawTeam = { id: string; name: string; short_code: string | null } | { id: string; name: string; short_code: string | null }[] | null;
+type RawTeam =
+	| {
+			id: string;
+			name: string;
+			short_code: string | null;
+			logo_url: string | null;
+		}
+	| {
+			id: string;
+			name: string;
+			short_code: string | null;
+			logo_url: string | null;
+		}[]
+	| null;
 type RawGameTitle = { name: string; slug: string; game_types?: { slug: string } | { slug: string }[] | null } | { name: string; slug: string; game_types?: { slug: string } | { slug: string }[] | null }[] | null;
 type RawCompInstance = { id: string; name: string; slug: string } | { id: string; name: string; slug: string }[] | null;
 
@@ -69,8 +82,18 @@ function mapRowToCardProps(row: RawMatchRow): MatchCardProps {
     id: row.id,
     gameType: mapGameType(gameTypeObj?.slug),
     gameTitle: gameTitle?.name ?? '',
-    homeTeam: { id: home?.id ?? '', name: home?.name ?? 'TBD', shortCode: home?.short_code ?? '' },
-    awayTeam: { id: away?.id ?? '', name: away?.name ?? 'TBD', shortCode: away?.short_code ?? '' },
+    homeTeam: {
+      id: home?.id ?? '',
+      name: home?.name ?? 'TBD',
+      shortCode: home?.short_code ?? '',
+      logoUrl: home?.logo_url ?? null,
+    },
+    awayTeam: {
+      id: away?.id ?? '',
+      name: away?.name ?? 'TBD',
+      shortCode: away?.short_code ?? '',
+      logoUrl: away?.logo_url ?? null,
+    },
     homeScore: scoreRow?.home_current_score ?? 0,
     awayScore: scoreRow?.away_current_score ?? 0,
     homeMapsWon: row.home_maps_won ?? undefined,
@@ -131,14 +154,27 @@ function groupMatchesByCompetition(rows: RawMatchRow[]): CompetitionGroup[] {
 
 const MATCH_QUERY = `
   id, status, scheduled_at, match_format, home_maps_won, away_maps_won, best_of, comp_instance_id,
-  home_team:teams!matches_team_home_id_fkey(id, name, short_code),
-  away_team:teams!matches_team_away_id_fkey(id, name, short_code),
+
+  home_team:teams!matches_team_home_id_fkey(
+    id,
+    name,
+    short_code,
+    logo_url
+  ),
+
+  away_team:teams!matches_team_away_id_fkey(
+    id,
+    name,
+    short_code,
+    logo_url
+  ),
+
   game_titles(name, slug, game_types(slug)),
   comp_instance:comp_instances!matches_comp_instance_id_fkey(id, name, slug),
   match_scores(home_current_score, away_current_score)
 `;
 
-export function useLiveFeed() {
+export function useLiveFeed(date?: string) {
   const [tickerMatches, setTickerMatches] = useState<TickerMatch[]>([]);
   const [groups, setGroups] = useState<CompetitionGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -156,11 +192,22 @@ export function useLiveFeed() {
   }, []);
 
   const refetchGroups = useCallback(async (supabase: ReturnType<typeof createClient>) => {
-    const { data, error: fetchErr } = await supabase
+    let query = supabase
       .from('matches')
       .select(MATCH_QUERY)
       .in('status', ['live', 'scheduled', 'delayed', 'completed'])
-      .is('deleted_at', null)
+      .is('deleted_at', null);
+
+    if (date) {
+      const start = new Date(`${date}T00:00:00`);
+      const end = new Date(`${date}T23:59:59`);
+
+      query = query
+        .gte('scheduled_at', start.toISOString())
+        .lte('scheduled_at', end.toISOString());
+    }
+
+    const { data, error: fetchErr } = await query
       .order('scheduled_at', { ascending: true, nullsFirst: false })
       .limit(50);
 
@@ -199,18 +246,34 @@ export function useLiveFeed() {
       const gameTitle = one(row.game_titles);
       const scoreRow = one(row.match_scores);
 
+      console.log('ROW HOME TEAM', row.home_team);
+      console.log('ROW AWAY TEAM', row.away_team);
+
       return {
         id: row.id,
         gameCode: gameTitle?.name ?? '',
-        homeTeam: home?.short_code ?? home?.name ?? 'TBD',
-        awayTeam: away?.short_code ?? away?.name ?? 'TBD',
+
+        homeTeam: {
+          id: home?.id,
+          name: home?.name ?? 'TBD',
+          shortCode: home?.short_code ?? 'TBD',
+          logoUrl: home?.logo_url ?? null,
+        },
+
+        awayTeam: {
+          id: away?.id,
+          name: away?.name ?? 'TBD',
+          shortCode: away?.short_code ?? 'TBD',
+          logoUrl: away?.logo_url ?? null,
+        },
+
         homeScore: scoreRow?.home_current_score ?? 0,
         awayScore: scoreRow?.away_current_score ?? 0,
         status: 'live',
       };
     });
     setTickerMatches(ticker);
-  }, []);
+  }, [date]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -219,8 +282,10 @@ export function useLiveFeed() {
       setIsLoading(true);
       try {
         await refetchGroups(supabase);
+        setError(null);
       } catch (err) {
-        setError(err instanceof Error ? err : new Error(String(err)));
+        console.error('Live feed fetch failed', err);
+        // keep previous data instead of crashing the UI
       } finally {
         setIsLoading(false);
       }

@@ -9,18 +9,56 @@ const supabase = createClient(supabaseUrl, serviceRoleKey);
 
 const PANDASCORE_COMP_INSTANCE_ID =
   '792ac7cf-cef3-4d49-8e5d-9c08846fbd3e';
+
 const GAME_CONFIG = {
   valorant: {
-    endpoint: '/valorant/matches/upcoming',
+    endpoint: '/valorant/matches',
     gameTitleId: 'fefb9413-9852-4b07-b120-8aba37b810a8',
   },
   csgo: {
-    endpoint: '/csgo/matches/upcoming',
+    endpoint: '/csgo/matches',
     gameTitleId: '84891a91-f9ac-476d-b893-3576cea58d86',
   },
 } as const;
 
-async function getUpcomingMatches(endpoint: string, limit = 5) {
+type PandaResult = {
+  score?: number;
+};
+
+type PandaGame = {
+  position?: number;
+  status?: string;
+  finished_at?: string | null;
+  winner?: {
+    name?: string | null;
+  } | null;
+  scores?: Array<{
+    score?: number | null;
+  }>;
+};
+
+type PandaMatch = {
+  id: number | string;
+  status: string;
+  begin_at?: string | null;
+  end_at?: string | null;
+  number_of_games?: number | null;
+  opponents?: PandaOpponent[];
+  results?: PandaResult[];
+  games?: PandaGame[];
+};
+
+type PandaOpponent = {
+  opponent?: {
+    name?: string;
+    image_url?: string | null;
+  };
+};
+
+async function getMatches(
+  endpoint: string,
+  limit = 10,
+): Promise<PandaMatch[]> {
   const url = `https://api.pandascore.co${endpoint}?per_page=${limit}`;
 
   const response = await fetch(url, {
@@ -31,10 +69,33 @@ async function getUpcomingMatches(endpoint: string, limit = 5) {
   });
 
   if (!response.ok) {
-    throw new Error(`PandaScore ${response.status}`);
+    const errorBody = await response.text();
+
+    throw new Error(
+      `PandaScore ${response.status} for ${url}: ${errorBody}`,
+    );
   }
 
   return await response.json();
+}
+
+async function getAllRelevantMatches(
+  baseEndpoint: string,
+  limit = 10,
+) {
+  const [upcoming, running, past] = await Promise.all([
+    getMatches(`${baseEndpoint}/upcoming`, limit),
+    getMatches(`${baseEndpoint}/running`, limit),
+    getMatches(`${baseEndpoint}/past`, limit),
+  ]);
+
+  const map = new Map<string, PandaMatch>();
+
+  for (const match of [...upcoming, ...running, ...past]) {
+    map.set(String(match.id), match);
+  }
+
+  return Array.from(map.values());
 }
 
 function slugify(value: string) {
@@ -44,7 +105,7 @@ function slugify(value: string) {
     .replace(/^-|-$/g, '');
 }
 
-async function ensureTeam(name: string) {
+async function ensureTeam(name: string, logoUrl?: string | null) {
   const clean = name.replace(/\s+/g, ' ').trim();
   const slug = slugify(clean);
 
@@ -55,7 +116,21 @@ async function ensureTeam(name: string) {
     .is('deleted_at', null)
     .maybeSingle();
 
-  if (existing) return existing.id;
+  // Team already exists → update its logo
+  if (existing) {
+    // Only update the logo when PandaScore actually supplied one.
+    // Never overwrite an existing logo with null.
+    if (logoUrl) {
+      const { error } = await supabase
+        .from('teams')
+        .update({ logo_url: logoUrl })
+        .eq('id', existing.id);
+
+      if (error) throw error;
+    }
+
+  return existing.id;
+}
 
   const shortCode = clean
     .split(' ')
@@ -64,12 +139,14 @@ async function ensureTeam(name: string) {
     .slice(0, 6)
     .toUpperCase();
 
+  // New team → insert with logo
   const { data, error } = await supabase
     .from('teams')
     .insert({
       name: clean,
       slug,
       short_code: shortCode,
+      logo_url: logoUrl ?? null,
     })
     .select('id')
     .single();
@@ -96,7 +173,7 @@ Deno.serve(async (req: Request) => {
     const body = await req.json().catch(() => ({}));
 
     const game = (body.game ?? 'valorant') as keyof typeof GAME_CONFIG;
-    const limit = Number(body.limit ?? 5);
+    const limit = Number(body.limit ?? 3);
 
     const config = GAME_CONFIG[game];
 
@@ -107,21 +184,48 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const matches = await getUpcomingMatches(config.endpoint, limit);
+    const matches = await getAllRelevantMatches(
+      config.endpoint,
+      limit,
+    );
 
     let synced = 0;
 
-    for (const match of matches) {
+    for (const match of matches as PandaMatch[]) {
+
       const teamAName =
-        match.opponents?.[0]?.opponent?.name?.replace(/\s+/g, ' ').trim() ??
-        'TBD';
+        match.opponents?.[0]?.opponent?.name?.replace(/\s+/g, ' ').trim();
 
       const teamBName =
-        match.opponents?.[1]?.opponent?.name?.replace(/\s+/g, ' ').trim() ??
-        'TBD';
+        match.opponents?.[1]?.opponent?.name?.replace(/\s+/g, ' ').trim();
 
-      const teamAId = await ensureTeam(teamAName);
-      const teamBId = await ensureTeam(teamBName);
+      // Skip incomplete PandaScore fixtures
+      if (!teamAName || !teamBName || teamAName === teamBName) {
+        console.log(
+          'Skipping incomplete fixture',
+          match.id,
+          teamAName,
+          teamBName,
+        );
+        continue;
+      }
+
+      const teamALogo =
+        match.opponents?.[0]?.opponent?.image_url ?? null;
+
+      const teamBLogo =
+        match.opponents?.[1]?.opponent?.image_url ?? null;
+
+      const teamAId = await ensureTeam(teamAName, teamALogo);
+      const teamBId = await ensureTeam(teamBName, teamBLogo);
+
+      const homeScore = match.results?.[0]?.score ?? 0;
+      const awayScore = match.results?.[1]?.score ?? 0;
+
+      let winnerTeamId: string | null = null;
+
+      if (homeScore > awayScore) winnerTeamId = teamAId;
+      if (awayScore > homeScore) winnerTeamId = teamBId;
 
       const payload = {
         external_source: 'pandascore',
@@ -131,18 +235,81 @@ Deno.serve(async (req: Request) => {
         team_home_id: teamAId,
         team_away_id: teamBId,
         match_format: 'head_to_head',
-        best_of: 3,
+        best_of: Number(match.number_of_games) || 3,
+
         scheduled_at: match.begin_at,
+        started_at:
+          match.status === 'running' || match.status === 'finished'
+            ? match.begin_at ?? new Date().toISOString()
+            : null,
+
+        ended_at:
+          match.status === 'finished'
+            ? match.end_at ?? new Date().toISOString()
+            : null,
+
         status: mapStatus(match.status),
+
+        winner_team_id: winnerTeamId,
+        home_maps_won: Number(homeScore) || 0,
+        away_maps_won: Number(awayScore) || 0,
       };
 
-      const { error } = await supabase
+      const { data: upsertedMatch, error } = await supabase
         .from('matches')
         .upsert(payload, {
           onConflict: 'external_source,external_id',
-        });
+        })
+        .select('id')
+        .single();
 
       if (error) throw error;
+
+      // Keep projection table in sync for home page + match room
+      const { error: scoreError } = await supabase
+        .from('match_scores')
+        .upsert({
+          match_id: upsertedMatch.id,
+          home_maps_won: Number(homeScore) || 0,
+          away_maps_won: Number(awayScore) || 0,
+
+          // Current score mirrors maps for now
+          home_current_score: Number(homeScore) || 0,
+          away_current_score: Number(awayScore) || 0,
+
+          // Store PandaScore game results if available
+          score_breakdown:
+            Array.isArray(match.games) && match.games.length > 0
+              ? {
+                  games: match.games.map((g: PandaGame) => {
+                    const homeMapScore = g.scores?.[0]?.score ?? null;
+                    const awayMapScore = g.scores?.[1]?.score ?? null;
+
+                    let winnerName: string | null = g.winner?.name ?? null;
+
+                    if (!winnerName && homeMapScore != null && awayMapScore != null) {
+                      if (homeMapScore > awayMapScore) winnerName = teamAName;
+                      else if (awayMapScore > homeMapScore) winnerName = teamBName;
+                    }
+
+                    return {
+                      position: g.position,
+                      status: g.status,
+                      winner: winnerName,
+                      home_score: homeMapScore,
+                      away_score: awayMapScore,
+                      finished_at: g.finished_at ?? null,
+                    };
+                  }),
+                }
+              : null,
+
+          updated_at: new Date().toISOString(),
+        })
+        .select('match_id')
+        .single();
+
+      if (scoreError) throw scoreError;
 
       synced++;
     }
@@ -157,18 +324,23 @@ Deno.serve(async (req: Request) => {
         headers: { 'Content-Type': 'application/json' },
       },
     );
-  } catch (error) {
-    console.error(error);
+  }  catch (error) {
+      console.error('SYNC ERROR:', error);
 
-    return new Response(
-      JSON.stringify({
-        ok: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      },
-    );
-  }
+      const message =
+        error instanceof Error
+          ? error.message
+          : JSON.stringify(error, null, 2);
+
+      return new Response(
+        JSON.stringify({
+          ok: false,
+          error: message,
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
+    }
 });

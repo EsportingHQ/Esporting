@@ -15,6 +15,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'esportsinsider.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'cdn-api.pandascore.co',
+      },
     ],
   },
 }

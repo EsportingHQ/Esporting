@@ -8,6 +8,8 @@ import {
 	MatchMap,
 	BRResult,
 } from '@/hooks/useMatchRealtime';
+import type { ScoreBreakdown } from '@/hooks/useMatchRealtime';
+
 interface TimelineTabProps {
 	events: MatchEvent[];
 	statusLogs: MatchStatusLog[];
@@ -15,6 +17,7 @@ interface TimelineTabProps {
 	isShooter: boolean;
 	isBR: boolean;
 	matchMaps: MatchMap[];
+	scoreBreakdown?: ScoreBreakdown | null;
 	brResults: BRResult[];
 }
 
@@ -25,6 +28,7 @@ export function TimelineTab({
 	isShooter,
 	isBR,
 	matchMaps,
+	scoreBreakdown,
 	brResults,
 }: TimelineTabProps) {
 	const getEventEmoji = (type: string) => {
@@ -74,6 +78,16 @@ export function TimelineTab({
 		}
 	};
 
+	const hiddenEventIds = new Set(
+		events
+			.filter((e) => e.is_correction && e.meta?.replaces_event_id)
+			.map((e) => e.meta?.replaces_event_id as string),
+	);
+
+	const visibleEvents = events.filter((e) => !hiddenEventIds.has(e.id));
+
+	console.log('scoreBreakdown', scoreBreakdown);
+
 	return (
 		<div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 			{/* Left 2 Cols: Event Stream */}
@@ -112,7 +126,7 @@ export function TimelineTab({
 
 				{/* Live Timeline Events List */}
 				<div className="space-y-3 max-h-125 overflow-y-auto pr-2">
-					{events.map((ev) => (
+					{visibleEvents.map((ev) => (
 						<div
 							key={ev.id}
 							className={`bg-bg-surface border p-3 rounded transition-all flex items-start gap-4 ${
@@ -147,7 +161,7 @@ export function TimelineTab({
 						</div>
 					))}
 
-					{events.length === 0 && (
+					{visibleEvents.length === 0 && (
 						<div className="py-12 text-center text-text-muted border border-dashed border-border-line rounded">
 							<Clock className="w-6 h-6 mx-auto mb-2 text-text-muted/40" />
 							<p className="font-display font-semibold uppercase text-xs tracking-wider">
@@ -173,62 +187,127 @@ export function TimelineTab({
 						</div>
 
 						<div className="space-y-3 text-xs font-data">
-							{matchMaps.map((slot) => (
-								<div
-									key={slot.id}
-									className={`p-3 rounded border flex items-center justify-between ${
-										slot.status === 'live'
-											? 'bg-accent-signal/10 border-accent-signal/30'
-											: 'bg-bg-void border-border-line'
-									}`}
-								>
-									<div>
-										<span className="block font-display font-bold uppercase tracking-wider text-[9px] text-text-muted">
-											MAP 0{slot.map_number} —{' '}
-											{slot.status.toUpperCase()}
-										</span>
-										<span className="font-body font-semibold text-text-primary">
-											{slot.maps?.name ??
-												`Map ${slot.map_number}`}
-										</span>
-										<span className="block text-[10px] text-accent-readout">
-											{slot.modes?.name ?? 'Mode'}
-										</span>
-									</div>
+							{matchMaps.map((slot) => {
+								const gameInfo = scoreBreakdown?.games?.find(
+									(g) =>
+										Number(g.position) ===
+										Number(slot.map_number),
+								);
 
-									<div className="text-right">
-										{slot.status === 'completed' ? (
-											<div className="font-bold text-text-primary text-base">
-												{slot.home_score ?? 0} :{' '}
-												{slot.away_score ?? 0}
-											</div>
-										) : slot.status === 'live' ? (
-											<div className="font-bold text-accent-signal text-base flex items-center gap-1.5 justify-end">
-												<StatusDot
-													status="live"
-													size="sm"
-												/>
-												<span>
-													{slot.home_score ?? 0} :{' '}
-													{slot.away_score ?? 0}
+								return (
+									<div
+										key={slot.id}
+										className={`p-3 rounded border ${
+											slot.status === 'live'
+												? 'bg-accent-signal/10 border-accent-signal/30'
+												: 'bg-bg-void border-border-line'
+										}`}
+									>
+										<div className="flex items-center justify-between">
+											<div>
+												<span className="block font-display font-bold uppercase tracking-wider text-[9px] text-text-muted">
+													MAP 0{slot.map_number} —{' '}
+													{slot.status.toUpperCase()}
+												</span>
+
+												<span className="font-body font-semibold text-text-primary">
+													{slot.maps?.name ??
+														`Map ${slot.map_number}`}
+												</span>
+
+												<span className="block text-[10px] text-accent-readout">
+													{slot.modes?.name ?? 'Mode'}
 												</span>
 											</div>
-										) : (
-											<span className="text-text-muted italic">
-												TBD
-											</span>
-										)}
-									</div>
-								</div>
-							))}
 
-							{matchMaps.length === 0 && (
+											<div className="text-right">
+												{slot.status === 'completed' ? (
+													gameInfo?.home_score !=
+														null &&
+													gameInfo?.away_score !=
+														null ? (
+														<div className="font-bold text-text-primary text-base">
+															{
+																gameInfo.home_score
+															}{' '}
+															:{' '}
+															{
+																gameInfo.away_score
+															}
+														</div>
+													) : (
+														<div className="text-[11px] text-text-muted uppercase">
+															Completed
+														</div>
+													)
+												) : slot.status === 'live' ? (
+													<div className="font-bold text-accent-signal text-base flex items-center gap-1.5 justify-end">
+														<StatusDot
+															status="live"
+															size="sm"
+														/>
+														<span>
+															{slot.home_score ??
+																0}{' '}
+															:{' '}
+															{slot.away_score ??
+																0}
+														</span>
+													</div>
+												) : (
+													<span className="text-text-muted italic">
+														TBD
+													</span>
+												)}
+											</div>
+										</div>
+									</div>
+								);
+							})}
+
+							{matchMaps.length === 0 &&
+							scoreBreakdown?.games?.length ? (
+								<div className="space-y-2">
+									{scoreBreakdown.games.map((g, idx) => (
+										<div
+											key={idx}
+											className="p-3 rounded border border-border-line bg-bg-void flex items-center justify-between"
+										>
+											<div>
+												<span className="block font-display font-bold uppercase tracking-wider text-[9px] text-text-muted">
+													MAP{' '}
+													{String(
+														g.position ?? idx + 1,
+													).padStart(2, '0')}
+												</span>
+												<span className="text-xs text-text-muted uppercase">
+													{g.status ?? 'completed'}
+												</span>
+											</div>
+
+											<div className="text-right">
+												<div className="font-semibold text-text-primary text-sm">
+													{g.winner ?? 'TBD'}
+												</div>
+
+												{g.home_score != null &&
+													g.away_score != null && (
+														<div className="text-[11px] text-text-muted font-data">
+															{g.home_score} :{' '}
+															{g.away_score}
+														</div>
+													)}
+											</div>
+										</div>
+									))}
+								</div>
+							) : matchMaps.length === 0 ? (
 								<div className="py-6 text-center text-text-muted border border-dashed border-border-line rounded">
 									<p className="font-display font-semibold uppercase text-xs tracking-wider">
 										No map results available yet
 									</p>
 								</div>
-							)}
+							) : null}
 						</div>
 					</div>
 				)}
