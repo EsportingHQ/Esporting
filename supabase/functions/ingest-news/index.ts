@@ -1,6 +1,8 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 /// <reference lib="deno.ns" />
 
+const newsCronSecret = Deno.env.get('NEWS_CRON_SECRET')!;
+
 type FeedConfig = {
   name: string
   url: string
@@ -174,6 +176,14 @@ async function fetchArticleContent(url: string): Promise<{
 }
 
 Deno.serve(async (req: Request) => {
+  const authHeader = req.headers.get('Authorization');
+  if (authHeader !== `Bearer ${newsCronSecret}`) {
+    return new Response(
+      JSON.stringify({ ok: false, error: 'Unauthorized' }),
+      { status: 401, headers: { 'Content-Type': 'application/json' } },
+    );
+  }
+
   const body = await req.json().catch(() => ({}));
     const refreshExisting = body.refreshExisting === true;
     const limitPerFeed = Number(body.limitPerFeed ?? 10);
