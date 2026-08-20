@@ -3,14 +3,11 @@
 import { useState, use } from 'react';
 import Link from 'next/link';
 import { PublicNav } from '@/components/layout/public-nav';
-import { MatchCard, MatchCardProps } from '@/components/broadcast/match-card';
+import { MatchCard } from '@/components/broadcast/match-card';
 import { EventBadge } from '@/components/broadcast/event-badge';
 import { Trophy, Calendar, Award, ListOrdered, FileText } from 'lucide-react';
-import {
-	useCompetitionDetail,
-	StandingRow,
-	BRStandingRow,
-} from '@/hooks/useCompetitionDetail';
+import { useCompetitionDetail } from '@/hooks/useCompetitionDetail';
+import { combineCompetitionName } from '@/lib/competitionName';
 
 type CompetitionTab = 'overview' | 'schedule' | 'results' | 'standings';
 
@@ -32,6 +29,7 @@ export default function CompetitionDetailPage({
 		resultsMatches,
 		standings: leagueStandings,
 		brStandings,
+		stageGroups,
 		isBRFormat,
 		isLoading,
 		error,
@@ -103,7 +101,10 @@ export default function CompetitionDetailPage({
 							<EventBadge status="ongoing" />
 						</div>
 						<h1 className="font-display font-black text-3xl tracking-wide uppercase">
-							{competition.name}
+							{combineCompetitionName(
+								competition.seriesName,
+								competition.name,
+							)}
 						</h1>
 						<p className="text-xs text-text-muted max-w-xl font-body leading-relaxed">
 							{competition.description ??
@@ -207,11 +208,14 @@ export default function CompetitionDetailPage({
 									</div>
 									<div className="bg-bg-void border border-border-line p-3 rounded">
 										<span className="text-[10px] text-text-muted font-display font-bold uppercase block mb-1">
-											Organizer ID
+											End Date
 										</span>
-										<span className="font-data text-accent-readout">
-											{competition.organiserName ||
-												'EsportingHQ'}
+										<span className="font-data">
+											{competition.ends_at
+												? new Date(
+														competition.ends_at,
+													).toLocaleDateString()
+												: 'TBD'}
 										</span>
 									</div>
 								</div>
@@ -283,137 +287,173 @@ export default function CompetitionDetailPage({
 
 					{/* Tab 4: Standings */}
 					{activeTab === 'standings' && (
-						<div className="bg-bg-surface border border-border-line rounded overflow-hidden">
+						<div className="space-y-6">
 							{isBRFormat ? (
-								/* Battle Royale Points Standings Table */
-								<table className="w-full text-left border-collapse text-xs">
-									<thead>
-										<tr className="bg-bg-void border-b border-border-line font-display font-bold text-text-muted uppercase tracking-wider">
-											<th className="py-3 px-4 w-12 text-center">
-												Rank
-											</th>
-											<th className="py-3 px-4">
-												Squad Name
-											</th>
-											<th className="py-3 px-4 w-20 text-center">
-												Tag
-											</th>
-											<th className="py-3 px-4 w-24 text-center">
-												Total Kills
-											</th>
-											<th className="py-3 px-4 w-24 text-center">
-												Place Pts
-											</th>
-											<th className="py-3 px-4 w-24 text-center">
-												Kill Pts
-											</th>
-											<th className="py-3 px-4 w-28 text-center text-accent-signal">
-												Total Pts
-											</th>
-										</tr>
-									</thead>
-									<tbody className="divide-y divide-border-line font-data">
-										{brStandings.map((row) => (
-											<tr
-												key={row.shortCode}
-												className="hover:bg-bg-void/40 transition-colors"
-											>
-												<td className="py-3 px-4 text-center font-bold">
-													{row.rank}
-												</td>
-												<td className="py-3 px-4 font-body font-medium text-text-primary">
-													{row.name}
-												</td>
-												<td className="py-3 px-4 text-center text-text-muted">
-													{row.shortCode}
-												</td>
-												<td className="py-3 px-4 text-center">
-													{row.kills}
-												</td>
-												<td className="py-3 px-4 text-center">
-													{row.placementPts}
-												</td>
-												<td className="py-3 px-4 text-center">
-													{row.killPts}
-												</td>
-												<td className="py-3 px-4 text-center font-bold text-accent-signal">
-													{row.totalPts}
-												</td>
+								<div className="bg-bg-surface border border-border-line rounded overflow-hidden">
+									<table className="w-full text-left border-collapse text-xs">
+										<thead>
+											<tr className="bg-bg-void border-b border-border-line font-display font-bold text-text-muted uppercase tracking-wider">
+												<th className="py-3 px-4 w-12 text-center">
+													Rank
+												</th>
+												<th className="py-3 px-4">
+													Squad Name
+												</th>
+												<th className="py-3 px-4 w-20 text-center">
+													Tag
+												</th>
+												<th className="py-3 px-4 w-24 text-center">
+													Total Kills
+												</th>
+												<th className="py-3 px-4 w-24 text-center">
+													Place Pts
+												</th>
+												<th className="py-3 px-4 w-24 text-center">
+													Kill Pts
+												</th>
+												<th className="py-3 px-4 w-28 text-center text-accent-signal">
+													Total Pts
+												</th>
 											</tr>
-										))}
-									</tbody>
-								</table>
+										</thead>
+										<tbody className="divide-y divide-border-line font-data">
+											{brStandings.map((row) => (
+												<tr
+													key={row.shortCode}
+													className="hover:bg-bg-void/40 transition-colors"
+												>
+													<td className="py-3 px-4 text-center font-bold">
+														{row.rank}
+													</td>
+													<td className="py-3 px-4 font-body font-medium text-text-primary">
+														{row.name}
+													</td>
+													<td className="py-3 px-4 text-center text-text-muted">
+														{row.shortCode}
+													</td>
+													<td className="py-3 px-4 text-center">
+														{row.kills}
+													</td>
+													<td className="py-3 px-4 text-center">
+														{row.placementPts}
+													</td>
+													<td className="py-3 px-4 text-center">
+														{row.killPts}
+													</td>
+													<td className="py-3 px-4 text-center font-bold text-accent-signal">
+														{row.totalPts}
+													</td>
+												</tr>
+											))}
+										</tbody>
+									</table>
+								</div>
+							) : leagueStandings.length > 0 ? (
+								<div className="bg-bg-surface border border-border-line rounded overflow-hidden">
+									<table className="w-full text-left border-collapse text-xs">
+										<thead>
+											<tr className="bg-bg-void border-b border-border-line font-display font-bold text-text-muted uppercase tracking-wider text-[11px]">
+												<th className="py-3 px-4 w-12 text-center">
+													Rank
+												</th>
+												<th className="py-3 px-4">
+													Squad Name
+												</th>
+												<th className="py-3 px-4 w-20 text-center">
+													Tag
+												</th>
+												<th className="py-3 px-4 w-16 text-center">
+													PL
+												</th>
+												<th className="py-3 px-4 w-16 text-center">
+													W
+												</th>
+												<th className="py-3 px-4 w-16 text-center">
+													D
+												</th>
+												<th className="py-3 px-4 w-16 text-center">
+													L
+												</th>
+												<th className="py-3 px-4 w-16 text-center">
+													GD
+												</th>
+												<th className="py-3 px-4 w-20 text-center text-accent-signal">
+													PTS
+												</th>
+											</tr>
+										</thead>
+										<tbody className="divide-y divide-border-line font-data">
+											{leagueStandings.map((row) => (
+												<tr
+													key={row.shortCode}
+													className="hover:bg-bg-void/40 transition-colors"
+												>
+													<td className="py-3 px-4 text-center font-bold">
+														{row.rank}
+													</td>
+													<td className="py-3 px-4 font-body font-medium text-text-primary">
+														{row.name}
+													</td>
+													<td className="py-3 px-4 text-center text-text-muted">
+														{row.shortCode}
+													</td>
+													<td className="py-3 px-4 text-center">
+														{row.played}
+													</td>
+													<td className="py-3 px-4 text-center">
+														{row.won}
+													</td>
+													<td className="py-3 px-4 text-center">
+														{row.drawn ?? 0}
+													</td>
+													<td className="py-3 px-4 text-center">
+														{row.lost}
+													</td>
+													<td className="py-3 px-4 text-center">
+														{row.gd ?? 0}
+													</td>
+													<td className="py-3 px-4 text-center font-bold text-accent-signal">
+														{row.pts}
+													</td>
+												</tr>
+											))}
+										</tbody>
+									</table>
+								</div>
+							) : stageGroups.length > 0 ? (
+								stageGroups.map((stage) => (
+									<div
+										key={stage.stageId}
+										className="bg-bg-surface border border-border-line rounded overflow-hidden"
+									>
+										<div className="px-4 py-3 bg-bg-void/40 border-b border-border-line flex items-center justify-between">
+											<h3 className="font-display font-bold text-sm uppercase tracking-wider text-text-primary">
+												{stage.name}
+											</h3>
+											<span className="text-[10px] font-data text-text-muted uppercase">
+												{stage.stageType}
+											</span>
+										</div>
+										<div className="p-3 space-y-3 divide-y divide-border-line/50">
+											{stage.matches.map((match) => (
+												<Link
+													key={match.id}
+													href={`/competitions/${slug}/matches/${match.id}`}
+												>
+													<MatchCard
+														{...match}
+														showFavorites={false}
+													/>
+												</Link>
+											))}
+										</div>
+									</div>
+								))
 							) : (
-								/* H2H Football/League Standings Table */
-								<table className="w-full text-left border-collapse text-xs">
-									<thead>
-										<tr className="bg-bg-void border-b border-border-line font-display font-bold text-text-muted uppercase tracking-wider text-[11px]">
-											<th className="py-3 px-4 w-12 text-center">
-												Rank
-											</th>
-											<th className="py-3 px-4">
-												Squad Name
-											</th>
-											<th className="py-3 px-4 w-20 text-center">
-												Tag
-											</th>
-											<th className="py-3 px-4 w-16 text-center">
-												PL
-											</th>
-											<th className="py-3 px-4 w-16 text-center">
-												W
-											</th>
-											<th className="py-3 px-4 w-16 text-center">
-												D
-											</th>
-											<th className="py-3 px-4 w-16 text-center">
-												L
-											</th>
-											<th className="py-3 px-4 w-16 text-center">
-												GD
-											</th>
-											<th className="py-3 px-4 w-20 text-center text-accent-signal">
-												PTS
-											</th>
-										</tr>
-									</thead>
-									<tbody className="divide-y divide-border-line font-data">
-										{leagueStandings.map((row) => (
-											<tr
-												key={row.shortCode}
-												className="hover:bg-bg-void/40 transition-colors"
-											>
-												<td className="py-3 px-4 text-center font-bold">
-													{row.rank}
-												</td>
-												<td className="py-3 px-4 font-body font-medium text-text-primary">
-													{row.name}
-												</td>
-												<td className="py-3 px-4 text-center text-text-muted">
-													{row.shortCode}
-												</td>
-												<td className="py-3 px-4 text-center">
-													{row.played}
-												</td>
-												<td className="py-3 px-4 text-center">
-													{row.won}
-												</td>
-												<td className="py-3 px-4 text-center">
-													{row.drawn ?? 0}
-												</td>
-												<td className="py-3 px-4 text-center">
-													{row.lost}
-												</td>
-												<td className="py-3 px-4 text-center">
-													{row.gd ?? 0}
-												</td>
-												<td className="py-3 px-4 text-center font-bold text-accent-signal">
-													{row.pts}
-												</td>
-											</tr>
-										))}
-									</tbody>
-								</table>
+								<div className="bg-bg-surface border border-border-line rounded p-10 text-center text-text-muted text-xs">
+									No stage or standings data available for
+									this competition yet.
+								</div>
 							)}
 						</div>
 					)}

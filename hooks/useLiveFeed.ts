@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { MatchCardProps } from '@/components/broadcast/match-card';
 import { TickerMatch } from '@/components/broadcast/broadcast-ticker';
 import { ToastMessage } from '@/components/ui/ScoreToast';
+import { combineCompetitionName } from '@/lib/competitionName';
 import { useNotificationPrefs } from './useNotificationPrefs';
 
 export interface CompetitionGroup {
@@ -32,8 +33,13 @@ type RawTeam =
 		}[]
 	| null;
 type RawGameTitle = { name: string; slug: string; game_types?: { slug: string } | { slug: string }[] | null } | { name: string; slug: string; game_types?: { slug: string } | { slug: string }[] | null }[] | null;
-type RawCompInstance = { id: string; name: string; slug: string } | { id: string; name: string; slug: string }[] | null;
-
+interface RawCompInstanceRow {
+  id: string;
+  name: string;
+  slug: string;
+  comp_series?: { name: string } | { name: string }[] | null;
+}
+type RawCompInstance = RawCompInstanceRow | RawCompInstanceRow[] | null;
 interface RawMatchRow {
   id: string;
   status: string;
@@ -123,7 +129,8 @@ function groupMatchesByCompetition(rows: RawMatchRow[]): CompetitionGroup[] {
     const fallbackName = 'Competition';
     const fallbackSlug = row.comp_instance_id;
 
-    const compName = comp?.name ?? fallbackName;
+    const seriesName = one(comp?.comp_series ?? null)?.name;
+    const compName = combineCompetitionName(seriesName, comp?.name ?? fallbackName);
     const compSlug = comp?.slug ?? fallbackSlug;
 
     const gameTitle = one(row.game_titles);
@@ -170,7 +177,7 @@ const MATCH_QUERY = `
   ),
 
   game_titles(name, slug, game_types(slug)),
-  comp_instance:comp_instances!matches_comp_instance_id_fkey(id, name, slug),
+  comp_instance:comp_instances!matches_comp_instance_id_fkey(id, name, slug, comp_series(name)),
   match_scores(home_current_score, away_current_score)
 `;
 
@@ -220,7 +227,7 @@ export function useLiveFeed(date?: string) {
 
     const { data: compData, error: compErr } = await supabase
       .from('comp_instances')
-      .select('id, name, slug')
+      .select('id, name, slug, comp_series(name)')
       .in('id', compIds);
 
     if (compErr) throw compErr;
@@ -245,9 +252,6 @@ export function useLiveFeed(date?: string) {
       const away = one(row.away_team);
       const gameTitle = one(row.game_titles);
       const scoreRow = one(row.match_scores);
-
-      console.log('ROW HOME TEAM', row.home_team);
-      console.log('ROW AWAY TEAM', row.away_team);
 
       return {
         id: row.id,

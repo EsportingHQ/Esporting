@@ -15,7 +15,6 @@ export interface CompetitionDetail {
     starts_at: string | null;
     ends_at: string | null;
     seriesName: string;
-    organiserName: string;
 }
 
 export interface StandingRow {
@@ -48,6 +47,14 @@ export interface ParticipantTeam {
     shortCode: string;
 }
 
+export interface StageGroup {
+    stageId: string;
+    name: string;
+    stageType: string;
+    stageOrder: number;
+    matches: MatchCardProps[];
+}
+
 function one<T>(value: T | T[] | null | undefined): T | null {
     if (Array.isArray(value)) return value[0] ?? null;
     return value ?? null;
@@ -59,6 +66,12 @@ interface RawTeamRef {
     short_code: string | null;
 }
 
+interface RawStageRef {
+    name: string;
+    stage_type: string;
+    stage_order: number;
+}
+
 interface RawMatchRow {
     id: string;
     status: string;
@@ -67,10 +80,12 @@ interface RawMatchRow {
     home_maps_won: number | null;
     away_maps_won: number | null;
     best_of: number;
+    stage_id: string | null;
     home_team: RawTeamRef | RawTeamRef[] | null;
     away_team: RawTeamRef | RawTeamRef[] | null;
     game_titles: { name: string; slug: string; game_types?: { slug: string } | { slug: string }[] | null } | { name: string; slug: string; game_types?: { slug: string } | { slug: string }[] | null }[] | null;
     match_scores: { home_current_score: number; away_current_score: number } | { home_current_score: number; away_current_score: number }[] | null;
+    comp_stages: RawStageRef | RawStageRef[] | null;
 }
 
 function mapGameType(gameTypeSlug: string | undefined): 'football' | 'shooter' | 'br' {
@@ -114,11 +129,12 @@ function mapRowToCard(row: RawMatchRow, competitionSlug: string): MatchCardProps
 }
 
 const MATCH_QUERY = `
-    id, status, scheduled_at, match_format, home_maps_won, away_maps_won, best_of,
+    id, status, scheduled_at, match_format, home_maps_won, away_maps_won, best_of, stage_id,
     home_team:teams!matches_team_home_id_fkey(id, name, short_code),
     away_team:teams!matches_team_away_id_fkey(id, name, short_code),
     game_titles(name, slug, game_types(slug)),
-    match_scores(home_current_score, away_current_score)
+    match_scores(home_current_score, away_current_score),
+    comp_stages(name, stage_type, stage_order)
 `;
 
 export function useCompetitionDetail(slug: string) {
@@ -128,6 +144,7 @@ export function useCompetitionDetail(slug: string) {
     const [resultsMatches, setResultsMatches] = useState<MatchCardProps[]>([]);
     const [standings, setStandings] = useState<StandingRow[]>([]);
     const [brStandings, setBrStandings] = useState<BRStandingRow[]>([]);
+    const [stageGroups, setStageGroups] = useState<StageGroup[]>([]);
     const [isBRFormat, setIsBRFormat] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
@@ -145,8 +162,7 @@ export function useCompetitionDetail(slug: string) {
             .from('comp_instances')
             .select(`
                 id, name, slug, format, status, prize_pool, description, starts_at, ends_at,
-                comp_series(name),
-                organiser_id
+                comp_series(name)
             `)
             .eq('slug', slug)
             .is('deleted_at', null)
@@ -171,14 +187,12 @@ export function useCompetitionDetail(slug: string) {
         starts_at: instanceRaw.starts_at,
         ends_at: instanceRaw.ends_at,
         seriesName,
-        organiserName: '',
         };
         setCompetition(instance);
 
         const isBR = instance.format === 'ranking';
         setIsBRFormat(isBR);
 
-        // Registered teams
         const { data: regs } = await supabase
             .from('comp_registrations')
             .select('teams(id, name, short_code)')
@@ -191,7 +205,6 @@ export function useCompetitionDetail(slug: string) {
             .map((t) => ({ id: t!.id, name: t!.name, shortCode: t!.short_code ?? '' }));
         setParticipants(teams);
 
-        // Matches — scheduled/delayed/live go to schedule, completed go to results
         const { data: matchesRaw } = await supabase
             .from('matches')
             .select(MATCH_QUERY)
@@ -207,8 +220,30 @@ export function useCompetitionDetail(slug: string) {
         setScheduleMatches(upcoming.map((r) => mapRowToCard(r, slug)));
         setResultsMatches(completed.map((r) => mapRowToCard(r, slug)));
 
+        // Group matches by stage (Final, Semi-Final, Group A, etc.) — used
+        // as the standings-tab fallback when no computed league standings
+        // exist, which is always true for PandaScore-synced knockouts since
+        // the `standings` table is only populated for organiser leagues.
+        const stageMap = new Map<string, StageGroup>();
+        for (const row of rows) {
+            if (!row.stage_id) continue;
+            const stage = one(row.comp_stages);
+            if (!stage) continue;
+
+            if (!stageMap.has(row.stage_id)) {
+                stageMap.set(row.stage_id, {
+                    stageId: row.stage_id,
+                    name: stage.name,
+                    stageType: stage.stage_type,
+                    stageOrder: stage.stage_order,
+                    matches: [],
+                });
+            }
+            stageMap.get(row.stage_id)!.matches.push(mapRowToCard(row, slug));
+        }
+        setStageGroups(Array.from(stageMap.values()).sort((a, b) => a.stageOrder - b.stageOrder));
+
         if (isBR) {
-            // BR standings — aggregate br_match_results across all this competition's matches
             const { data: brRows } = await supabase
                 .from('br_match_results')
                 .select(`
@@ -257,8 +292,6 @@ export function useCompetitionDetail(slug: string) {
 
             setBrStandings(sorted);
         } else {
-            // standings are scoped by stage_id, not comp_instance_id directly —
-            // fetch this competition's stage ids first
             const { data: stageRows } = await supabase
                 .from('comp_stages')
                 .select('id')
@@ -320,6 +353,7 @@ export function useCompetitionDetail(slug: string) {
         resultsMatches,
         standings,
         brStandings,
+        stageGroups,
         isBRFormat,
         isLoading,
         error,

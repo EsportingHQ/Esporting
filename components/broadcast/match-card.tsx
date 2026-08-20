@@ -72,9 +72,6 @@ export function MatchCard({
 	// Accessible string representation for screen readers
 	const accessibleLabel = `${homeTeam.name} ${homeScore}, ${awayTeam.name} ${awayScore}. ${gameTitle}. Status: ${status}. ${timeLabel || ''}`;
 
-	console.log('HOME LOGO', homeTeam.logoUrl);
-	console.log('AWAY LOGO', awayTeam.logoUrl);
-
 	const content = (
 		<div
 			tabIndex={0}

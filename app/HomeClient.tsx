@@ -23,6 +23,15 @@ export default function HomeClient() {
 
 	const [gameFilter, setGameFilter] = useState<string>('all');
 
+	const [gameTypeFilter, setGameTypeFilter] = useState<
+		'all' | 'football' | 'shooter'
+	>('all');
+
+	function handleGameTypeFilter(next: 'all' | 'football' | 'shooter') {
+		setGameTypeFilter(next);
+		setGameFilter('all');
+	}
+
 	const [selectedDate, setSelectedDate] = useState(() =>
 		new Date().toISOString().slice(0, 10),
 	);
@@ -41,6 +50,12 @@ export default function HomeClient() {
 
 	// Filter groups and matches
 	const filteredGroups = groups
+		.filter((group) => {
+			if (gameTypeFilter === 'all') return true;
+			const category =
+				group.gameType === 'football' ? 'football' : 'shooter';
+			return category === gameTypeFilter;
+		})
 		.map((group) => {
 			// Filter matches within group
 			const matches = group.matches.filter((match) => {
@@ -96,11 +111,17 @@ export default function HomeClient() {
 		return b.liveCount - a.liveCount;
 	});
 
+	const categoryFilteredGroupsForTabs = groups.filter((g) => {
+		if (gameTypeFilter === 'all') return true;
+		const category = g.gameType === 'football' ? 'football' : 'shooter';
+		return category === gameTypeFilter;
+	});
+
 	const gameTabs = [
 		{ id: 'all', label: 'ALL' },
 		...Array.from(
 			new Map(
-				groups
+				categoryFilteredGroupsForTabs
 					.flatMap((g) => g.matches)
 					.map((m) => [
 						m.gameTitle.toLowerCase(),
@@ -160,6 +181,27 @@ export default function HomeClient() {
 
 						{/* Filter Controls Row */}
 						<div className="flex flex-wrap items-center justify-between gap-3 bg-bg-surface border border-border-line p-3 rounded">
+							{/* Category Filter Tabs */}
+							<div className="flex border border-border-line rounded overflow-hidden text-xs font-display font-bold">
+								{(['all', 'football', 'shooter'] as const).map(
+									(cat) => (
+										<button
+											key={cat}
+											onClick={() =>
+												handleGameTypeFilter(cat)
+											}
+											className={`px-3 py-1.5 uppercase transition-colors ${
+												gameTypeFilter === cat
+													? 'bg-accent-readout text-bg-void font-extrabold'
+													: 'bg-bg-void hover:bg-bg-void/50 text-text-muted hover:text-text-primary'
+											}`}
+										>
+											{cat}
+										</button>
+									),
+								)}
+							</div>
+
 							{/* Status Filter Tabs */}
 							<div className="flex border border-border-line rounded overflow-hidden text-xs font-display font-bold">
 								{statusTabs.map((tab) => (
@@ -259,6 +301,7 @@ export default function HomeClient() {
 							onAction={() => {
 								setStatusFilter('all');
 								setGameFilter('all');
+								setGameTypeFilter('all');
 							}}
 						/>
 					)}

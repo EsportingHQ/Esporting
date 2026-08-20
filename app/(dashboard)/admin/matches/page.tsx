@@ -40,6 +40,7 @@ export default async function AdminMatchesPage() {
 		)
 		.is('deleted_at', null)
 		.not('status', 'in', '("completed","cancelled")')
+		.is('external_source', null)
 		.order('scheduled_at', { ascending: true, nullsFirst: false });
 
 	// Fetch the contributor role ID
