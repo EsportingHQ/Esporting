@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
 interface TallyLightProps {
   className?: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
 }
 
-export function TallyLight({ className = '', size = 'md' }: TallyLightProps) {
+export function TallyLight({ className = "", size = "md" }: TallyLightProps) {
   const sizeClasses = {
-    sm: 'w-1.5 h-1.5',
-    md: 'w-2.5 h-2.5',
-    lg: 'w-3.5 h-3.5',
+    sm: "w-1.5 h-1.5",
+    md: "w-2.5 h-2.5",
+    lg: "w-3.5 h-3.5",
   };
 
   return (

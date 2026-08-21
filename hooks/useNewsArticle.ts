@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 export interface NewsArticleDetail {
   id: string;
@@ -29,13 +29,13 @@ export function useNewsArticle(slug: string) {
         setIsLoading(true);
 
         const { data, error } = await supabase
-          .from('news_articles')
+          .from("news_articles")
           .select(
-            'id, title, slug, body, excerpt, published_at, profiles!news_articles_author_id_fkey(username, display_name)'
+            "id, title, slug, body, excerpt, published_at, profiles!news_articles_author_id_fkey(username, display_name)",
           )
-          .eq('slug', slug)
-          .eq('status', 'published')
-          .is('deleted_at', null)
+          .eq("slug", slug)
+          .eq("status", "published")
+          .is("deleted_at", null)
           .single();
 
         if (error || !data) {
@@ -54,17 +54,18 @@ export function useNewsArticle(slug: string) {
           body: data.body,
           excerpt: data.excerpt,
           published_at: data.published_at,
-          authorName: profile?.display_name ?? profile?.username ?? 'Broadcast Desk',
-          tag: 'NEWS',
+          authorName:
+            profile?.display_name ?? profile?.username ?? "Broadcast Desk",
+          tag: "NEWS",
         });
 
         const { data: relatedRows } = await supabase
-          .from('news_articles')
-          .select('id, title, slug, body, excerpt, published_at')
-          .eq('status', 'published')
-          .is('deleted_at', null)
-          .neq('slug', slug)
-          .order('published_at', { ascending: false })
+          .from("news_articles")
+          .select("id, title, slug, body, excerpt, published_at")
+          .eq("status", "published")
+          .is("deleted_at", null)
+          .neq("slug", slug)
+          .order("published_at", { ascending: false })
           .limit(3);
 
         setRelated(
@@ -72,12 +73,12 @@ export function useNewsArticle(slug: string) {
             id: r.id,
             title: r.title,
             slug: r.slug,
-            body: r.body ?? '',
+            body: r.body ?? "",
             excerpt: r.excerpt,
             published_at: r.published_at,
-            authorName: '',
-            tag: 'NEWS',
-          }))
+            authorName: "",
+            tag: "NEWS",
+          })),
         );
       } catch (e) {
         setError(e as Error);

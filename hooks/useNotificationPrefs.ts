@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 export interface NotificationPreferences {
   matchStart: boolean;
@@ -24,12 +24,12 @@ export function useNotificationPrefs() {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('esporting_notification_prefs');
+      const stored = localStorage.getItem("esporting_notification_prefs");
       if (stored) {
         setPrefs({ ...defaultPrefs, ...JSON.parse(stored) });
       }
     } catch (e) {
-      console.error('Failed to load notification preferences', e);
+      console.error("Failed to load notification preferences", e);
     } finally {
       setIsLoaded(true);
     }
@@ -39,7 +39,10 @@ export function useNotificationPrefs() {
     setPrefs((prev) => {
       const updated = { ...prev, ...newPrefs };
       try {
-        localStorage.setItem('esporting_notification_prefs', JSON.stringify(updated));
+        localStorage.setItem(
+          "esporting_notification_prefs",
+          JSON.stringify(updated),
+        );
       } catch (e) {}
       return updated;
     });

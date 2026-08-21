@@ -1,38 +1,49 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { MatchCardProps } from '@/components/broadcast/match-card';
-import { TickerMatch } from '@/components/broadcast/broadcast-ticker';
-import { ToastMessage } from '@/components/ui/ScoreToast';
-import { combineCompetitionName } from '@/lib/competitionName';
-import { useNotificationPrefs } from './useNotificationPrefs';
+import { useState, useEffect, useCallback } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { MatchCardProps } from "@/components/broadcast/match-card";
+import { TickerMatch } from "@/components/broadcast/broadcast-ticker";
+import { ToastMessage } from "@/components/ui/ScoreToast";
+import { combineCompetitionName } from "@/lib/competitionName";
+import { useNotificationPrefs } from "./useNotificationPrefs";
 
 export interface CompetitionGroup {
   id: string;
   name: string;
   slug: string;
   gameTitle: string;
-  gameType: 'football' | 'shooter' | 'br';
+  gameType: "football" | "shooter" | "br";
   liveCount: number;
   matches: MatchCardProps[];
 }
 
 type RawTeam =
-	| {
-			id: string;
-			name: string;
-			short_code: string | null;
-			logo_url: string | null;
-		}
-	| {
-			id: string;
-			name: string;
-			short_code: string | null;
-			logo_url: string | null;
-		}[]
-	| null;
-type RawGameTitle = { name: string; slug: string; game_types?: { slug: string } | { slug: string }[] | null } | { name: string; slug: string; game_types?: { slug: string } | { slug: string }[] | null }[] | null;
+  | {
+      id: string;
+      name: string;
+      short_code: string | null;
+      logo_url: string | null;
+    }
+  | {
+      id: string;
+      name: string;
+      short_code: string | null;
+      logo_url: string | null;
+    }[]
+  | null;
+type RawGameTitle =
+  | {
+      name: string;
+      slug: string;
+      game_types?: { slug: string } | { slug: string }[] | null;
+    }
+  | {
+      name: string;
+      slug: string;
+      game_types?: { slug: string } | { slug: string }[] | null;
+    }[]
+  | null;
 interface RawCompInstanceRow {
   id: string;
   name: string;
@@ -53,7 +64,10 @@ interface RawMatchRow {
   away_team: RawTeam;
   game_titles: RawGameTitle;
   comp_instance: RawCompInstance;
-  match_scores: { home_current_score: number; away_current_score: number }[] | { home_current_score: number; away_current_score: number } | null;
+  match_scores:
+    | { home_current_score: number; away_current_score: number }[]
+    | { home_current_score: number; away_current_score: number }
+    | null;
 }
 
 function one<T>(value: T | T[] | null | undefined): T | null {
@@ -61,18 +75,23 @@ function one<T>(value: T | T[] | null | undefined): T | null {
   return value ?? null;
 }
 
-function mapGameType(gameTypeSlug: string | undefined): 'football' | 'shooter' | 'br' {
-  if (gameTypeSlug === 'football') return 'football';
-  if (gameTypeSlug?.includes('br')) return 'br';
-  return 'shooter';
+function mapGameType(
+  gameTypeSlug: string | undefined,
+): "football" | "shooter" | "br" {
+  if (gameTypeSlug === "football") return "football";
+  if (gameTypeSlug?.includes("br")) return "br";
+  return "shooter";
 }
 
 function mapStatusLabel(status: string, scheduledAt: string | null): string {
-  if (status === 'live') return 'LIVE NOW';
-  if (status === 'completed') return 'Finished';
-  if (status === 'delayed') return 'Delayed';
-  if (status === 'scheduled' && scheduledAt) {
-    return new Date(scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (status === "live") return "LIVE NOW";
+  if (status === "completed") return "Finished";
+  if (status === "delayed") return "Delayed";
+  if (status === "scheduled" && scheduledAt) {
+    return new Date(scheduledAt).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   }
   return status;
 }
@@ -87,17 +106,17 @@ function mapRowToCardProps(row: RawMatchRow): MatchCardProps {
   return {
     id: row.id,
     gameType: mapGameType(gameTypeObj?.slug),
-    gameTitle: gameTitle?.name ?? '',
+    gameTitle: gameTitle?.name ?? "",
     homeTeam: {
-      id: home?.id ?? '',
-      name: home?.name ?? 'TBD',
-      shortCode: home?.short_code ?? '',
+      id: home?.id ?? "",
+      name: home?.name ?? "TBD",
+      shortCode: home?.short_code ?? "",
       logoUrl: home?.logo_url ?? null,
     },
     awayTeam: {
-      id: away?.id ?? '',
-      name: away?.name ?? 'TBD',
-      shortCode: away?.short_code ?? '',
+      id: away?.id ?? "",
+      name: away?.name ?? "TBD",
+      shortCode: away?.short_code ?? "",
       logoUrl: away?.logo_url ?? null,
     },
     homeScore: scoreRow?.home_current_score ?? 0,
@@ -105,13 +124,13 @@ function mapRowToCardProps(row: RawMatchRow): MatchCardProps {
     homeMapsWon: row.home_maps_won ?? undefined,
     awayMapsWon: row.away_maps_won ?? undefined,
     bestOf: row.best_of > 1 ? row.best_of : undefined,
-    status: row.status as MatchCardProps['status'],
+    status: row.status as MatchCardProps["status"],
     timeLabel: mapStatusLabel(row.status, row.scheduled_at),
     competitionSlug:
       one(row.comp_instance)?.slug ??
-        (row.comp_instance_id === 'e88e0b35-1782-4143-b857-af6d3d7ae807'
-          ? 'lagos-mobile-championship-season-1-2026'
-          : row.comp_instance_id),
+      (row.comp_instance_id === "e88e0b35-1782-4143-b857-af6d3d7ae807"
+        ? "lagos-mobile-championship-season-1-2026"
+        : row.comp_instance_id),
   };
 }
 
@@ -121,16 +140,21 @@ function groupMatchesByCompetition(rows: RawMatchRow[]): CompetitionGroup[] {
   for (const row of rows) {
     // Support both alias names during migration/cache refresh
     const comp =
-      one((row as RawMatchRow & { comp_instances?: RawCompInstance }).comp_instances) ??
-      one(row.comp_instance);
+      one(
+        (row as RawMatchRow & { comp_instances?: RawCompInstance })
+          .comp_instances,
+      ) ?? one(row.comp_instance);
 
     const compId = comp?.id ?? row.comp_instance_id;
 
-    const fallbackName = 'Competition';
+    const fallbackName = "Competition";
     const fallbackSlug = row.comp_instance_id;
 
     const seriesName = one(comp?.comp_series ?? null)?.name;
-    const compName = combineCompetitionName(seriesName, comp?.name ?? fallbackName);
+    const compName = combineCompetitionName(
+      seriesName,
+      comp?.name ?? fallbackName,
+    );
     const compSlug = comp?.slug ?? fallbackSlug;
 
     const gameTitle = one(row.game_titles);
@@ -142,7 +166,7 @@ function groupMatchesByCompetition(rows: RawMatchRow[]): CompetitionGroup[] {
         id: compId,
         name: compName,
         slug: compSlug,
-        gameTitle: gameTitle?.name ?? '',
+        gameTitle: gameTitle?.name ?? "",
         gameType,
         liveCount: 0,
         matches: [],
@@ -153,7 +177,7 @@ function groupMatchesByCompetition(rows: RawMatchRow[]): CompetitionGroup[] {
     const cardProps = mapRowToCardProps(row);
     group.matches.push(cardProps);
 
-    if (row.status === 'live') group.liveCount += 1;
+    if (row.status === "live") group.liveCount += 1;
   }
 
   return Array.from(byComp.values());
@@ -189,7 +213,7 @@ export function useLiveFeed(date?: string) {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const { prefs } = useNotificationPrefs();
 
-  const addToast = useCallback((toast: Omit<ToastMessage, 'id'>) => {
+  const addToast = useCallback((toast: Omit<ToastMessage, "id">) => {
     const id = `toast-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
     setToasts((prev) => [...prev, { ...toast, id }]);
   }, []);
@@ -198,86 +222,87 @@ export function useLiveFeed(date?: string) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  const refetchGroups = useCallback(async (supabase: ReturnType<typeof createClient>) => {
-    let query = supabase
-      .from('matches')
-      .select(MATCH_QUERY)
-      .in('status', ['live', 'scheduled', 'delayed', 'completed'])
-      .is('deleted_at', null);
+  const refetchGroups = useCallback(
+    async (supabase: ReturnType<typeof createClient>) => {
+      let query = supabase
+        .from("matches")
+        .select(MATCH_QUERY)
+        .in("status", ["live", "scheduled", "delayed", "completed"])
+        .is("deleted_at", null);
 
-    if (date) {
-      const start = new Date(`${date}T00:00:00`);
-      const end = new Date(`${date}T23:59:59`);
+      if (date) {
+        const start = new Date(`${date}T00:00:00`);
+        const end = new Date(`${date}T23:59:59`);
 
-      query = query
-        .gte('scheduled_at', start.toISOString())
-        .lte('scheduled_at', end.toISOString());
-    }
+        query = query
+          .gte("scheduled_at", start.toISOString())
+          .lte("scheduled_at", end.toISOString());
+      }
 
-    const { data, error: fetchErr } = await query
-      .order('scheduled_at', { ascending: true, nullsFirst: false })
-      .limit(50);
+      const { data, error: fetchErr } = await query
+        .order("scheduled_at", { ascending: true, nullsFirst: false })
+        .limit(50);
 
-    if (fetchErr) throw fetchErr;
+      if (fetchErr) throw fetchErr;
 
-    const rows = (data ?? []) as unknown as RawMatchRow[];
+      const rows = (data ?? []) as unknown as RawMatchRow[];
 
-    // Fetch competition metadata separately
-    const compIds = [...new Set(rows.map((r) => r.comp_instance_id))];
+      // Fetch competition metadata separately
+      const compIds = [...new Set(rows.map((r) => r.comp_instance_id))];
 
-    const { data: compData, error: compErr } = await supabase
-      .from('comp_instances')
-      .select('id, name, slug, comp_series(name)')
-      .in('id', compIds);
+      const { data: compData, error: compErr } = await supabase
+        .from("comp_instances")
+        .select("id, name, slug, comp_series(name)")
+        .in("id", compIds);
 
-    if (compErr) throw compErr;
+      if (compErr) throw compErr;
 
-    const compMap = new Map(
-      (compData ?? []).map((c) => [c.id, c]),
-    );
+      const compMap = new Map((compData ?? []).map((c) => [c.id, c]));
 
-    // Attach competition metadata manually
-    const rowsWithComp = rows.map((row) => ({
-      ...row,
-      comp_instance: compMap.get(row.comp_instance_id) ?? null,
-    }));
+      // Attach competition metadata manually
+      const rowsWithComp = rows.map((row) => ({
+        ...row,
+        comp_instance: compMap.get(row.comp_instance_id) ?? null,
+      }));
 
-    const builtGroups = groupMatchesByCompetition(rowsWithComp);
+      const builtGroups = groupMatchesByCompetition(rowsWithComp);
 
-    setGroups(builtGroups);
+      setGroups(builtGroups);
 
-    const liveRows = rows.filter((r) => r.status === 'live').slice(0, 6);
-    const ticker: TickerMatch[] = liveRows.map((row) => {
-      const home = one(row.home_team);
-      const away = one(row.away_team);
-      const gameTitle = one(row.game_titles);
-      const scoreRow = one(row.match_scores);
+      const liveRows = rows.filter((r) => r.status === "live").slice(0, 6);
+      const ticker: TickerMatch[] = liveRows.map((row) => {
+        const home = one(row.home_team);
+        const away = one(row.away_team);
+        const gameTitle = one(row.game_titles);
+        const scoreRow = one(row.match_scores);
 
-      return {
-        id: row.id,
-        gameCode: gameTitle?.name ?? '',
+        return {
+          id: row.id,
+          gameCode: gameTitle?.name ?? "",
 
-        homeTeam: {
-          id: home?.id,
-          name: home?.name ?? 'TBD',
-          shortCode: home?.short_code ?? 'TBD',
-          logoUrl: home?.logo_url ?? null,
-        },
+          homeTeam: {
+            id: home?.id,
+            name: home?.name ?? "TBD",
+            shortCode: home?.short_code ?? "TBD",
+            logoUrl: home?.logo_url ?? null,
+          },
 
-        awayTeam: {
-          id: away?.id,
-          name: away?.name ?? 'TBD',
-          shortCode: away?.short_code ?? 'TBD',
-          logoUrl: away?.logo_url ?? null,
-        },
+          awayTeam: {
+            id: away?.id,
+            name: away?.name ?? "TBD",
+            shortCode: away?.short_code ?? "TBD",
+            logoUrl: away?.logo_url ?? null,
+          },
 
-        homeScore: scoreRow?.home_current_score ?? 0,
-        awayScore: scoreRow?.away_current_score ?? 0,
-        status: 'live',
-      };
-    });
-    setTickerMatches(ticker);
-  }, [date]);
+          homeScore: scoreRow?.home_current_score ?? 0,
+          awayScore: scoreRow?.away_current_score ?? 0,
+          status: "live",
+        };
+      });
+      setTickerMatches(ticker);
+    },
+    [date],
+  );
 
   useEffect(() => {
     const supabase = createClient();
@@ -288,7 +313,7 @@ export function useLiveFeed(date?: string) {
         await refetchGroups(supabase);
         setError(null);
       } catch (err) {
-        console.error('Live feed fetch failed', err);
+        console.error("Live feed fetch failed", err);
         // keep previous data instead of crashing the UI
       } finally {
         setIsLoading(false);
@@ -301,10 +326,10 @@ export function useLiveFeed(date?: string) {
     // On any relevant change, refetch the grouped feed — simplest
     // correct approach given matches span many competitions at once.
     const channel = supabase
-      .channel('public-live-feed')
+      .channel("public-live-feed")
       .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'match_scores' },
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "match_scores" },
         () => {
           refetchGroups(supabase).catch((err) =>
             setError(err instanceof Error ? err : new Error(String(err))),
@@ -312,19 +337,19 @@ export function useLiveFeed(date?: string) {
         },
       )
       .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'matches' },
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "matches" },
         (payload) => {
           const newRow = payload.new as { status?: string; id?: string };
-          if (newRow.status === 'live' && prefs.matchStart) {
+          if (newRow.status === "live" && prefs.matchStart) {
             addToast({
-              gameCode: '',
-              homeTeam: '',
-              awayTeam: '',
-              newScore: '',
-              eventType: 'Match is now live',
-              matchId: newRow.id ?? '',
-              competitionSlug: '',
+              gameCode: "",
+              homeTeam: "",
+              awayTeam: "",
+              newScore: "",
+              eventType: "Match is now live",
+              matchId: newRow.id ?? "",
+              competitionSlug: "",
             });
           }
           refetchGroups(supabase).catch((err) =>

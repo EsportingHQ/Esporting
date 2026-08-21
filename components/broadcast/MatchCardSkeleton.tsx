@@ -1,11 +1,14 @@
-'use client';
+"use client";
 
 interface MatchCardSkeletonProps {
   count?: number;
   className?: string;
 }
 
-export function MatchCardSkeleton({ count = 1, className = '' }: MatchCardSkeletonProps) {
+export function MatchCardSkeleton({
+  count = 1,
+  className = "",
+}: MatchCardSkeletonProps) {
   const items = Array.from({ length: count });
 
   return (

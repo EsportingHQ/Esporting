@@ -1,18 +1,18 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg-void: #0B0F14;
+  --color-bg-void: #0b0f14;
   --color-bg-surface: #131922;
-  --color-bg-elevated: #1A2332;
-  --color-border-line: #232B36;
-  --color-accent-signal: #FF4B3E;
-  --color-accent-readout: #00D4FF;
-  --color-accent-favorite: #FBBF24;
-  --color-state-win: #4ADE80;
-  --color-state-alert: #F87171;
-  --color-text-primary: #E8ECEF;
-  --color-text-muted: #8A94A3;
-  --color-bg-skeleton: #1E2A3A;
+  --color-bg-elevated: #1a2332;
+  --color-border-line: #232b36;
+  --color-accent-signal: #ff4b3e;
+  --color-accent-readout: #00d4ff;
+  --color-accent-favorite: #fbbf24;
+  --color-state-win: #4ade80;
+  --color-state-alert: #f87171;
+  --color-text-primary: #e8ecef;
+  --color-text-muted: #8a94a3;
+  --color-bg-skeleton: #1e2a3a;
   --color-bg-skeleton-highlight: #253344;
 
   --font-display: "Rajdhani", "Impact", "Arial Black", sans-serif;
@@ -22,30 +22,34 @@
 
 /* Dimmed Alternative Theme Tokens */
 [data-theme="dimmed"] {
-  --color-bg-void: #161D27;
-  --color-bg-surface: #1F2836;
+  --color-bg-void: #161d27;
+  --color-bg-surface: #1f2836;
   --color-bg-elevated: #283446;
   --color-border-line: #334155;
-  --color-text-primary: #F1F5F9;
-  --color-text-muted: #94A3B8;
+  --color-text-primary: #f1f5f9;
+  --color-text-muted: #94a3b8;
   --color-bg-skeleton: #273548;
-  --color-bg-skeleton-highlight: #33455E;
+  --color-bg-skeleton-highlight: #33455e;
 }
 
 @layer base {
-  html, body {
-    background-color: var(--color-bg-void, #0B0F14);
-    color: var(--color-text-primary, #E8ECEF);
+  html,
+  body {
+    background-color: var(--color-bg-void, #0b0f14);
+    color: var(--color-text-primary, #e8ecef);
     font-family: var(--font-body), sans-serif;
     min-height: 100vh;
     overflow-x: hidden;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
   }
 }
 
 /* Custom animations & helpers */
 @keyframes tally-breath {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.4;
     transform: scale(0.95);
   }
@@ -88,9 +92,9 @@
 .skeleton-shimmer {
   background: linear-gradient(
     90deg,
-    var(--color-bg-skeleton, #1E2A3A) 25%,
+    var(--color-bg-skeleton, #1e2a3a) 25%,
     var(--color-bg-skeleton-highlight, #253344) 50%,
-    var(--color-bg-skeleton, #1E2A3A) 75%
+    var(--color-bg-skeleton, #1e2a3a) 75%
   );
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.5s ease-in-out infinite;
@@ -102,7 +106,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tally-pulse, .score-flash, .skeleton-shimmer {
+  .tally-pulse,
+  .score-flash,
+  .skeleton-shimmer {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
@@ -115,12 +121,12 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-bg-void, #0B0F14);
+  background: var(--color-bg-void, #0b0f14);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border-line, #232B36);
+  background: var(--color-border-line, #232b36);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted, #8A94A3);
+  background: var(--color-text-muted, #8a94a3);
 }

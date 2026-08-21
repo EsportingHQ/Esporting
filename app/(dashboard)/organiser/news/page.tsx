@@ -1,9 +1,14 @@
-
-import { createClient } from '@/lib/supabase/server';
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
-import Link from 'next/link';
-import { FileText, PlusCircle, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { createClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import {
+  FileText,
+  PlusCircle,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+} from "lucide-react";
 
 type ArticleRow = {
   id: string;
@@ -18,22 +23,22 @@ type ArticleRow = {
 function getCompetitionName(
   comp: { name: string } | { name: string }[] | null,
 ): string {
-  if (!comp) return 'General';
-  return Array.isArray(comp) ? (comp[0]?.name ?? 'General') : comp.name;
+  if (!comp) return "General";
+  return Array.isArray(comp) ? (comp[0]?.name ?? "General") : comp.name;
 }
 
 function statusStyles(status: string) {
   switch (status) {
-    case 'published':
-      return 'bg-state-win/10 text-state-win border border-state-win/30';
-    case 'pending_review':
-      return 'bg-accent-readout/10 text-accent-readout border border-accent-readout/30';
-    case 'rejected':
-      return 'bg-state-alert/10 text-state-alert border border-state-alert/30';
-    case 'archived':
-      return 'bg-bg-void text-text-muted border border-border-line';
+    case "published":
+      return "bg-state-win/10 text-state-win border border-state-win/30";
+    case "pending_review":
+      return "bg-accent-readout/10 text-accent-readout border border-accent-readout/30";
+    case "rejected":
+      return "bg-state-alert/10 text-state-alert border border-state-alert/30";
+    case "archived":
+      return "bg-bg-void text-text-muted border border-border-line";
     default:
-      return 'bg-bg-void text-text-muted border border-border-line';
+      return "bg-bg-void text-text-muted border border-border-line";
   }
 }
 
@@ -45,13 +50,13 @@ export default async function OrganiserNewsPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect('/login');
+  if (!user) redirect("/login");
 
   const { data: roleData } = await supabase
-    .from('user_role_assignments')
-    .select('roles(name)')
-    .eq('user_id', user.id)
-    .is('revoked_at', null);
+    .from("user_role_assignments")
+    .select("roles(name)")
+    .eq("user_id", user.id)
+    .is("revoked_at", null);
 
   const roles =
     (roleData as { roles: { name: string } }[] | null)?.map(
@@ -59,13 +64,14 @@ export default async function OrganiserNewsPage() {
     ) ?? [];
 
   const canAccess =
-    roles.includes('super_admin') || roles.includes('organiser');
+    roles.includes("super_admin") || roles.includes("organiser");
 
-  if (!canAccess) redirect('/dashboard-redirect');
+  if (!canAccess) redirect("/dashboard-redirect");
 
   const { data: articles } = await supabase
-    .from('news_articles')
-    .select(`
+    .from("news_articles")
+    .select(
+      `
       id,
       title,
       slug,
@@ -73,10 +79,11 @@ export default async function OrganiserNewsPage() {
       updated_at,
       published_at,
       comp_instances(name)
-    `)
-    .eq('author_id', user.id)
-    .is('deleted_at', null)
-    .order('updated_at', { ascending: false });
+    `,
+    )
+    .eq("author_id", user.id)
+    .is("deleted_at", null)
+    .order("updated_at", { ascending: false });
 
   const rows = (articles ?? []) as unknown as ArticleRow[];
 
@@ -116,7 +123,7 @@ export default async function OrganiserNewsPage() {
             Pending Review
           </p>
           <p className="text-2xl font-data font-black text-text-primary">
-            {rows.filter((a) => a.status === 'pending_review').length}
+            {rows.filter((a) => a.status === "pending_review").length}
           </p>
         </div>
 
@@ -125,7 +132,7 @@ export default async function OrganiserNewsPage() {
             Published
           </p>
           <p className="text-2xl font-data font-black text-text-primary">
-            {rows.filter((a) => a.status === 'published').length}
+            {rows.filter((a) => a.status === "published").length}
           </p>
         </div>
       </div>
@@ -151,7 +158,7 @@ export default async function OrganiserNewsPage() {
                   <span
                     className={`px-2 py-0.5 rounded-full text-[10px] font-display font-bold uppercase tracking-wider ${statusStyles(article.status)}`}
                   >
-                    {article.status.replace('_', ' ')}
+                    {article.status.replace("_", " ")}
                   </span>
 
                   <span className="flex items-center gap-1">
@@ -166,7 +173,7 @@ export default async function OrganiserNewsPage() {
                     </span>
                   )}
 
-                  {article.status === 'rejected' && (
+                  {article.status === "rejected" && (
                     <span className="flex items-center gap-1 text-state-alert">
                       <AlertCircle className="w-3 h-3" />
                       Needs revision
@@ -192,7 +199,8 @@ export default async function OrganiserNewsPage() {
               No articles yet
             </p>
             <p className="text-xs text-text-muted max-w-sm mx-auto leading-relaxed">
-              Create match recaps, tournament announcements, and editorial updates for your competitions.
+              Create match recaps, tournament announcements, and editorial
+              updates for your competitions.
             </p>
           </div>
 

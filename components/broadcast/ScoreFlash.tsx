@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
-import { RollDigit } from './roll-digit';
+import { useEffect, useRef, useState } from "react";
+import { RollDigit } from "./roll-digit";
 
 interface ScoreFlashProps {
   value: number | string;
@@ -10,10 +10,15 @@ interface ScoreFlashProps {
   className?: string;
 }
 
-export function ScoreFlash({ value, isLive = false, teamName = '', className = '' }: ScoreFlashProps) {
+export function ScoreFlash({
+  value,
+  isLive = false,
+  teamName = "",
+  className = "",
+}: ScoreFlashProps) {
   const prevValueRef = useRef(value);
   const [isFlashing, setIsFlashing] = useState(false);
-  const [srAnnouncement, setSrAnnouncement] = useState('');
+  const [srAnnouncement, setSrAnnouncement] = useState("");
 
   useEffect(() => {
     if (prevValueRef.current !== value) {
@@ -43,10 +48,13 @@ export function ScoreFlash({ value, isLive = false, teamName = '', className = '
 
       <div
         className={`px-1.5 py-0.5 rounded transition-all duration-300 ${
-          isFlashing ? 'score-flash font-bold text-accent-signal' : ''
+          isFlashing ? "score-flash font-bold text-accent-signal" : ""
         } ${className}`}
       >
-        <RollDigit value={value} className={isLive && !isFlashing ? 'text-accent-signal' : ''} />
+        <RollDigit
+          value={value}
+          className={isLive && !isFlashing ? "text-accent-signal" : ""}
+        />
       </div>
     </div>
   );

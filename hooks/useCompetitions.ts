@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useCallback } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { useEffect, useState, useCallback } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 export interface CompetitionGameTitle {
   name: string;
@@ -39,7 +39,8 @@ type RawGameTitleRow = {
   id: string;
   name: string;
   slug: string;
-  game_types: { name: string; slug: string } | { name: string; slug: string }[] | null;
+  game_types:
+    { name: string; slug: string } | { name: string; slug: string }[] | null;
 };
 
 type RawCompRow = {
@@ -54,8 +55,16 @@ type RawCompRow = {
   comp_game_titles:
     | {
         game_titles:
-          | { name: string; slug: string; game_types: { slug: string } | { slug: string }[] | null }
-          | { name: string; slug: string; game_types: { slug: string } | { slug: string }[] | null }[]
+          | {
+              name: string;
+              slug: string;
+              game_types: { slug: string } | { slug: string }[] | null;
+            }
+          | {
+              name: string;
+              slug: string;
+              game_types: { slug: string } | { slug: string }[] | null;
+            }[]
           | null;
       }[]
     | null;
@@ -63,7 +72,9 @@ type RawCompRow = {
 
 export function useCompetitions() {
   const [competitions, setCompetitions] = useState<CompetitionListItem[]>([]);
-  const [gameTitleOptions, setGameTitleOptions] = useState<GameTitleOption[]>([]);
+  const [gameTitleOptions, setGameTitleOptions] = useState<GameTitleOption[]>(
+    [],
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -74,27 +85,29 @@ export function useCompetitions() {
 
     try {
       const { data: gameTitlesRaw, error: gtErr } = await supabase
-        .from('game_titles')
-        .select('id, name, slug, game_types(name, slug)')
-        .eq('is_active', true)
-        .order('name');
+        .from("game_titles")
+        .select("id, name, slug, game_types(name, slug)")
+        .eq("is_active", true)
+        .order("name");
 
       if (gtErr) throw gtErr;
 
-      const gameTitles: GameTitleOption[] = ((gameTitlesRaw ?? []) as RawGameTitleRow[]).map((g) => {
+      const gameTitles: GameTitleOption[] = (
+        (gameTitlesRaw ?? []) as RawGameTitleRow[]
+      ).map((g) => {
         const gt = one(g.game_types);
         return {
           id: g.id,
           name: g.name,
           slug: g.slug,
-          gameTypeSlug: gt?.slug ?? '',
-          gameTypeName: gt?.name ?? '',
+          gameTypeSlug: gt?.slug ?? "",
+          gameTypeName: gt?.name ?? "",
         };
       });
       setGameTitleOptions(gameTitles);
 
       const { data: compsRaw, error: compErr } = await supabase
-        .from('comp_instances')
+        .from("comp_instances")
         .select(
           `
           id, name, slug, format, status, prize_pool, starts_at,
@@ -102,9 +115,9 @@ export function useCompetitions() {
           comp_game_titles(game_titles(name, slug, game_types(slug)))
         `,
         )
-        .is('deleted_at', null)
-        .neq('status', 'draft')
-        .order('starts_at', { ascending: false, nullsFirst: false });
+        .is("deleted_at", null)
+        .neq("status", "draft")
+        .order("starts_at", { ascending: false, nullsFirst: false });
 
       if (compErr) throw compErr;
 
@@ -114,27 +127,33 @@ export function useCompetitions() {
       const [{ data: regCounts }, { data: liveCounts }] = await Promise.all([
         compIds.length
           ? supabase
-              .from('comp_registrations')
-              .select('comp_instance_id')
-              .eq('status', 'approved')
-              .in('comp_instance_id', compIds)
+              .from("comp_registrations")
+              .select("comp_instance_id")
+              .eq("status", "approved")
+              .in("comp_instance_id", compIds)
           : Promise.resolve({ data: [] as { comp_instance_id: string }[] }),
         compIds.length
           ? supabase
-              .from('matches')
-              .select('comp_instance_id')
-              .eq('status', 'live')
-              .in('comp_instance_id', compIds)
+              .from("matches")
+              .select("comp_instance_id")
+              .eq("status", "live")
+              .in("comp_instance_id", compIds)
           : Promise.resolve({ data: [] as { comp_instance_id: string }[] }),
       ]);
 
       const teamCountMap = new Map<string, number>();
       for (const r of regCounts ?? []) {
-        teamCountMap.set(r.comp_instance_id, (teamCountMap.get(r.comp_instance_id) ?? 0) + 1);
+        teamCountMap.set(
+          r.comp_instance_id,
+          (teamCountMap.get(r.comp_instance_id) ?? 0) + 1,
+        );
       }
       const liveCountMap = new Map<string, number>();
       for (const r of liveCounts ?? []) {
-        liveCountMap.set(r.comp_instance_id, (liveCountMap.get(r.comp_instance_id) ?? 0) + 1);
+        liveCountMap.set(
+          r.comp_instance_id,
+          (liveCountMap.get(r.comp_instance_id) ?? 0) + 1,
+        );
       }
 
       const mapped: CompetitionListItem[] = compRows.map((c) => {
@@ -144,7 +163,7 @@ export function useCompetitions() {
           .map((gt) => ({
             name: gt.name,
             slug: gt.slug,
-            gameTypeSlug: one(gt.game_types)?.slug ?? '',
+            gameTypeSlug: one(gt.game_types)?.slug ?? "",
           }));
 
         return {
@@ -155,7 +174,7 @@ export function useCompetitions() {
           status: c.status,
           prizePool: c.prize_pool,
           startDate: c.starts_at,
-          seriesName: one(c.comp_series)?.name ?? '',
+          seriesName: one(c.comp_series)?.name ?? "",
           gameTitles: gameTitlesForComp,
           teamCount: teamCountMap.get(c.id) ?? 0,
           liveMatchesCount: liveCountMap.get(c.id) ?? 0,
@@ -164,13 +183,15 @@ export function useCompetitions() {
 
       setCompetitions(mapped);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to load competitions'));
+      setError(
+        err instanceof Error ? err : new Error("Failed to load competitions"),
+      );
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-    useEffect(() => {
+  useEffect(() => {
     Promise.resolve().then(() => load());
   }, [load]);
 

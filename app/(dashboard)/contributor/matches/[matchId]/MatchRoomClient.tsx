@@ -2,8 +2,15 @@
 
 import { createClient } from '@/lib/supabase/client';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import LineupEditorPanel from './LineupEditorPanel';
 
-type Status = 'scheduled' | 'delayed' | 'live' | 'completed' | 'cancelled' | 'walkover';
+type Status =
+	| 'scheduled'
+	| 'delayed'
+	| 'live'
+	| 'completed'
+	| 'cancelled'
+	| 'walkover';
 type MatchFormat = 'head_to_head' | 'battle_royale';
 
 export type Team = {
@@ -134,7 +141,11 @@ export type Participant = {
 	slot_number: number;
 	team_id: string | null;
 	player_id: string | null;
-	teams: { name: string; short_code: string | null; logo_url: string | null } | null;
+	teams: {
+		name: string;
+		short_code: string | null;
+		logo_url: string | null;
+	} | null;
 	players: { gamertag: string; avatar_url: string | null } | null;
 };
 
@@ -146,6 +157,14 @@ export type BrResult = {
 	placement_pts: number;
 	kill_pts: number;
 	total_pts: number;
+};
+
+export type LineupRow = {
+	id: string;
+	team_id: string;
+	player_id: string;
+	role: string;
+	confirmed: boolean;
 };
 
 type Props = {
@@ -160,6 +179,8 @@ type Props = {
 	mapModeLinks: MapModeLink[];
 	participants: Participant[];
 	initialBrResults: BrResult[];
+	eligiblePlayers: { team_id: string; player_id: string; gamertag: string }[];
+	currentLineup: LineupRow[];
 };
 
 const VALID_TRANSITIONS: Record<Status, { status: Status; label: string }[]> = {
@@ -193,9 +214,12 @@ const FOOTBALL_EVENTS = [
 ];
 
 function statusClass(status: string): string {
-	if (status === 'live') return 'bg-green-500/15 text-green-300 border-green-500/30';
-	if (status === 'delayed') return 'bg-yellow-500/15 text-yellow-300 border-yellow-500/30';
-	if (status === 'cancelled') return 'bg-red-500/15 text-red-300 border-red-500/30';
+	if (status === 'live')
+		return 'bg-green-500/15 text-green-300 border-green-500/30';
+	if (status === 'delayed')
+		return 'bg-yellow-500/15 text-yellow-300 border-yellow-500/30';
+	if (status === 'cancelled')
+		return 'bg-red-500/15 text-red-300 border-red-500/30';
 	return 'bg-gray-800 text-gray-300 border-gray-700';
 }
 
@@ -218,31 +242,46 @@ function teamName(team: Team | null): string {
 }
 
 function participantName(participant: Participant): string {
-	return participant.teams?.name ?? participant.players?.gamertag ?? `Slot ${participant.slot_number}`;
+	return (
+		participant.teams?.name ??
+		participant.players?.gamertag ??
+		`Slot ${participant.slot_number}`
+	);
 }
 
 function eventLabel(event: MatchEvent): string {
 	const player = event.players?.gamertag;
 	const team = event.teams?.name;
 	const minute = event.meta?.minute ? ` (${event.meta.minute}')` : '';
-	const mapNumber = event.meta?.map_number ? ` Map ${event.meta.map_number}` : '';
+	const mapNumber = event.meta?.map_number
+		? ` Map ${event.meta.map_number}`
+		: '';
 
 	if (event.event_type === 'correction') {
 		return `Correction: ${String(event.meta?.reason ?? 'Event corrected')}`;
 	}
-	if (event.event_type === 'goal') return `${player ?? 'Player'} scores for ${team ?? 'team'}${minute}`;
-	if (event.event_type === 'own_goal') return `${player ?? 'Player'} own goal${minute}`;
-	if (event.event_type === 'penalty_goal') return `${player ?? 'Player'} converts penalty${minute}`;
-	if (event.event_type === 'penalty_miss') return `${player ?? 'Player'} misses penalty${minute}`;
-	if (event.event_type === 'yellow_card') return `${player ?? 'Player'} yellow card${minute}`;
-	if (event.event_type === 'red_card') return `${player ?? 'Player'} red card${minute}`;
+	if (event.event_type === 'goal')
+		return `${player ?? 'Player'} scores for ${team ?? 'team'}${minute}`;
+	if (event.event_type === 'own_goal')
+		return `${player ?? 'Player'} own goal${minute}`;
+	if (event.event_type === 'penalty_goal')
+		return `${player ?? 'Player'} converts penalty${minute}`;
+	if (event.event_type === 'penalty_miss')
+		return `${player ?? 'Player'} misses penalty${minute}`;
+	if (event.event_type === 'yellow_card')
+		return `${player ?? 'Player'} yellow card${minute}`;
+	if (event.event_type === 'red_card')
+		return `${player ?? 'Player'} red card${minute}`;
 	if (event.event_type === 'half_time') return 'Half Time';
 	if (event.event_type === 'full_time') return 'Full Time';
-	if (event.event_type === 'score_update') return `${team ?? 'Team'} score updated to ${event.value ?? 0}`;
+	if (event.event_type === 'score_update')
+		return `${team ?? 'Team'} score updated to ${event.value ?? 0}`;
 	if (event.event_type === 'round_end') return `${team ?? 'Team'} wins round`;
 	if (event.event_type === 'map_end') return `${mapNumber || 'Map'} ended`;
-	if (event.event_type === 'map_selected') return `${mapNumber || 'Map'} selected`;
-	if (event.event_type === 'mode_selected') return `${mapNumber || 'Mode'} selected`;
+	if (event.event_type === 'map_selected')
+		return `${mapNumber || 'Map'} selected`;
+	if (event.event_type === 'mode_selected')
+		return `${mapNumber || 'Mode'} selected`;
 	return event.event_type.replaceAll('_', ' ');
 }
 
@@ -265,6 +304,8 @@ export default function MatchRoomClient({
 	mapModeLinks,
 	participants,
 	initialBrResults,
+	eligiblePlayers,
+	currentLineup,
 }: Props) {
 	const supabase = useMemo(() => createClient(), []);
 	const [match, setMatch] = useState(initialMatch);
@@ -302,15 +343,21 @@ export default function MatchRoomClient({
 	const isShooter = match.game_titles?.game_types?.slug === 'shooter';
 	const isBattleRoyale = match.match_format === 'battle_royale';
 	const visibleEvents = events.filter((event) => !event.is_void);
-	const currentMap = maps.find((map) => map.id === mapSlotId) ?? maps[0] ?? null;
+	const currentMap =
+		maps.find((map) => map.id === mapSlotId) ?? maps[0] ?? null;
 	const liveMap = maps.find((map) => map.status === 'live') ?? currentMap;
 	const selectedEventConfig =
-		FOOTBALL_EVENTS.find((item) => item.type === eventType) ?? FOOTBALL_EVENTS[0];
-	const eventPlayers = lineups.filter((lineup) => lineup.team_id === eventTeamId);
+		FOOTBALL_EVENTS.find((item) => item.type === eventType) ??
+		FOOTBALL_EVENTS[0];
+	const eventPlayers = lineups.filter(
+		(lineup) => lineup.team_id === eventTeamId,
+	);
 	const allowedModes = selectedMapId
 		? availableModes.filter((mode) =>
 				mapModeLinks.some(
-					(link) => link.map_id === selectedMapId && link.mode_id === mode.id,
+					(link) =>
+						link.map_id === selectedMapId &&
+						link.mode_id === mode.id,
 				),
 			)
 		: availableModes;
@@ -349,7 +396,10 @@ export default function MatchRoomClient({
 					filter: `id=eq.${match.id}`,
 				},
 				(payload) => {
-					setMatch((current) => ({ ...current, ...(payload.new as Partial<MatchRoomMatch>) }));
+					setMatch((current) => ({
+						...current,
+						...(payload.new as Partial<MatchRoomMatch>),
+					}));
 				},
 			)
 			.on(
@@ -362,7 +412,10 @@ export default function MatchRoomClient({
 				},
 				(payload) => {
 					if (payload.eventType === 'INSERT') {
-						setStatusLogs((current) => [payload.new as StatusLog, ...current]);
+						setStatusLogs((current) => [
+							payload.new as StatusLog,
+							...current,
+						]);
 					}
 				},
 			)
@@ -379,7 +432,9 @@ export default function MatchRoomClient({
 						const updated = payload.new as MatchEvent;
 						setEvents((current) =>
 							current.map((event) =>
-								event.id === updated.id ? { ...event, ...updated } : event,
+								event.id === updated.id
+									? { ...event, ...updated }
+									: event,
 							),
 						);
 						return;
@@ -389,22 +444,31 @@ export default function MatchRoomClient({
 						const inserted = payload.new as MatchEvent;
 						const { data } = await supabase
 							.from('match_events')
-							.select('*, teams(name, short_code), players(gamertag, real_name)')
+							.select(
+								'*, teams(name, short_code), players(gamertag, real_name)',
+							)
 							.eq('id', inserted.id)
 							.single();
 
 						setEvents((current) => {
-							const next = ((data as MatchEvent | null) ?? inserted) as MatchEvent;
-							if (current.some((event) => event.id === next.id)) return current;
+							const next = ((data as MatchEvent | null) ??
+								inserted) as MatchEvent;
+							if (current.some((event) => event.id === next.id))
+								return current;
 							return [next, ...current].sort(
-								(a, b) => numberValue(b.sequence_no) - numberValue(a.sequence_no),
+								(a, b) =>
+									numberValue(b.sequence_no) -
+									numberValue(a.sequence_no),
 							);
 						});
 
 						if (
-							['map_selected', 'mode_selected', 'score_update', 'map_end'].includes(
-								inserted.event_type,
-							)
+							[
+								'map_selected',
+								'mode_selected',
+								'score_update',
+								'map_end',
+							].includes(inserted.event_type)
 						) {
 							void refreshMaps();
 						}
@@ -418,7 +482,10 @@ export default function MatchRoomClient({
 		};
 	}, [match.id, refreshMaps, supabase]);
 
-	async function edgeCall(functionName: string, body: Record<string, unknown>) {
+	async function edgeCall(
+		functionName: string,
+		body: Record<string, unknown>,
+	) {
 		setError(null);
 		setMessage(null);
 
@@ -436,7 +503,8 @@ export default function MatchRoomClient({
 				method: 'POST',
 				headers: {
 					Authorization: `Bearer ${session.access_token}`,
-					apikey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? '',
+					apikey:
+						process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? '',
 					'Content-Type': 'application/json',
 				},
 				body: JSON.stringify(body),
@@ -454,7 +522,9 @@ export default function MatchRoomClient({
 	async function refreshBrResults() {
 		const { data } = await supabase
 			.from('br_match_results')
-			.select('id, participant_id, placement, kills, placement_pts, kill_pts, total_pts')
+			.select(
+				'id, participant_id, placement, kills, placement_pts, kill_pts, total_pts',
+			)
 			.eq('match_id', match.id)
 			.order('placement', { ascending: true });
 
@@ -489,9 +559,15 @@ export default function MatchRoomClient({
 			await edgeCall('post-match-event', {
 				match_id: match.id,
 				event_type: eventType,
-				team_id: selectedEventConfig.noTeam ? null : eventTeamId || null,
-				player_id: selectedEventConfig.noTeam ? null : eventPlayerId || null,
-				value: ['goal', 'own_goal', 'penalty_goal'].includes(eventType) ? 1 : null,
+				team_id: selectedEventConfig.noTeam
+					? null
+					: eventTeamId || null,
+				player_id: selectedEventConfig.noTeam
+					? null
+					: eventPlayerId || null,
+				value: ['goal', 'own_goal', 'penalty_goal'].includes(eventType)
+					? 1
+					: null,
 				meta: eventMinute ? { minute: Number(eventMinute) } : {},
 			});
 			setEventMinute('');
@@ -514,8 +590,14 @@ export default function MatchRoomClient({
 
 	async function postScoreUpdate(teamId: string, value: string) {
 		if (!liveMap) return;
-		const nextHome = teamId === match.team_home_id ? Number(value) : Number(homeScoreInput);
-		const nextAway = teamId === match.team_away_id ? Number(value) : Number(awayScoreInput);
+		const nextHome =
+			teamId === match.team_home_id
+				? Number(value)
+				: Number(homeScoreInput);
+		const nextAway =
+			teamId === match.team_away_id
+				? Number(value)
+				: Number(awayScoreInput);
 
 		await edgeCall('post-match-event', {
 			match_id: match.id,
@@ -566,13 +648,23 @@ export default function MatchRoomClient({
 				corrected_event_id: correctionEventId,
 				reason: correctionReason || null,
 				replacement_event_type: replacementType || null,
-				replacement_team_id: replacementType ? eventTeamId || null : null,
-				replacement_player_id: replacementType ? eventPlayerId || null : null,
-				replacement_value: ['goal', 'own_goal', 'penalty_goal'].includes(replacementType)
+				replacement_team_id: replacementType
+					? eventTeamId || null
+					: null,
+				replacement_player_id: replacementType
+					? eventPlayerId || null
+					: null,
+				replacement_value: [
+					'goal',
+					'own_goal',
+					'penalty_goal',
+				].includes(replacementType)
 					? 1
 					: null,
 				replacement_meta:
-					replacementType && eventMinute ? { minute: Number(eventMinute) } : {},
+					replacementType && eventMinute
+						? { minute: Number(eventMinute) }
+						: {},
 			});
 			setCorrectionEventId('');
 			setCorrectionReason('');
@@ -593,12 +685,21 @@ export default function MatchRoomClient({
 	return (
 		<div className="space-y-6">
 			<div className="flex items-center justify-between gap-4">
-				<a href="/contributor" className="text-sm text-gray-400 hover:text-white">
+				<a
+					href="/contributor"
+					className="text-sm text-gray-400 hover:text-white"
+				>
 					Back to matches
 				</a>
 				<div className="flex items-center gap-3">
-					{message ? <span className="text-sm text-green-300">{message}</span> : null}
-					{error ? <span className="text-sm text-red-300">{error}</span> : null}
+					{message ? (
+						<span className="text-sm text-green-300">
+							{message}
+						</span>
+					) : null}
+					{error ? (
+						<span className="text-sm text-red-300">{error}</span>
+					) : null}
 				</div>
 			</div>
 
@@ -606,8 +707,12 @@ export default function MatchRoomClient({
 				<div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
 					<div>
 						<div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
-							<span>{match.comp_instances?.name ?? 'Competition'}</span>
-							<span>{match.comp_stages?.name ?? 'Stage TBD'}</span>
+							<span>
+								{match.comp_instances?.name ?? 'Competition'}
+							</span>
+							<span>
+								{match.comp_stages?.name ?? 'Stage TBD'}
+							</span>
 							<span>{match.game_titles?.name ?? 'Game'}</span>
 						</div>
 						<h2 className="mt-3 text-2xl font-bold">
@@ -616,7 +721,8 @@ export default function MatchRoomClient({
 								: `${teamName(match.home_team)} vs ${teamName(match.away_team)}`}
 						</h2>
 						<p className="mt-2 text-sm text-gray-500">
-							Scheduled {formatDate(match.scheduled_at)} - Best of {match.best_of}
+							Scheduled {formatDate(match.scheduled_at)} - Best of{' '}
+							{match.best_of}
 						</p>
 					</div>
 					<span
@@ -639,7 +745,7 @@ export default function MatchRoomClient({
 
 						{isBattleRoyale ? (
 							<div className="overflow-x-auto">
-								<table className="w-full min-w-[560px] text-sm">
+								<table className="w-full min-w-140 text-sm">
 									<thead className="text-left text-xs uppercase text-gray-500">
 										<tr>
 											<th className="py-2">#</th>
@@ -652,17 +758,35 @@ export default function MatchRoomClient({
 									</thead>
 									<tbody>
 										{brResults.map((result) => {
-											const participant = participants.find(
-												(item) => item.id === result.participant_id,
-											);
+											const participant =
+												participants.find(
+													(item) =>
+														item.id ===
+														result.participant_id,
+												);
 											return (
-												<tr key={result.id} className="border-t border-gray-800">
-													<td className="py-3">{result.placement}</td>
-													<td>{participant ? participantName(participant) : 'Participant'}</td>
+												<tr
+													key={result.id}
+													className="border-t border-gray-800"
+												>
+													<td className="py-3">
+														{result.placement}
+													</td>
+													<td>
+														{participant
+															? participantName(
+																	participant,
+																)
+															: 'Participant'}
+													</td>
 													<td>{result.kills}</td>
-													<td>{result.placement_pts}</td>
+													<td>
+														{result.placement_pts}
+													</td>
 													<td>{result.kill_pts}</td>
-													<td className="font-semibold">{result.total_pts}</td>
+													<td className="font-semibold">
+														{result.total_pts}
+													</td>
 												</tr>
 											);
 										})}
@@ -677,17 +801,27 @@ export default function MatchRoomClient({
 						) : (
 							<div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
 								<div>
-									<p className="text-sm text-gray-500">{match.home_team?.short_code}</p>
-									<p className="text-lg font-semibold">{teamName(match.home_team)}</p>
+									<p className="text-sm text-gray-500">
+										{match.home_team?.short_code}
+									</p>
+									<p className="text-lg font-semibold">
+										{teamName(match.home_team)}
+									</p>
 								</div>
 								<div className="rounded-lg bg-gray-950 px-6 py-4 text-4xl font-bold">
 									{numberValue(score?.home_current_score)}
-									<span className="px-4 text-gray-600">-</span>
+									<span className="px-4 text-gray-600">
+										-
+									</span>
 									{numberValue(score?.away_current_score)}
 								</div>
 								<div className="text-right">
-									<p className="text-sm text-gray-500">{match.away_team?.short_code}</p>
-									<p className="text-lg font-semibold">{teamName(match.away_team)}</p>
+									<p className="text-sm text-gray-500">
+										{match.away_team?.short_code}
+									</p>
+									<p className="text-lg font-semibold">
+										{teamName(match.away_team)}
+									</p>
 								</div>
 							</div>
 						)}
@@ -695,21 +829,29 @@ export default function MatchRoomClient({
 
 					{isShooter && !isBattleRoyale ? (
 						<section className="rounded-lg border border-gray-800 bg-gray-900 p-5">
-							<h3 className="mb-4 font-semibold">Map Breakdown</h3>
+							<h3 className="mb-4 font-semibold">
+								Map Breakdown
+							</h3>
 							<div className="space-y-3">
 								{maps.map((map) => (
 									<div
 										key={map.id}
 										className="grid gap-3 rounded-lg border border-gray-800 bg-gray-950 p-4 md:grid-cols-[80px_1fr_120px_120px]"
 									>
-										<p className="font-semibold">Map {map.map_number}</p>
+										<p className="font-semibold">
+											Map {map.map_number}
+										</p>
 										<p className="text-sm text-gray-300">
-											{map.maps?.name ?? 'Map TBD'} - {map.modes?.name ?? 'Mode TBD'}
+											{map.maps?.name ?? 'Map TBD'} -{' '}
+											{map.modes?.name ?? 'Mode TBD'}
 										</p>
 										<p className="text-sm">
-											{numberValue(map.home_score)} - {numberValue(map.away_score)}
+											{numberValue(map.home_score)} -{' '}
+											{numberValue(map.away_score)}
 										</p>
-										<p className="text-xs uppercase text-gray-500">{map.status}</p>
+										<p className="text-xs uppercase text-gray-500">
+											{map.status}
+										</p>
 									</div>
 								))}
 							</div>
@@ -725,11 +867,16 @@ export default function MatchRoomClient({
 									Event
 									<select
 										value={eventType}
-										onChange={(event) => setEventType(event.target.value)}
+										onChange={(event) =>
+											setEventType(event.target.value)
+										}
 										className="mt-2 w-full rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 text-white"
 									>
 										{FOOTBALL_EVENTS.map((item) => (
-											<option key={item.type} value={item.type}>
+											<option
+												key={item.type}
+												value={item.type}
+											>
 												{item.label}
 											</option>
 										))}
@@ -747,10 +894,14 @@ export default function MatchRoomClient({
 										className="mt-2 w-full rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 text-white disabled:opacity-50"
 									>
 										{match.home_team ? (
-											<option value={match.home_team.id}>{match.home_team.name}</option>
+											<option value={match.home_team.id}>
+												{match.home_team.name}
+											</option>
 										) : null}
 										{match.away_team ? (
-											<option value={match.away_team.id}>{match.away_team.name}</option>
+											<option value={match.away_team.id}>
+												{match.away_team.name}
+											</option>
 										) : null}
 									</select>
 								</label>
@@ -758,14 +909,20 @@ export default function MatchRoomClient({
 									Player
 									<select
 										value={eventPlayerId}
-										onChange={(event) => setEventPlayerId(event.target.value)}
+										onChange={(event) =>
+											setEventPlayerId(event.target.value)
+										}
 										disabled={selectedEventConfig.noTeam}
 										className="mt-2 w-full rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 text-white disabled:opacity-50"
 									>
 										<option value="">No player</option>
 										{eventPlayers.map((lineup) => (
-											<option key={lineup.id} value={lineup.players?.id ?? ''}>
-												{lineup.players?.gamertag ?? 'Player'}
+											<option
+												key={lineup.id}
+												value={lineup.players?.id ?? ''}
+											>
+												{lineup.players?.gamertag ??
+													'Player'}
 											</option>
 										))}
 									</select>
@@ -774,7 +931,9 @@ export default function MatchRoomClient({
 									Minute
 									<input
 										value={eventMinute}
-										onChange={(event) => setEventMinute(event.target.value)}
+										onChange={(event) =>
+											setEventMinute(event.target.value)
+										}
 										type="number"
 										min="0"
 										className="mt-2 w-full rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 text-white"
@@ -798,12 +957,18 @@ export default function MatchRoomClient({
 										Map Slot
 										<select
 											value={mapSlotId}
-											onChange={(event) => setMapSlotId(event.target.value)}
+											onChange={(event) =>
+												setMapSlotId(event.target.value)
+											}
 											className="mt-2 w-full rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 text-white"
 										>
 											{maps.map((map) => (
-												<option key={map.id} value={map.id}>
-													Map {map.map_number} - {map.status}
+												<option
+													key={map.id}
+													value={map.id}
+												>
+													Map {map.map_number} -{' '}
+													{map.status}
 												</option>
 											))}
 										</select>
@@ -813,14 +978,19 @@ export default function MatchRoomClient({
 										<select
 											value={selectedMapId}
 											onChange={(event) => {
-												setSelectedMapId(event.target.value);
+												setSelectedMapId(
+													event.target.value,
+												);
 												setSelectedModeId('');
 											}}
 											className="mt-2 w-full rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 text-white"
 										>
 											<option value="">Select map</option>
 											{availableMaps.map((map) => (
-												<option key={map.id} value={map.id}>
+												<option
+													key={map.id}
+													value={map.id}
+												>
 													{map.name}
 												</option>
 											))}
@@ -830,12 +1000,21 @@ export default function MatchRoomClient({
 										Mode
 										<select
 											value={selectedModeId}
-											onChange={(event) => setSelectedModeId(event.target.value)}
+											onChange={(event) =>
+												setSelectedModeId(
+													event.target.value,
+												)
+											}
 											className="mt-2 w-full rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 text-white"
 										>
-											<option value="">Select mode</option>
+											<option value="">
+												Select mode
+											</option>
 											{allowedModes.map((mode) => (
-												<option key={mode.id} value={mode.id}>
+												<option
+													key={mode.id}
+													value={mode.id}
+												>
 													{mode.name}
 												</option>
 											))}
@@ -844,7 +1023,10 @@ export default function MatchRoomClient({
 									<button
 										type="button"
 										onClick={selectMapMode}
-										disabled={pending === 'map-mode' || (!selectedMapId && !selectedModeId)}
+										disabled={
+											pending === 'map-mode' ||
+											(!selectedMapId && !selectedModeId)
+										}
 										className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-500 disabled:opacity-50 md:col-span-3"
 									>
 										Start Map
@@ -855,7 +1037,11 @@ export default function MatchRoomClient({
 										Home Score
 										<input
 											value={homeScoreInput}
-											onChange={(event) => setHomeScoreInput(event.target.value)}
+											onChange={(event) =>
+												setHomeScoreInput(
+													event.target.value,
+												)
+											}
 											type="number"
 											min="0"
 											className="mt-2 w-full rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 text-white"
@@ -865,7 +1051,11 @@ export default function MatchRoomClient({
 										Away Score
 										<input
 											value={awayScoreInput}
-											onChange={(event) => setAwayScoreInput(event.target.value)}
+											onChange={(event) =>
+												setAwayScoreInput(
+													event.target.value,
+												)
+											}
 											type="number"
 											min="0"
 											className="mt-2 w-full rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 text-white"
@@ -875,7 +1065,11 @@ export default function MatchRoomClient({
 										Duration Min
 										<input
 											value={durationMinutes}
-											onChange={(event) => setDurationMinutes(event.target.value)}
+											onChange={(event) =>
+												setDurationMinutes(
+													event.target.value,
+												)
+											}
 											type="number"
 											min="0"
 											className="mt-2 w-full rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 text-white"
@@ -885,7 +1079,10 @@ export default function MatchRoomClient({
 										<button
 											type="button"
 											onClick={updateShooterScore}
-											disabled={pending === 'score-update' || !liveMap}
+											disabled={
+												pending === 'score-update' ||
+												!liveMap
+											}
 											className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-50"
 										>
 											Update Score
@@ -893,7 +1090,10 @@ export default function MatchRoomClient({
 										<button
 											type="button"
 											onClick={endMap}
-											disabled={pending === 'map-end' || !liveMap}
+											disabled={
+												pending === 'map-end' ||
+												!liveMap
+											}
 											className="flex-1 rounded-lg bg-gray-700 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-600 disabled:opacity-50"
 										>
 											End Map
@@ -907,7 +1107,8 @@ export default function MatchRoomClient({
 							<div className="space-y-3">
 								{brRows.map((row, index) => {
 									const participant = participants.find(
-										(item) => item.id === row.participant_id,
+										(item) =>
+											item.id === row.participant_id,
 									);
 									return (
 										<div
@@ -915,16 +1116,26 @@ export default function MatchRoomClient({
 											className="grid gap-3 rounded-lg border border-gray-800 bg-gray-950 p-3 md:grid-cols-[1fr_120px_120px]"
 										>
 											<p className="self-center text-sm">
-												{participant ? participantName(participant) : `Slot ${index + 1}`}
+												{participant
+													? participantName(
+															participant,
+														)
+													: `Slot ${index + 1}`}
 											</p>
 											<input
 												value={row.placement}
 												onChange={(event) => {
-													const placement = Number(event.target.value);
+													const placement = Number(
+														event.target.value,
+													);
 													setBrRows((current) =>
 														current.map((item) =>
-															item.participant_id === row.participant_id
-																? { ...item, placement }
+															item.participant_id ===
+															row.participant_id
+																? {
+																		...item,
+																		placement,
+																	}
 																: item,
 														),
 													);
@@ -936,11 +1147,17 @@ export default function MatchRoomClient({
 											<input
 												value={row.kills}
 												onChange={(event) => {
-													const kills = Number(event.target.value);
+													const kills = Number(
+														event.target.value,
+													);
 													setBrRows((current) =>
 														current.map((item) =>
-															item.participant_id === row.participant_id
-																? { ...item, kills }
+															item.participant_id ===
+															row.participant_id
+																? {
+																		...item,
+																		kills,
+																	}
 																: item,
 														),
 													);
@@ -955,7 +1172,10 @@ export default function MatchRoomClient({
 								<button
 									type="button"
 									onClick={submitBrResults}
-									disabled={pending === 'br-results' || participants.length === 0}
+									disabled={
+										pending === 'br-results' ||
+										participants.length === 0
+									}
 									className="w-full rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-500 disabled:opacity-50"
 								>
 									Submit BR Results
@@ -971,15 +1191,22 @@ export default function MatchRoomClient({
 								Event to void
 								<select
 									value={correctionEventId}
-									onChange={(event) => setCorrectionEventId(event.target.value)}
+									onChange={(event) =>
+										setCorrectionEventId(event.target.value)
+									}
 									className="mt-2 w-full rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 text-white"
 								>
-									<option value="">Select recent event</option>
+									<option value="">
+										Select recent event
+									</option>
 									{visibleEvents
 										.filter((event) => !event.is_correction)
 										.slice(0, 12)
 										.map((event) => (
-											<option key={event.id} value={event.id}>
+											<option
+												key={event.id}
+												value={event.id}
+											>
 												{eventLabel(event)}
 											</option>
 										))}
@@ -989,12 +1216,19 @@ export default function MatchRoomClient({
 								Optional replacement
 								<select
 									value={replacementType}
-									onChange={(event) => setReplacementType(event.target.value)}
+									onChange={(event) =>
+										setReplacementType(event.target.value)
+									}
 									className="mt-2 w-full rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 text-white"
 								>
 									<option value="">Void only</option>
-									{FOOTBALL_EVENTS.filter((item) => !item.noTeam).map((item) => (
-										<option key={item.type} value={item.type}>
+									{FOOTBALL_EVENTS.filter(
+										(item) => !item.noTeam,
+									).map((item) => (
+										<option
+											key={item.type}
+											value={item.type}
+										>
 											{item.label}
 										</option>
 									))}
@@ -1004,7 +1238,9 @@ export default function MatchRoomClient({
 								Reason
 								<input
 									value={correctionReason}
-									onChange={(event) => setCorrectionReason(event.target.value)}
+									onChange={(event) =>
+										setCorrectionReason(event.target.value)
+									}
 									className="mt-2 w-full rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 text-white"
 									placeholder="Wrong team credited"
 								/>
@@ -1012,7 +1248,10 @@ export default function MatchRoomClient({
 							<button
 								type="button"
 								onClick={correctEvent}
-								disabled={pending === 'correction' || !correctionEventId}
+								disabled={
+									pending === 'correction' ||
+									!correctionEventId
+								}
 								className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-50 md:col-span-2"
 							>
 								Void Event
@@ -1026,7 +1265,9 @@ export default function MatchRoomClient({
 						<h3 className="mb-4 font-semibold">Status Controls</h3>
 						<input
 							value={statusReason}
-							onChange={(event) => setStatusReason(event.target.value)}
+							onChange={(event) =>
+								setStatusReason(event.target.value)
+							}
 							className="mb-3 w-full rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 text-sm text-white"
 							placeholder="Reason, if needed"
 						/>
@@ -1036,7 +1277,9 @@ export default function MatchRoomClient({
 									key={action.status}
 									type="button"
 									onClick={() => updateStatus(action.status)}
-									disabled={pending === `status-${action.status}`}
+									disabled={
+										pending === `status-${action.status}`
+									}
 									className="rounded-lg bg-gray-800 px-4 py-2 text-left text-sm font-semibold text-white hover:bg-gray-700 disabled:opacity-50"
 								>
 									{action.label}
@@ -1052,11 +1295,18 @@ export default function MatchRoomClient({
 
 					<section className="rounded-lg border border-gray-800 bg-gray-900 p-5">
 						<h3 className="mb-4 font-semibold">Live Event Feed</h3>
-						<div className="max-h-[480px] space-y-3 overflow-y-auto pr-1">
+						<div className="max-h-120 space-y-3 overflow-y-auto pr-1">
 							{visibleEvents.map((event) => (
-								<div key={event.id} className="rounded-lg border border-gray-800 bg-gray-950 p-3">
-									<p className="text-sm font-medium">{eventLabel(event)}</p>
-									<p className="mt-1 text-xs text-gray-500">{formatDate(event.created_at)}</p>
+								<div
+									key={event.id}
+									className="rounded-lg border border-gray-800 bg-gray-950 p-3"
+								>
+									<p className="text-sm font-medium">
+										{eventLabel(event)}
+									</p>
+									<p className="mt-1 text-xs text-gray-500">
+										{formatDate(event.created_at)}
+									</p>
 								</div>
 							))}
 							{visibleEvents.length === 0 ? (
@@ -1067,16 +1317,31 @@ export default function MatchRoomClient({
 						</div>
 					</section>
 
+					<LineupEditorPanel
+						matchId={match.id}
+						homeTeamId={match.team_home_id}
+						awayTeamId={match.team_away_id}
+						homeTeamName={teamName(match.home_team)}
+						awayTeamName={teamName(match.away_team)}
+						eligiblePlayers={eligiblePlayers}
+						initialLineup={currentLineup}
+					/>
+
 					<section className="rounded-lg border border-gray-800 bg-gray-900 p-5">
 						<h3 className="mb-4 font-semibold">Status Timeline</h3>
 						<div className="space-y-3">
 							{statusLogs.map((log) => (
-								<div key={log.id} className="rounded-lg bg-gray-950 p-3">
+								<div
+									key={log.id}
+									className="rounded-lg bg-gray-950 p-3"
+								>
 									<p className="text-sm">
-										{log.old_status ?? 'created'} {'->'} {log.new_status}
+										{log.old_status ?? 'created'} {'->'}{' '}
+										{log.new_status}
 									</p>
 									<p className="mt-1 text-xs text-gray-500">
-										{log.reason ?? 'No reason'} - {formatDate(log.created_at)}
+										{log.reason ?? 'No reason'} -{' '}
+										{formatDate(log.created_at)}
 									</p>
 								</div>
 							))}
@@ -1091,21 +1356,41 @@ export default function MatchRoomClient({
 					<section className="rounded-lg border border-gray-800 bg-gray-900 p-5">
 						<h3 className="mb-4 font-semibold">Lineups</h3>
 						<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-							{[match.home_team, match.away_team].filter(Boolean).map((team) => (
-								<div key={team?.id} className="rounded-lg bg-gray-950 p-4">
-									<p className="mb-3 text-sm font-semibold">{team?.name}</p>
-									<div className="space-y-2">
-										{lineups
-											.filter((lineup) => lineup.team_id === team?.id)
-											.map((lineup) => (
-												<div key={lineup.id} className="flex items-center justify-between text-sm">
-													<span>{lineup.players?.gamertag ?? 'Player'}</span>
-													<span className="text-xs text-gray-500">{lineup.role}</span>
-												</div>
-											))}
+							{[match.home_team, match.away_team]
+								.filter(Boolean)
+								.map((team) => (
+									<div
+										key={team?.id}
+										className="rounded-lg bg-gray-950 p-4"
+									>
+										<p className="mb-3 text-sm font-semibold">
+											{team?.name}
+										</p>
+										<div className="space-y-2">
+											{lineups
+												.filter(
+													(lineup) =>
+														lineup.team_id ===
+														team?.id,
+												)
+												.map((lineup) => (
+													<div
+														key={lineup.id}
+														className="flex items-center justify-between text-sm"
+													>
+														<span>
+															{lineup.players
+																?.gamertag ??
+																'Player'}
+														</span>
+														<span className="text-xs text-gray-500">
+															{lineup.role}
+														</span>
+													</div>
+												))}
+										</div>
 									</div>
-								</div>
-							))}
+								))}
 						</div>
 					</section>
 				</div>

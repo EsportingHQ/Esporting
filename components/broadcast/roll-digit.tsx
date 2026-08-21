@@ -1,24 +1,26 @@
-'use client';
+"use client";
 
-import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState } from "react";
 
 interface RollDigitProps {
   value: number | string;
   className?: string;
 }
 
-export function RollDigit({ value, className = '' }: RollDigitProps) {
+export function RollDigit({ value, className = "" }: RollDigitProps) {
   const [prevValue, setPrevValue] = useState(value);
 
   useEffect(() => {
     setPrevValue(value);
   }, [value]);
 
-  const digits = String(value).split('');
+  const digits = String(value).split("");
 
   return (
-    <div className={`inline-flex items-center font-data font-medium tabular-nums ${className}`}>
+    <div
+      className={`inline-flex items-center font-data font-medium tabular-nums ${className}`}
+    >
       {digits.map((char, index) => (
         <DigitSlot key={`${index}-${char}`} char={char} />
       ))}
@@ -54,7 +56,7 @@ function DigitSlot({ char }: { char: string }) {
       y: 0,
       opacity: 1,
       transition: {
-        type: 'spring',
+        type: "spring",
         stiffness: 300,
         damping: 25,
       },

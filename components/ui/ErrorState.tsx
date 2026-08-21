@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle, RefreshCw } from "lucide-react";
 
 interface ErrorStateProps {
   title?: string;
@@ -10,10 +10,10 @@ interface ErrorStateProps {
 }
 
 export function ErrorState({
-  title = 'BROADCAST CONNECTION ERROR',
-  description = 'Failed to sync live telemetry data from server. Please check connection.',
+  title = "BROADCAST CONNECTION ERROR",
+  description = "Failed to sync live telemetry data from server. Please check connection.",
   onRetry,
-  className = '',
+  className = "",
 }: ErrorStateProps) {
   return (
     <div
@@ -26,7 +26,9 @@ export function ErrorState({
         <h3 className="font-display font-bold uppercase text-xs tracking-wider text-state-alert">
           {title}
         </h3>
-        <p className="text-xs text-text-muted font-body leading-relaxed">{description}</p>
+        <p className="text-xs text-text-muted font-body leading-relaxed">
+          {description}
+        </p>
       </div>
 
       {onRetry && (

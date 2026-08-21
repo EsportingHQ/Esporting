@@ -1,323 +1,324 @@
-import { createClient } from 'jsr:@supabase/supabase-js@2'
+import { createClient } from "jsr:@supabase/supabase-js@2";
 /// <reference lib="deno.ns" />
 
-const newsCronSecret = Deno.env.get('NEWS_CRON_SECRET')!;
+const newsCronSecret = Deno.env.get("NEWS_CRON_SECRET")!;
 
 type FeedConfig = {
-  name: string
-  url: string
-}
+  name: string;
+  url: string;
+};
 
 type ParsedItem = {
-  title: string
-  link: string
-  description: string
-  publishedAt: string | null
-}
+  title: string;
+  link: string;
+  description: string;
+  publishedAt: string | null;
+};
 
 const FEEDS: FeedConfig[] = [
   {
-    name: 'Esports Insider',
-    url: 'https://esportsinsider.com/feed',
+    name: "Esports Insider",
+    url: "https://esportsinsider.com/feed",
   },
   {
-    name: 'Dot Esports',
-    url: 'https://dotesports.com/feed',
+    name: "Dot Esports",
+    url: "https://dotesports.com/feed",
   },
   {
-    name: 'Dexerto Esports',
-    url: 'https://www.dexerto.com/feed/category/esports/',
+    name: "Dexerto Esports",
+    url: "https://www.dexerto.com/feed/category/esports/",
   },
-]
+];
 
-const SYSTEM_AUTHOR_ID = '7670ab52-a1cd-4436-bc05-bf26ae806f28'
+const SYSTEM_AUTHOR_ID = "7670ab52-a1cd-4436-bc05-bf26ae806f28";
 
 function stripHtml(input: string): string {
   return input
-    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
-    .replace(/<[^>]*>/g, '')
-    .replace(/&/g, '&')
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+    .replace(/<[^>]*>/g, "")
+    .replace(/&/g, "&")
     .replace(/"/g, '"')
     .replace(/'/g, "'")
-    .trim()
+    .trim();
 }
 
 function extractTag(block: string, tag: string): string {
   const match = block.match(
-    new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${tag}>`, 'i'),
-  )
-  return match?.[1]?.trim() ?? ''
+    new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${tag}>`, "i"),
+  );
+  return match?.[1]?.trim() ?? "";
 }
 
 function parseItems(xml: string): ParsedItem[] {
-  const items: ParsedItem[] = []
+  const items: ParsedItem[] = [];
 
   // RSS feeds
-  const rssMatches = xml.match(/<item\b[\s\S]*?<\/item>/gi) ?? []
+  const rssMatches = xml.match(/<item\b[\s\S]*?<\/item>/gi) ?? [];
 
   for (const item of rssMatches) {
     items.push({
-      title: stripHtml(extractTag(item, 'title')),
-      link: stripHtml(extractTag(item, 'link')),
+      title: stripHtml(extractTag(item, "title")),
+      link: stripHtml(extractTag(item, "link")),
       description: stripHtml(
-        extractTag(item, 'description') ||
-          extractTag(item, 'content:encoded'),
+        extractTag(item, "description") || extractTag(item, "content:encoded"),
       ).slice(0, 240),
-      publishedAt: extractTag(item, 'pubDate') || null,
-    })
+      publishedAt: extractTag(item, "pubDate") || null,
+    });
   }
 
   // Atom feeds
-  const atomMatches = xml.match(/<entry\b[\s\S]*?<\/entry>/gi) ?? []
+  const atomMatches = xml.match(/<entry\b[\s\S]*?<\/entry>/gi) ?? [];
 
   for (const entry of atomMatches) {
-    const hrefMatch = entry.match(/href="([^"]+)"/i)
+    const hrefMatch = entry.match(/href="([^"]+)"/i);
 
     items.push({
-      title: stripHtml(extractTag(entry, 'title')),
-      link: hrefMatch?.[1] ?? '',
+      title: stripHtml(extractTag(entry, "title")),
+      link: hrefMatch?.[1] ?? "",
       description: stripHtml(
-        extractTag(entry, 'summary') || extractTag(entry, 'content'),
+        extractTag(entry, "summary") || extractTag(entry, "content"),
       ).slice(0, 240),
       publishedAt:
-        extractTag(entry, 'published') ||
-        extractTag(entry, 'updated') ||
-        null,
-    })
+        extractTag(entry, "published") || extractTag(entry, "updated") || null,
+    });
   }
 
-  return items.filter((item) => item.title.length > 0 && item.link.length > 0)
+  return items.filter((item) => item.title.length > 0 && item.link.length > 0);
 }
 
 function slugify(input: string): string {
   return input
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 180)
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 180);
 }
 
 const GAME_KEYWORDS: Record<string, string[]> = {
-  valorant: ['valorant', 'vct', 'game changers'],
-  cs2: ['counter-strike', 'cs2', 'cs:go'],
-  'rainbow-six-siege': ['rainbow six siege', 'r6', 'siege'],
-  'codm-mp': ['call of duty', 'black ops', 'multiplayer'],
-  'codm-br': ['warzone', 'battle royale'],
-  'pubg-br': ['pubg mobile', 'pubg'],
-  'freefire-br': ['free fire'],
+  valorant: ["valorant", "vct", "game changers"],
+  cs2: ["counter-strike", "cs2", "cs:go"],
+  "rainbow-six-siege": ["rainbow six siege", "r6", "siege"],
+  "codm-mp": ["call of duty", "black ops", "multiplayer"],
+  "codm-br": ["warzone", "battle royale"],
+  "pubg-br": ["pubg mobile", "pubg"],
+  "freefire-br": ["free fire"],
 };
 
 function detectGameSlug(title: string, body: string): string | null {
-  const text = `${title} ${body}`.toLowerCase()
+  const text = `${title} ${body}`.toLowerCase();
 
   for (const [slug, keywords] of Object.entries(GAME_KEYWORDS)) {
-    if (keywords.some((k) => text.includes(k))) return slug
+    if (keywords.some((k) => text.includes(k))) return slug;
   }
 
-  return null
+  return null;
 }
 
 async function fetchArticleContent(url: string): Promise<{
-  body: string
-  coverUrl: string | null
+  body: string;
+  coverUrl: string | null;
 }> {
   try {
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'EsportingHQ-NewsBot/1.0',
+        "User-Agent": "EsportingHQ-NewsBot/1.0",
       },
-    })
+    });
 
-    const html = await response.text()
+    const html = await response.text();
 
     // Hero image from Open Graph
     const ogImage =
-      html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)?.[1] ??
-      null
+      html.match(
+        /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i,
+      )?.[1] ?? null;
 
     // Prefer article content
     const articleMatch =
-        html.match(/<article[^>]*>([\s\S]*?)<\/article>/i) ??
-        html.match(/class=["'][^"']*article-content[^"']*["'][^>]*>([\s\S]*?)<\/div>/i) ??
-        html.match(/class=["'][^"']*entry-content[^"']*["'][^>]*>([\s\S]*?)<\/div>/i) ??
-        html.match(/<main[^>]*>([\s\S]*?)<\/main>/i)
+      html.match(/<article[^>]*>([\s\S]*?)<\/article>/i) ??
+      html.match(
+        /class=["'][^"']*article-content[^"']*["'][^>]*>([\s\S]*?)<\/div>/i,
+      ) ??
+      html.match(
+        /class=["'][^"']*entry-content[^"']*["'][^>]*>([\s\S]*?)<\/div>/i,
+      ) ??
+      html.match(/<main[^>]*>([\s\S]*?)<\/main>/i);
 
-    const source = articleMatch?.[1] ?? ''
+    const source = articleMatch?.[1] ?? "";
 
     // Remove scripts, styles, and noisy metadata blocks first
     const cleaned = source
-        .replace(/<script[\s\S]*?<\/script>/gi, '')
-        .replace(/<style[\s\S]*?<\/style>/gi, '')
-        .replace(/<noscript[\s\S]*?<\/noscript>/gi, '')
-        .replace(/Published FR:[\s\S]*?(?=<p|$)/i, '')
-        .replace(/Updated FR:[\s\S]*?(?=<p|$)/i, '')
+      .replace(/<script[\s\S]*?<\/script>/gi, "")
+      .replace(/<style[\s\S]*?<\/style>/gi, "")
+      .replace(/<noscript[\s\S]*?<\/noscript>/gi, "")
+      .replace(/Published FR:[\s\S]*?(?=<p|$)/i, "")
+      .replace(/Updated FR:[\s\S]*?(?=<p|$)/i, "");
 
-    const paragraphs = Array.from(
-      cleaned.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi),
-    )
+    const paragraphs = Array.from(cleaned.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi))
       .map((m) => stripHtml(m[1]))
-      .map((p) => p.replace(/\s+/g, ' ').trim())
+      .map((p) => p.replace(/\s+/g, " ").trim())
       .filter((p) => p.length > 80)
-      .filter((p) => !p.includes('document.getElementById'))
-      .filter((p) => !p.includes('function ()'))
-      .filter((p) => !p.includes('window.'))
-      .filter((p) => !p.includes('cookie'))
-      .filter((p) => !p.toLowerCase().includes('<script'))
-      .filter((p) => !p.toLowerCase().includes('script'))
-      .slice(0, 20)
+      .filter((p) => !p.includes("document.getElementById"))
+      .filter((p) => !p.includes("function ()"))
+      .filter((p) => !p.includes("window."))
+      .filter((p) => !p.includes("cookie"))
+      .filter((p) => !p.toLowerCase().includes("<script"))
+      .filter((p) => !p.toLowerCase().includes("script"))
+      .slice(0, 20);
 
     return {
-        body: paragraphs.join('\n\n'),
-        coverUrl: ogImage,
-    }
+      body: paragraphs.join("\n\n"),
+      coverUrl: ogImage,
+    };
   } catch {
-    return { body: '', coverUrl: null }
+    return { body: "", coverUrl: null };
   }
 }
 
 Deno.serve(async (req: Request) => {
-  const authHeader = req.headers.get('Authorization');
+  const authHeader = req.headers.get("Authorization");
   if (authHeader !== `Bearer ${newsCronSecret}`) {
-    return new Response(
-      JSON.stringify({ ok: false, error: 'Unauthorized' }),
-      { status: 401, headers: { 'Content-Type': 'application/json' } },
-    );
+    return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   const body = await req.json().catch(() => ({}));
-    const refreshExisting = body.refreshExisting === true;
-    const limitPerFeed = Number(body.limitPerFeed ?? 10);
+  const refreshExisting = body.refreshExisting === true;
+  const limitPerFeed = Number(body.limitPerFeed ?? 10);
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
+  const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    const results: { feed: string; inserted: number; skipped: number }[] = []
+  const results: { feed: string; inserted: number; skipped: number }[] = [];
 
   for (const feed of FEEDS) {
     try {
       const response = await fetch(feed.url, {
         headers: {
-          'User-Agent': 'EsportingHQ-NewsBot/1.0',
-          Accept: 'application/rss+xml, application/xml, text/xml;q=0.9,*/*;q=0.8',
+          "User-Agent": "EsportingHQ-NewsBot/1.0",
+          Accept:
+            "application/rss+xml, application/xml, text/xml;q=0.9,*/*;q=0.8",
         },
-      })
-      const xml = await response.text()
+      });
+      const xml = await response.text();
 
-      console.log(feed.name, 'status', response.status)
-      console.log(feed.name, 'preview', xml.slice(0, 200))
+      console.log(feed.name, "status", response.status);
+      console.log(feed.name, "preview", xml.slice(0, 200));
 
-      const items = parseItems(xml)
+      const items = parseItems(xml);
 
-      console.log(feed.name, 'first item', items[0])
+      console.log(feed.name, "first item", items[0]);
 
-      console.log(feed.name, 'items found', items.length)
+      console.log(feed.name, "items found", items.length);
 
-        let inserted = 0
-        let updated = 0
-        let skipped = 0
+      let inserted = 0;
+      let updated = 0;
+      let skipped = 0;
 
       for (const item of items.slice(0, limitPerFeed)) {
         const { data: existing } = await supabase
-            .from('news_articles')
-            .select('id, body, cover_url, game_title_id')
-            .eq('source_url', item.link)
-            .maybeSingle()
+          .from("news_articles")
+          .select("id, body, cover_url, game_title_id")
+          .eq("source_url", item.link)
+          .maybeSingle();
 
         if (existing && !refreshExisting) {
-            skipped++
-            continue
+          skipped++;
+          continue;
         }
 
         // Fetch full article first
-        const article = await fetchArticleContent(item.link)
+        const article = await fetchArticleContent(item.link);
 
         // Auto-detect game from title + full body
         const gameSlug = detectGameSlug(
-            item.title,
-            article.body || item.description,
-        )
+          item.title,
+          article.body || item.description,
+        );
 
-        let gameTitleId: string | null = null
+        let gameTitleId: string | null = null;
 
         if (gameSlug) {
-            const { data: game } = await supabase
-                .from('game_titles')
-                .select('id')
-                .eq('slug', gameSlug)
-                .maybeSingle()
+          const { data: game } = await supabase
+            .from("game_titles")
+            .select("id")
+            .eq("slug", gameSlug)
+            .maybeSingle();
 
-            gameTitleId = game?.id ?? null
+          gameTitleId = game?.id ?? null;
         }
 
         const payload = {
-            title: item.title,
-            excerpt: item.description,
-            body: article.body || item.description,
-            cover_url: article.coverUrl,
-            source_type: 'external',
-            source_name: feed.name,
-            source_url: item.link,
-            source_published_at: item.publishedAt,
-            ingested_at: new Date().toISOString(),
-            game_title_id: gameTitleId,
-        }
+          title: item.title,
+          excerpt: item.description,
+          body: article.body || item.description,
+          cover_url: article.coverUrl,
+          source_type: "external",
+          source_name: feed.name,
+          source_url: item.link,
+          source_published_at: item.publishedAt,
+          ingested_at: new Date().toISOString(),
+          game_title_id: gameTitleId,
+        };
 
-        let error: { message: string } | null = null
+        let error: { message: string } | null = null;
 
-       if (existing && refreshExisting) {
-        const result = await supabase
-            .from('news_articles')
+        if (existing && refreshExisting) {
+          const result = await supabase
+            .from("news_articles")
             .update({
-            ...payload,
-            updated_at: new Date().toISOString(),
+              ...payload,
+              updated_at: new Date().toISOString(),
             })
-            .eq('id', existing.id)
+            .eq("id", existing.id);
 
-        error = result.error
+          error = result.error;
 
-        if (!error) {
-            updated++
-        }
+          if (!error) {
+            updated++;
+          }
         } else {
-        const slug = `${slugify(item.title)}-${crypto.randomUUID().slice(0, 8)}`
+          const slug = `${slugify(item.title)}-${crypto.randomUUID().slice(0, 8)}`;
 
-        const result = await supabase.from('news_articles').insert({
+          const result = await supabase.from("news_articles").insert({
             ...payload,
             slug,
             author_id: SYSTEM_AUTHOR_ID,
-            status: 'pending_review',
-        })
+            status: "pending_review",
+          });
 
-        error = result.error
+          error = result.error;
         }
 
         if (error) {
-            console.error('Upsert failed', feed.name, item.title, error.message)
+          console.error("Upsert failed", feed.name, item.title, error.message);
         } else if (!existing) {
-            inserted++
+          inserted++;
         }
       }
 
-        results.push({
-            feed: feed.name,
-            inserted,
-            updated,
-            skipped,
-        })
+      results.push({
+        feed: feed.name,
+        inserted,
+        updated,
+        skipped,
+      });
     } catch (error) {
-        console.error('Feed failed', feed.name, error)
-        results.push({
-            feed: feed.name,
-            inserted: 0,
-            updated: 0,
-            skipped: 0,
-        })
+      console.error("Feed failed", feed.name, error);
+      results.push({
+        feed: feed.name,
+        inserted: 0,
+        updated: 0,
+        skipped: 0,
+      });
     }
   }
 
   return new Response(JSON.stringify({ ok: true, results }), {
-    headers: { 'Content-Type': 'application/json' },
-  })
-})
+    headers: { "Content-Type": "application/json" },
+  });
+});

@@ -1,5 +1,5 @@
-import HomeClient from './HomeClient';
+import HomeClient from "./HomeClient";
 
 export default function Page() {
-	return <HomeClient />;
+  return <HomeClient />;
 }

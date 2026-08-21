@@ -1,4 +1,4 @@
-import { login } from '@/lib/actions/auth';
+import { login } from "@/lib/actions/auth";
 
 export default async function LoginPage({
   searchParams,
@@ -23,8 +23,8 @@ export default async function LoginPage({
         {/* Error Banner */}
         {params.error && (
           <div className="bg-state-alert/10 border border-state-alert/30 text-state-alert rounded px-4 py-3 mb-6 text-xs font-body">
-            {params.error === 'invite_failed'
-              ? 'Invite link expired or invalid. Contact your administrator.'
+            {params.error === "invite_failed"
+              ? "Invite link expired or invalid. Contact your administrator."
               : decodeURIComponent(params.error)}
           </div>
         )}

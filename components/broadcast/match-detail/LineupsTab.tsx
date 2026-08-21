@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { Users, User } from 'lucide-react';
-import { Match } from '@/hooks/useMatchRealtime';
+import Link from "next/link";
+import { Users, User } from "lucide-react";
+import { Match } from "@/hooks/useMatchRealtime";
 
 interface LineupsTabProps {
   match: Match;
@@ -10,17 +10,65 @@ interface LineupsTabProps {
 
 export function LineupsTab({ match }: LineupsTabProps) {
   const homeLineup = [
-    { id: 'p1', name: 'Kuti_Junior', role: 'starter', number: 10, position: 'FWD' },
-    { id: 'p2', name: 'Striker_X', role: 'starter', number: 7, position: 'MID' },
-    { id: 'p3', name: 'Defender_One', role: 'starter', number: 4, position: 'DEF' },
-    { id: 'p4', name: 'Benched_Guy', role: 'substitute', number: 12, position: 'SUB' },
+    {
+      id: "p1",
+      name: "Kuti_Junior",
+      role: "starter",
+      number: 10,
+      position: "FWD",
+    },
+    {
+      id: "p2",
+      name: "Striker_X",
+      role: "starter",
+      number: 7,
+      position: "MID",
+    },
+    {
+      id: "p3",
+      name: "Defender_One",
+      role: "starter",
+      number: 4,
+      position: "DEF",
+    },
+    {
+      id: "p4",
+      name: "Benched_Guy",
+      role: "substitute",
+      number: 12,
+      position: "SUB",
+    },
   ];
 
   const awayLineup = [
-    { id: 'p5', name: 'Bello_Master', role: 'starter', number: 9, position: 'FWD' },
-    { id: 'p6', name: 'Venom_Sniper', role: 'starter', number: 11, position: 'MID' },
-    { id: 'p7', name: 'Shield_Wall', role: 'starter', number: 5, position: 'DEF' },
-    { id: 'p8', name: 'Coach_Sub', role: 'substitute', number: 14, position: 'SUB' },
+    {
+      id: "p5",
+      name: "Bello_Master",
+      role: "starter",
+      number: 9,
+      position: "FWD",
+    },
+    {
+      id: "p6",
+      name: "Venom_Sniper",
+      role: "starter",
+      number: 11,
+      position: "MID",
+    },
+    {
+      id: "p7",
+      name: "Shield_Wall",
+      role: "starter",
+      number: 5,
+      position: "DEF",
+    },
+    {
+      id: "p8",
+      name: "Coach_Sub",
+      role: "substitute",
+      number: 14,
+      position: "SUB",
+    },
   ];
 
   return (
@@ -39,7 +87,9 @@ export function LineupsTab({ match }: LineupsTabProps) {
             <span className="font-display font-bold uppercase text-sm text-accent-readout">
               {match.team_home?.name}
             </span>
-            <span className="text-[10px] font-data text-text-muted">HOME SQUAD</span>
+            <span className="text-[10px] font-data text-text-muted">
+              HOME SQUAD
+            </span>
           </div>
 
           <div className="space-y-2 text-xs font-body">
@@ -47,7 +97,7 @@ export function LineupsTab({ match }: LineupsTabProps) {
               STARTING LINEUP
             </div>
             {homeLineup
-              .filter((p) => p.role === 'starter')
+              .filter((p) => p.role === "starter")
               .map((p) => (
                 <Link
                   key={p.id}
@@ -72,7 +122,7 @@ export function LineupsTab({ match }: LineupsTabProps) {
               SUBSTITUTES
             </div>
             {homeLineup
-              .filter((p) => p.role === 'substitute')
+              .filter((p) => p.role === "substitute")
               .map((p) => (
                 <Link
                   key={p.id}
@@ -101,7 +151,9 @@ export function LineupsTab({ match }: LineupsTabProps) {
             <span className="font-display font-bold uppercase text-sm text-accent-readout">
               {match.team_away?.name}
             </span>
-            <span className="text-[10px] font-data text-text-muted">AWAY SQUAD</span>
+            <span className="text-[10px] font-data text-text-muted">
+              AWAY SQUAD
+            </span>
           </div>
 
           <div className="space-y-2 text-xs font-body">
@@ -109,7 +161,7 @@ export function LineupsTab({ match }: LineupsTabProps) {
               STARTING LINEUP
             </div>
             {awayLineup
-              .filter((p) => p.role === 'starter')
+              .filter((p) => p.role === "starter")
               .map((p) => (
                 <Link
                   key={p.id}
@@ -134,7 +186,7 @@ export function LineupsTab({ match }: LineupsTabProps) {
               SUBSTITUTES
             </div>
             {awayLineup
-              .filter((p) => p.role === 'substitute')
+              .filter((p) => p.role === "substitute")
               .map((p) => (
                 <Link
                   key={p.id}

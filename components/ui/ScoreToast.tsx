@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Bell } from 'lucide-react';
-import { StatusDot } from '../broadcast/StatusDot';
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Bell } from "lucide-react";
+import { StatusDot } from "../broadcast/StatusDot";
 
 export interface ToastMessage {
   id: string;
@@ -53,14 +53,14 @@ function ToastItem({
 
   const href = toast.competitionSlug
     ? `/competitions/${toast.competitionSlug}/matches/${toast.matchId}`
-    : '#';
+    : "#";
 
   return (
     <motion.div
       initial={{ opacity: 0, x: 50, scale: 0.95 }}
       animate={{ opacity: 1, x: 0, scale: 1 }}
       exit={{ opacity: 0, x: 50, scale: 0.9 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
       role="alert"
       className="pointer-events-auto bg-bg-elevated border border-accent-readout/40 rounded p-3 shadow-xl select-none flex items-start justify-between gap-3 text-xs"
     >
@@ -69,7 +69,11 @@ function ToastItem({
           <Bell className="w-3.5 h-3.5" />
         </div>
 
-        <Link href={href} onClick={() => onDismiss(toast.id)} className="flex-1 min-w-0 group">
+        <Link
+          href={href}
+          onClick={() => onDismiss(toast.id)}
+          className="flex-1 min-w-0 group"
+        >
           <div className="flex items-center justify-between gap-2">
             <span className="font-display font-bold text-accent-readout text-[10px] uppercase">
               {toast.gameCode} • {toast.eventType}

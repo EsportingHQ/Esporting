@@ -1,4 +1,4 @@
-import { pandascoreFetch } from './client';
+import { pandascoreFetch } from "./client";
 
 export type PandaScoreMatch = {
   id: number;

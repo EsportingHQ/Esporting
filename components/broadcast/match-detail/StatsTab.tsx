@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { BarChart2 } from 'lucide-react';
-import { Match, MatchStats } from '@/hooks/useMatchRealtime';
+import { BarChart2 } from "lucide-react";
+import { Match, MatchStats } from "@/hooks/useMatchRealtime";
 
 interface StatsTabProps {
   match: Match;
@@ -10,11 +10,36 @@ interface StatsTabProps {
 
 export function StatsTab({ match, stats }: StatsTabProps) {
   const statRows = [
-    { label: 'POSSESSION %', home: stats.homePossession, away: stats.awayPossession, total: 100 },
-    { label: 'TOTAL SHOTS', home: stats.homeShots, away: stats.awayShots, total: Math.max(1, stats.homeShots + stats.awayShots) },
-    { label: 'SHOTS ON TARGET', home: stats.homeShotsOnTarget, away: stats.awayShotsOnTarget, total: Math.max(1, stats.homeShotsOnTarget + stats.awayShotsOnTarget) },
-    { label: 'YELLOW CARDS', home: stats.homeYellowCards, away: stats.awayYellowCards, total: Math.max(1, stats.homeYellowCards + stats.awayYellowCards) },
-    { label: 'RED CARDS', home: stats.homeRedCards, away: stats.awayRedCards, total: Math.max(1, stats.homeRedCards + stats.awayRedCards) },
+    {
+      label: "POSSESSION %",
+      home: stats.homePossession,
+      away: stats.awayPossession,
+      total: 100,
+    },
+    {
+      label: "TOTAL SHOTS",
+      home: stats.homeShots,
+      away: stats.awayShots,
+      total: Math.max(1, stats.homeShots + stats.awayShots),
+    },
+    {
+      label: "SHOTS ON TARGET",
+      home: stats.homeShotsOnTarget,
+      away: stats.awayShotsOnTarget,
+      total: Math.max(1, stats.homeShotsOnTarget + stats.awayShotsOnTarget),
+    },
+    {
+      label: "YELLOW CARDS",
+      home: stats.homeYellowCards,
+      away: stats.awayYellowCards,
+      total: Math.max(1, stats.homeYellowCards + stats.awayYellowCards),
+    },
+    {
+      label: "RED CARDS",
+      home: stats.homeRedCards,
+      away: stats.awayRedCards,
+      total: Math.max(1, stats.homeRedCards + stats.awayRedCards),
+    },
   ];
 
   return (
@@ -29,9 +54,13 @@ export function StatsTab({ match, stats }: StatsTabProps) {
       <div className="bg-bg-surface border border-border-line rounded p-6 max-w-3xl mx-auto space-y-6 select-none font-body">
         {/* Team Headers */}
         <div className="flex items-center justify-between font-display font-bold text-sm border-b border-border-line pb-4">
-          <span className="text-accent-readout uppercase">{match.team_home?.name}</span>
+          <span className="text-accent-readout uppercase">
+            {match.team_home?.name}
+          </span>
           <span className="text-text-muted text-xs">METRIC COMPARISON</span>
-          <span className="text-accent-signal uppercase">{match.team_away?.name}</span>
+          <span className="text-accent-signal uppercase">
+            {match.team_away?.name}
+          </span>
         </div>
 
         {/* Stat Comparison Bars */}
@@ -43,11 +72,15 @@ export function StatsTab({ match, stats }: StatsTabProps) {
             return (
               <div key={row.label} className="space-y-2">
                 <div className="flex items-center justify-between text-xs font-data">
-                  <span className="font-bold text-text-primary text-sm">{row.home}</span>
+                  <span className="font-bold text-text-primary text-sm">
+                    {row.home}
+                  </span>
                   <span className="font-display font-semibold text-text-muted text-[10px] tracking-wider uppercase">
                     {row.label}
                   </span>
-                  <span className="font-bold text-text-primary text-sm">{row.away}</span>
+                  <span className="font-bold text-text-primary text-sm">
+                    {row.away}
+                  </span>
                 </div>
 
                 {/* Dual bar chart visualization */}

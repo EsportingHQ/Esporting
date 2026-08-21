@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { AlertCircle, CheckCircle, Mail, User, Shield } from 'lucide-react';
+import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { AlertCircle, CheckCircle, Mail, User, Shield } from "lucide-react";
 
 export type OrganiserRow = {
   user_id: string;
@@ -17,9 +17,9 @@ type Props = {
 export default function InviteOrganiserClient({ existingOrganisers }: Props) {
   const supabase = createClient();
 
-  const [email, setEmail] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [organisation, setOrganisation] = useState('');
+  const [email, setEmail] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [organisation, setOrganisation] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -29,7 +29,7 @@ export default function InviteOrganiserClient({ existingOrganisers }: Props) {
     setSuccess(null);
 
     if (!email) {
-      setError('Email is required');
+      setError("Email is required");
       return;
     }
 
@@ -39,16 +39,16 @@ export default function InviteOrganiserClient({ existingOrganisers }: Props) {
         data: { session },
       } = await supabase.auth.getSession();
       if (!session?.access_token)
-        throw new Error('Session expired, please log in again');
+        throw new Error("Session expired, please log in again");
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/invite-organiser`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
             Authorization: `Bearer ${session.access_token}`,
             apikey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             email,
@@ -58,16 +58,14 @@ export default function InviteOrganiserClient({ existingOrganisers }: Props) {
         },
       );
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'Failed to send invite');
+      if (!res.ok) throw new Error(data.error ?? "Failed to send invite");
 
       setSuccess(`Invite sent successfully to ${email}`);
-      setEmail('');
-      setDisplayName('');
-      setOrganisation('');
+      setEmail("");
+      setDisplayName("");
+      setOrganisation("");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Something went wrong',
-      );
+      setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -151,7 +149,7 @@ export default function InviteOrganiserClient({ existingOrganisers }: Props) {
             onClick={handleInvite}
             className="bg-accent-readout hover:bg-accent-readout/80 disabled:opacity-50 text-bg-void font-display font-black text-sm uppercase tracking-widest px-6 py-2.5 rounded transition-all cursor-pointer"
           >
-            {loading ? 'SENDING TELEMETRY...' : 'SEND INVITE'}
+            {loading ? "SENDING TELEMETRY..." : "SEND INVITE"}
           </button>
         </div>
       </div>
@@ -163,7 +161,9 @@ export default function InviteOrganiserClient({ existingOrganisers }: Props) {
         </h3>
         <div className="space-y-2">
           {existingOrganisers.length === 0 && (
-            <p className="text-xs text-text-muted italic">No organisers invited yet.</p>
+            <p className="text-xs text-text-muted italic">
+              No organisers invited yet.
+            </p>
           )}
           {existingOrganisers.map((org) => (
             <div
@@ -171,7 +171,9 @@ export default function InviteOrganiserClient({ existingOrganisers }: Props) {
               className="bg-bg-surface border border-border-line rounded p-4 flex justify-between items-center text-xs"
             >
               <div className="font-medium text-text-primary">
-                {org.profiles?.display_name ?? org.profiles?.username ?? 'Unknown Operator'}
+                {org.profiles?.display_name ??
+                  org.profiles?.username ??
+                  "Unknown Operator"}
               </div>
               <div className="font-data text-text-muted">
                 {new Date(org.granted_at).toLocaleDateString()}

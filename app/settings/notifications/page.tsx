@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { PublicNav } from '@/components/layout/public-nav';
-import { NotificationToggle } from '@/components/ui/NotificationToggle';
-import { ScoreToast, ToastMessage } from '@/components/ui/ScoreToast';
-import { useNotificationPrefs } from '@/hooks/useNotificationPrefs';
-import { Bell, ShieldCheck, Check, Sparkles } from 'lucide-react';
+import { useState } from "react";
+import { PublicNav } from "@/components/layout/public-nav";
+import { NotificationToggle } from "@/components/ui/NotificationToggle";
+import { ScoreToast, ToastMessage } from "@/components/ui/ScoreToast";
+import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
+import { Bell, ShieldCheck, Check, Sparkles } from "lucide-react";
 
 export default function NotificationSettingsPage() {
   const { prefs, updatePrefs, isLoaded } = useNotificationPrefs();
@@ -22,13 +22,13 @@ export default function NotificationSettingsPage() {
     const id = `test-toast-${Date.now()}`;
     const newToast: ToastMessage = {
       id,
-      gameCode: 'FC26',
-      homeTeam: 'KUTI',
-      awayTeam: 'BELLO',
-      newScore: '2 - 1',
-      eventType: 'Team Kuti scored!',
-      matchId: '1',
-      competitionSlug: 'ui-esports-league',
+      gameCode: "FC26",
+      homeTeam: "KUTI",
+      awayTeam: "BELLO",
+      newScore: "2 - 1",
+      eventType: "Team Kuti scored!",
+      matchId: "1",
+      competitionSlug: "ui-esports-league",
     };
     setTestToasts((prev) => [...prev, newToast]);
   };
@@ -55,7 +55,8 @@ export default function NotificationSettingsPage() {
               </h1>
             </div>
             <p className="text-xs text-text-muted font-data mt-1">
-              CONFIGURE IN-APP LIVE SCORE TOASTS AND BROADCAST ANNOUNCEMENT NOTIFICATIONS
+              CONFIGURE IN-APP LIVE SCORE TOASTS AND BROADCAST ANNOUNCEMENT
+              NOTIFICATIONS
             </p>
           </div>
 
@@ -75,7 +76,8 @@ export default function NotificationSettingsPage() {
                 FAVORITE SQUADS FILTER
               </h2>
               <p className="text-xs text-text-muted font-body mt-0.5">
-                When enabled, live score toasts are strictly limited to squads and competitions on your favorites list.
+                When enabled, live score toasts are strictly limited to squads
+                and competitions on your favorites list.
               </p>
             </div>
           </div>
@@ -85,7 +87,7 @@ export default function NotificationSettingsPage() {
             label="FAVORITE SQUADS ONLY"
             description="Suppress alerts for matches not involving your starred teams or leagues"
             checked={prefs.favoriteTeamsOnly}
-            onChange={(val) => handleToggle('favoriteTeamsOnly', val)}
+            onChange={(val) => handleToggle("favoriteTeamsOnly", val)}
           />
         </div>
 
@@ -101,7 +103,7 @@ export default function NotificationSettingsPage() {
               label="GOALS & SCORE UPDATES"
               description="Trigger real-time score toasts whenever a goal, point, or map win is recorded in live matches"
               checked={prefs.goalScored}
-              onChange={(val) => handleToggle('goalScored', val)}
+              onChange={(val) => handleToggle("goalScored", val)}
             />
 
             <NotificationToggle
@@ -109,7 +111,7 @@ export default function NotificationSettingsPage() {
               label="MATCH KICK-OFF ALERTS"
               description="Notify when a scheduled match shifts status to LIVE"
               checked={prefs.matchStart}
-              onChange={(val) => handleToggle('matchStart', val)}
+              onChange={(val) => handleToggle("matchStart", val)}
             />
 
             <NotificationToggle
@@ -117,7 +119,7 @@ export default function NotificationSettingsPage() {
               label="FINAL RESULTS ALERTS"
               description="Receive notifications summarizing final match scores when matches reach COMPLETED status"
               checked={prefs.matchEnd}
-              onChange={(val) => handleToggle('matchEnd', val)}
+              onChange={(val) => handleToggle("matchEnd", val)}
             />
 
             <NotificationToggle
@@ -125,7 +127,7 @@ export default function NotificationSettingsPage() {
               label="BROADCAST DELAYS & ANNOUNCEMENTS"
               description="Alert on match delays, technical timeouts, and official organizer notes"
               checked={prefs.statusChange}
-              onChange={(val) => handleToggle('statusChange', val)}
+              onChange={(val) => handleToggle("statusChange", val)}
             />
           </div>
         </div>
@@ -135,7 +137,9 @@ export default function NotificationSettingsPage() {
           <div className="space-y-1 text-center sm:text-left">
             <div className="flex items-center gap-2 justify-center sm:justify-start">
               <Sparkles className="w-4 h-4 text-accent-favorite" />
-              <h3 className="font-display font-bold text-sm uppercase">PREVIEW NOTIFICATION TOAST</h3>
+              <h3 className="font-display font-bold text-sm uppercase">
+                PREVIEW NOTIFICATION TOAST
+              </h3>
             </div>
             <p className="text-xs text-text-muted font-body">
               Click the button to send a simulated score toast overlay.

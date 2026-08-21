@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { LucideIcon } from 'lucide-react';
+import Link from "next/link";
+import { LucideIcon } from "lucide-react";
 
 interface EmptyStateProps {
   icon: LucideIcon;
@@ -20,7 +20,7 @@ export function EmptyState({
   actionLabel,
   actionHref,
   onAction,
-  className = '',
+  className = "",
 }: EmptyStateProps) {
   return (
     <div
@@ -33,7 +33,9 @@ export function EmptyState({
         <h3 className="font-display font-bold uppercase text-sm tracking-wider text-text-primary">
           {title}
         </h3>
-        <p className="text-xs text-text-muted font-body leading-relaxed">{description}</p>
+        <p className="text-xs text-text-muted font-body leading-relaxed">
+          {description}
+        </p>
       </div>
 
       {actionLabel && (

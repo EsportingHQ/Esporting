@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { Search, X } from 'lucide-react';
+import { Search, X } from "lucide-react";
 
 interface SearchInputProps {
   value: string;
@@ -12,8 +12,8 @@ interface SearchInputProps {
 export function SearchInput({
   value,
   onChange,
-  placeholder = 'SEARCH TEAMS, COMPETITIONS, OR MATCHES...',
-  className = '',
+  placeholder = "SEARCH TEAMS, COMPETITIONS, OR MATCHES...",
+  className = "",
 }: SearchInputProps) {
   return (
     <div className={`relative flex items-center w-full ${className}`}>
@@ -30,7 +30,7 @@ export function SearchInput({
       {value && (
         <button
           type="button"
-          onClick={() => onChange('')}
+          onClick={() => onChange("")}
           aria-label="Clear search"
           className="absolute right-2.5 p-0.5 text-text-muted hover:text-text-primary rounded hover:bg-bg-surface transition-colors"
         >

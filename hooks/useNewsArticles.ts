@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 export interface NewsArticleListItem {
   id: string;
@@ -26,11 +26,11 @@ export function useNewsArticles() {
         setIsLoading(true);
 
         const { data, error } = await supabase
-          .from('news_articles')
-          .select('id, title, slug, excerpt, cover_url, published_at')
-          .eq('status', 'published')
-          .is('deleted_at', null)
-          .order('published_at', { ascending: false });
+          .from("news_articles")
+          .select("id, title, slug, excerpt, cover_url, published_at")
+          .eq("status", "published")
+          .is("deleted_at", null)
+          .order("published_at", { ascending: false });
 
         if (error) throw error;
 
@@ -41,9 +41,9 @@ export function useNewsArticles() {
             slug: a.slug,
             excerpt: a.excerpt,
             published_at: a.published_at,
-            tag: 'NEWS',
+            tag: "NEWS",
             image_url: a.cover_url,
-          }))
+          })),
         );
       } catch (e) {
         setError(e as Error);

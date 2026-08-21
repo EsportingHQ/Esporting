@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
+import { motion } from "framer-motion";
 
 export interface TabItem {
   id: string;
@@ -21,8 +21,8 @@ export function TabBar({
   tabs,
   activeTab,
   onTabChange,
-  layoutId = 'active-tab-indicator',
-  className = '',
+  layoutId = "active-tab-indicator",
+  className = "",
 }: TabBarProps) {
   return (
     <div
@@ -41,18 +41,24 @@ export function TabBar({
             id={`tab-${tab.id}`}
             onClick={() => onTabChange(tab.id)}
             className={`relative px-4 py-2.5 flex items-center gap-2 transition-colors shrink-0 focus-ring ${
-              isActive ? 'text-accent-readout' : 'text-text-muted hover:text-text-primary'
+              isActive
+                ? "text-accent-readout"
+                : "text-text-muted hover:text-text-primary"
             }`}
           >
-            {tab.icon && <span className="w-3.5 h-3.5 flex items-center justify-center">{tab.icon}</span>}
+            {tab.icon && (
+              <span className="w-3.5 h-3.5 flex items-center justify-center">
+                {tab.icon}
+              </span>
+            )}
             <span className="uppercase">{tab.label}</span>
 
             {tab.badge !== undefined && (
               <span
                 className={`px-1.5 py-0.5 text-[9px] font-data rounded-full ${
                   isActive
-                    ? 'bg-accent-readout/20 text-accent-readout'
-                    : 'bg-bg-surface text-text-muted'
+                    ? "bg-accent-readout/20 text-accent-readout"
+                    : "bg-bg-surface text-text-muted"
                 }`}
               >
                 {tab.badge}
@@ -63,7 +69,7 @@ export function TabBar({
               <motion.div
                 layoutId={layoutId}
                 className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent-readout"
-                transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                transition={{ type: "spring", stiffness: 500, damping: 35 }}
               />
             )}
           </button>

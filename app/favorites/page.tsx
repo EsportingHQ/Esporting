@@ -1,21 +1,26 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { PublicNav } from '@/components/layout/public-nav';
-import { MatchCard } from '@/components/broadcast/match-card';
-import { FavoriteStar } from '@/components/broadcast/FavoriteStar';
-import { EmptyState } from '@/components/ui/EmptyState';
-import { useFavorites } from '@/hooks/useFavorites';
-import { useLiveFeed } from '@/hooks/useLiveFeed';
-import { Star, Trophy, Sparkles, Plus, ArrowRight } from 'lucide-react';
+import Link from "next/link";
+import { PublicNav } from "@/components/layout/public-nav";
+import { MatchCard } from "@/components/broadcast/match-card";
+import { FavoriteStar } from "@/components/broadcast/FavoriteStar";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { useFavorites } from "@/hooks/useFavorites";
+import { useLiveFeed } from "@/hooks/useLiveFeed";
+import { Star, Trophy, Sparkles, Plus, ArrowRight } from "lucide-react";
 
 export default function FavoritesPage() {
-  const { favorites, suggestedFavorites, isFavorite, toggleFavorite } = useFavorites();
+  const { favorites, suggestedFavorites, isFavorite, toggleFavorite } =
+    useFavorites();
   const { groups, isLoading } = useLiveFeed();
 
   // Extract starred team and competition IDs
-  const starredTeamIds = favorites.filter((f) => f.type === 'team').map((f) => f.id);
-  const starredCompIds = favorites.filter((f) => f.type === 'competition').map((f) => f.id);
+  const starredTeamIds = favorites
+    .filter((f) => f.type === "team")
+    .map((f) => f.id);
+  const starredCompIds = favorites
+    .filter((f) => f.type === "competition")
+    .map((f) => f.id);
 
   // Filter matches involving starred teams or inside starred competitions
   const personalizedMatches = groups
@@ -25,7 +30,7 @@ export default function FavoritesPage() {
         (match.homeTeam.id && starredTeamIds.includes(match.homeTeam.id)) ||
         (match.awayTeam.id && starredTeamIds.includes(match.awayTeam.id));
 
-      const isCompMatch = starredCompIds.includes(match.competitionSlug || '');
+      const isCompMatch = starredCompIds.includes(match.competitionSlug || "");
 
       return isTeamMatch || isCompMatch;
     });
@@ -45,7 +50,8 @@ export default function FavoritesPage() {
               </h1>
             </div>
             <p className="text-xs text-text-muted font-data mt-1">
-              PERSONALIZED MATCH SCHEDULE AND STANDINGS FOR STARRED SQUADS AND LEAGUES
+              PERSONALIZED MATCH SCHEDULE AND STANDINGS FOR STARRED SQUADS AND
+              LEAGUES
             </p>
           </div>
         </div>
@@ -64,7 +70,9 @@ export default function FavoritesPage() {
                   className="px-3 py-1.5 bg-bg-void border border-border-line rounded flex items-center gap-2 group"
                 >
                   <Star className="w-3.5 h-3.5 text-accent-favorite fill-accent-favorite" />
-                  <span className="font-semibold text-text-primary">{fav.name}</span>
+                  <span className="font-semibold text-text-primary">
+                    {fav.name}
+                  </span>
                   <span className="text-[9px] font-data text-text-muted uppercase bg-bg-surface px-1.5 rounded">
                     {fav.type}
                   </span>
@@ -94,7 +102,7 @@ export default function FavoritesPage() {
                 <MatchCard
                   key={m.id}
                   {...m}
-                  href={`/competitions/${m.competitionSlug || 'ui-esports-league'}/matches/${m.id}`}
+                  href={`/competitions/${m.competitionSlug || "ui-esports-league"}/matches/${m.id}`}
                 />
               ))}
             </div>
@@ -150,12 +158,14 @@ export default function FavoritesPage() {
                     onClick={() => toggleFavorite(sug.type, sug.id, sug.name)}
                     className={`w-full py-1.5 rounded text-xs font-display font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all focus-ring ${
                       active
-                        ? 'bg-accent-favorite/20 text-accent-favorite border border-accent-favorite/40'
-                        : 'bg-bg-surface hover:bg-bg-surface/80 border border-border-line text-text-muted hover:text-text-primary'
+                        ? "bg-accent-favorite/20 text-accent-favorite border border-accent-favorite/40"
+                        : "bg-bg-surface hover:bg-bg-surface/80 border border-border-line text-text-muted hover:text-text-primary"
                     }`}
                   >
-                    <Star className={`w-3.5 h-3.5 ${active ? 'fill-accent-favorite' : ''}`} />
-                    <span>{active ? 'STARRED' : 'ADD TO FAVORITES'}</span>
+                    <Star
+                      className={`w-3.5 h-3.5 ${active ? "fill-accent-favorite" : ""}`}
+                    />
+                    <span>{active ? "STARRED" : "ADD TO FAVORITES"}</span>
                   </button>
                 </div>
               );

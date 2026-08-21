@@ -1,16 +1,18 @@
-import type { Metadata, Viewport } from 'next';
-import './globals.css';
+import type { Metadata, Viewport } from "next";
+import Script from "next/script";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: 'Esporting — Live eSports scores and tournament organizer',
-  description: 'Broadcast control room and live scores platform for gaming tournaments.',
+  title: "Esporting — Live eSports scores and tournament organizer",
+  description:
+    "Broadcast control room and live scores platform for gaming tournaments.",
 };
 
 export const viewport: Viewport = {
-  width: 'device-width',
+  width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  themeColor: '#0B0F14',
+  themeColor: "#0B0F14",
 };
 
 export default function RootLayout({
@@ -26,12 +28,17 @@ export default function RootLayout({
     >
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
         <link
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Rajdhani:wght@500;600;700&display=swap"
           rel="stylesheet"
         />
-        <script
+        <Script
+          id="theme-initialization"
           dangerouslySetInnerHTML={{
             __html: `
               (function() {

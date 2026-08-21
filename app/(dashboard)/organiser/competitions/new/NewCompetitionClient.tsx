@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { AlertCircle, Plus, Trash2, Award, Calendar, Layers, Shield } from 'lucide-react';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { AlertCircle, Plus, Trash2 } from "lucide-react";
 
 type Series = { id: string; name: string };
 type GameTitle = { id: string; name: string; slug: string };
@@ -20,25 +20,32 @@ type StageInput = {
   best_of: number;
 };
 
-export default function NewCompetitionClient({ existingSeries, gameTitles }: Props) {
+export default function NewCompetitionClient({
+  existingSeries,
+  gameTitles,
+}: Props) {
   const router = useRouter();
   const supabase = createClient();
 
-  const [seriesMode, setSeriesMode] = useState<'new' | 'existing'>('new');
-  const [seriesId, setSeriesId] = useState('');
-  const [seriesName, setSeriesName] = useState('');
-  const [seriesDescription, setSeriesDescription] = useState('');
+  const [seriesMode, setSeriesMode] = useState<"new" | "existing">("new");
+  const [seriesId, setSeriesId] = useState("");
+  const [seriesName, setSeriesName] = useState("");
+  const [seriesDescription, setSeriesDescription] = useState("");
 
-  const [instanceName, setInstanceName] = useState('');
-  const [editionLabel, setEditionLabel] = useState('');
-  const [format, setFormat] = useState('league');
-  const [prizePool, setPrizePool] = useState('');
-  const [description, setDescription] = useState('');
+  const [instanceName, setInstanceName] = useState("");
+  const [editionLabel, setEditionLabel] = useState("");
+  const [format, setFormat] = useState("league");
+  const [prizePool, setPrizePool] = useState("");
+  const [description, setDescription] = useState("");
+  const [startsAt, setStartsAt] = useState("");
+  const [endsAt, setEndsAt] = useState("");
+  const [seriesLogoUrl, setSeriesLogoUrl] = useState("");
+  const [bannerUrl, setBannerUrl] = useState("");
 
   const [selectedGames, setSelectedGames] = useState<string[]>([]);
 
   const [stages, setStages] = useState<StageInput[]>([
-    { name: 'Group Stage', stage_type: 'group', stage_order: 1, best_of: 1 },
+    { name: "Group Stage", stage_type: "group", stage_order: 1, best_of: 1 },
   ]);
 
   const [loading, setLoading] = useState(false);
@@ -46,20 +53,29 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
 
   function toggleGame(slug: string) {
     setSelectedGames((prev) =>
-      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
+      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug],
     );
   }
 
-  function updateStage(index: number, field: keyof StageInput, value: string | number) {
+  function updateStage(
+    index: number,
+    field: keyof StageInput,
+    value: string | number,
+  ) {
     setStages((prev) =>
-      prev.map((s, i) => (i === index ? { ...s, [field]: value } : s))
+      prev.map((s, i) => (i === index ? { ...s, [field]: value } : s)),
     );
   }
 
   function addStage() {
     setStages((prev) => [
       ...prev,
-      { name: '', stage_type: 'knockout', stage_order: prev.length + 1, best_of: 1 },
+      {
+        name: "",
+        stage_type: "knockout",
+        stage_order: prev.length + 1,
+        best_of: 1,
+      },
     ]);
   }
 
@@ -71,22 +87,25 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
     setError(null);
 
     if (!instanceName || selectedGames.length === 0) {
-      setError('Competition name and at least one game are required');
+      setError("Competition name and at least one game are required");
       return;
     }
-    if (seriesMode === 'new' && !seriesName) {
-      setError('Series name is required');
+    if (seriesMode === "new" && !seriesName) {
+      setError("Series name is required");
       return;
     }
-    if (seriesMode === 'existing' && !seriesId) {
-      setError('Select an existing series');
+    if (seriesMode === "existing" && !seriesId) {
+      setError("Select an existing series");
       return;
     }
 
     setLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) throw new Error('Session expired, please log in again');
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.access_token)
+        throw new Error("Session expired, please log in again");
 
       const body: Record<string, unknown> = {
         instance_name: instanceName,
@@ -94,13 +113,17 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
         format,
         prize_pool: prizePool || null,
         description: description || null,
+        starts_at: startsAt ? new Date(startsAt).toISOString() : null,
+        ends_at: endsAt ? new Date(endsAt).toISOString() : null,
+        banner_url: bannerUrl || null,
         game_title_slugs: selectedGames,
         stages: stages.filter((s) => s.name),
       };
 
-      if (seriesMode === 'new') {
+      if (seriesMode === "new") {
         body.series_name = seriesName;
         body.series_description = seriesDescription || null;
+        body.series_logo_url = seriesLogoUrl || null;
       } else {
         body.series_id = seriesId;
       }
@@ -108,21 +131,22 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/register-competition`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
             Authorization: `Bearer ${session.access_token}`,
             apikey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(body),
-        }
+        },
       );
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'Failed to create competition');
+      if (!res.ok)
+        throw new Error(data.error ?? "Failed to create competition");
 
       router.push(`/organiser/competitions/${data.competition.instance.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -155,29 +179,29 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={() => setSeriesMode('new')}
+              onClick={() => setSeriesMode("new")}
               className={`px-4 py-1.5 rounded text-xs font-display font-bold uppercase tracking-wider border transition-colors ${
-                seriesMode === 'new'
-                  ? 'bg-accent-readout border-accent-readout text-bg-void'
-                  : 'bg-bg-void border-border-line text-text-muted hover:text-text-primary'
+                seriesMode === "new"
+                  ? "bg-accent-readout border-accent-readout text-bg-void"
+                  : "bg-bg-void border-border-line text-text-muted hover:text-text-primary"
               }`}
             >
               New Series
             </button>
             <button
               type="button"
-              onClick={() => setSeriesMode('existing')}
+              onClick={() => setSeriesMode("existing")}
               className={`px-4 py-1.5 rounded text-xs font-display font-bold uppercase tracking-wider border transition-colors ${
-                seriesMode === 'existing'
-                  ? 'bg-accent-readout border-accent-readout text-bg-void'
-                  : 'bg-bg-void border-border-line text-text-muted hover:text-text-primary'
+                seriesMode === "existing"
+                  ? "bg-accent-readout border-accent-readout text-bg-void"
+                  : "bg-bg-void border-border-line text-text-muted hover:text-text-primary"
               }`}
             >
               Existing Series
             </button>
           </div>
 
-          {seriesMode === 'new' ? (
+          {seriesMode === "new" ? (
             <div className="space-y-2 pt-1">
               <input
                 placeholder="Series Name (e.g. UI eSports League)"
@@ -190,6 +214,12 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
                 value={seriesDescription}
                 onChange={(e) => setSeriesDescription(e.target.value)}
                 className="w-full bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary placeholder-text-muted/30 focus:outline-none focus:border-accent-readout transition-colors min-h-[60px]"
+              />
+              <input
+                placeholder="Series logo URL (optional)"
+                value={seriesLogoUrl}
+                onChange={(e) => setSeriesLogoUrl(e.target.value)}
+                className="w-full bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary placeholder-text-muted/30 focus:outline-none focus:border-accent-readout transition-colors"
               />
             </div>
           ) : (
@@ -250,6 +280,44 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
           </div>
         </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label className="block text-[10px] font-display font-bold text-text-muted uppercase tracking-wider">
+              Starts At (optional)
+            </label>
+            <input
+              type="datetime-local"
+              value={startsAt}
+              onChange={(e) => setStartsAt(e.target.value)}
+              className="w-full bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent-readout transition-colors"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="block text-[10px] font-display font-bold text-text-muted uppercase tracking-wider">
+              Ends At (optional)
+            </label>
+            <input
+              type="datetime-local"
+              value={endsAt}
+              onChange={(e) => setEndsAt(e.target.value)}
+              className="w-full bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent-readout transition-colors"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <label className="block text-[10px] font-display font-bold text-text-muted uppercase tracking-wider">
+            Banner URL (optional)
+          </label>
+          <input
+            placeholder="https://..."
+            value={bannerUrl}
+            onChange={(e) => setBannerUrl(e.target.value)}
+            className="w-full bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary placeholder-text-muted/30 focus:outline-none focus:border-accent-readout transition-colors"
+          />
+        </div>
+
         {/* Format */}
         <div className="space-y-1">
           <label className="block text-[10px] font-display font-bold text-text-muted uppercase tracking-wider">
@@ -260,9 +328,13 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
             onChange={(e) => setFormat(e.target.value)}
             className="w-full bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent-readout transition-colors"
           >
-            <option value="league">League (Round-Robin with Standings Table)</option>
+            <option value="league">
+              League (Round-Robin with Standings Table)
+            </option>
             <option value="knockout">Knockout (Bracket Elimination)</option>
-            <option value="group+knockout">Group Stage + Knockout Playoffs</option>
+            <option value="group+knockout">
+              Group Stage + Knockout Playoffs
+            </option>
             <option value="ranking">Ranking (BR Lobby Accumulator)</option>
           </select>
         </div>
@@ -294,8 +366,8 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
                   onClick={() => toggleGame(g.slug)}
                   className={`px-3 py-1.5 rounded text-xs font-display font-bold uppercase border transition-colors ${
                     active
-                      ? 'bg-accent-readout border-accent-readout text-bg-void'
-                      : 'bg-bg-void border-border-line text-text-muted hover:text-text-primary'
+                      ? "bg-accent-readout border-accent-readout text-bg-void"
+                      : "bg-bg-void border-border-line text-text-muted hover:text-text-primary"
                   }`}
                 >
                   {g.name}
@@ -316,12 +388,12 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
                 <input
                   placeholder="Stage name (e.g. Group Stage)"
                   value={stage.name}
-                  onChange={(e) => updateStage(i, 'name', e.target.value)}
+                  onChange={(e) => updateStage(i, "name", e.target.value)}
                   className="bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary placeholder-text-muted/30 focus:outline-none focus:border-accent-readout transition-colors flex-2"
                 />
                 <select
                   value={stage.stage_type}
-                  onChange={(e) => updateStage(i, 'stage_type', e.target.value)}
+                  onChange={(e) => updateStage(i, "stage_type", e.target.value)}
                   className="bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent-readout transition-colors flex-1"
                 >
                   <option value="league">League</option>
@@ -330,13 +402,17 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
                   <option value="ranking">Ranking</option>
                 </select>
                 <div className="flex items-center gap-1.5 bg-bg-void border border-border-line px-2 rounded h-[38px] shrink-0">
-                  <span className="text-[10px] font-data text-text-muted">BO</span>
+                  <span className="text-[10px] font-data text-text-muted">
+                    BO
+                  </span>
                   <input
                     type="number"
                     min={1}
                     max={15}
                     value={stage.best_of}
-                    onChange={(e) => updateStage(i, 'best_of', Number(e.target.value))}
+                    onChange={(e) =>
+                      updateStage(i, "best_of", Number(e.target.value))
+                    }
                     className="w-8 bg-transparent text-text-primary text-sm font-data focus:outline-none text-center"
                     title="Best of maps"
                   />
@@ -371,7 +447,7 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
             onClick={handleSubmit}
             className="w-full bg-accent-readout hover:bg-accent-readout/80 disabled:opacity-50 text-bg-void font-display font-black text-sm uppercase tracking-widest py-3 rounded transition-all cursor-pointer"
           >
-            {loading ? 'CREATING CAMPAIGN DATA...' : 'CREATE COMPETITION'}
+            {loading ? "CREATING CAMPAIGN DATA..." : "CREATE COMPETITION"}
           </button>
         </div>
       </div>

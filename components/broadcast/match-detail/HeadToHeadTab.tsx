@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { History, Shield } from 'lucide-react';
-import { Match, HeadToHeadRecord } from '@/hooks/useMatchRealtime';
+import { History, Shield } from "lucide-react";
+import { Match, HeadToHeadRecord } from "@/hooks/useMatchRealtime";
 
 interface HeadToHeadTabProps {
   match: Match;
@@ -10,9 +10,13 @@ interface HeadToHeadTabProps {
 
 export function HeadToHeadTab({ match, headToHead }: HeadToHeadTabProps) {
   // Aggregate stats
-  const homeWins = headToHead.filter((h) => h.winner === match.team_home?.name).length;
-  const awayWins = headToHead.filter((h) => h.winner === match.team_away?.name).length;
-  const draws = headToHead.filter((h) => h.winner === 'Draw').length;
+  const homeWins = headToHead.filter(
+    (h) => h.winner === match.team_home?.name,
+  ).length;
+  const awayWins = headToHead.filter(
+    (h) => h.winner === match.team_away?.name,
+  ).length;
+  const draws = headToHead.filter((h) => h.winner === "Draw").length;
 
   return (
     <div className="space-y-6">
@@ -27,17 +31,25 @@ export function HeadToHeadTab({ match, headToHead }: HeadToHeadTabProps) {
       <div className="bg-bg-surface border border-border-line rounded p-6 max-w-3xl mx-auto space-y-6">
         <div className="grid grid-cols-3 gap-4 text-center font-display border-b border-border-line pb-4">
           <div>
-            <span className="text-2xl font-black text-accent-readout block">{homeWins}</span>
+            <span className="text-2xl font-black text-accent-readout block">
+              {homeWins}
+            </span>
             <span className="text-[10px] text-text-muted uppercase tracking-wider">
               {match.team_home?.name} WINS
             </span>
           </div>
           <div>
-            <span className="text-2xl font-black text-text-muted block">{draws}</span>
-            <span className="text-[10px] text-text-muted uppercase tracking-wider">DRAWS</span>
+            <span className="text-2xl font-black text-text-muted block">
+              {draws}
+            </span>
+            <span className="text-[10px] text-text-muted uppercase tracking-wider">
+              DRAWS
+            </span>
           </div>
           <div>
-            <span className="text-2xl font-black text-accent-signal block">{awayWins}</span>
+            <span className="text-2xl font-black text-accent-signal block">
+              {awayWins}
+            </span>
             <span className="text-[10px] text-text-muted uppercase tracking-wider">
               {match.team_away?.name} WINS
             </span>
@@ -60,15 +72,17 @@ export function HeadToHeadTab({ match, headToHead }: HeadToHeadTabProps) {
                   <span className="block font-display font-bold text-[10px] text-accent-readout uppercase">
                     {item.competition}
                   </span>
-                  <span className="text-text-muted text-[10px]">{item.date}</span>
+                  <span className="text-text-muted text-[10px]">
+                    {item.date}
+                  </span>
                 </div>
 
                 <div className="flex items-center gap-3 font-semibold text-sm">
                   <span
                     className={
                       item.winner === match.team_home?.name
-                        ? 'text-state-win font-bold'
-                        : 'text-text-primary'
+                        ? "text-state-win font-bold"
+                        : "text-text-primary"
                     }
                   >
                     {item.homeTeam}
@@ -79,8 +93,8 @@ export function HeadToHeadTab({ match, headToHead }: HeadToHeadTabProps) {
                   <span
                     className={
                       item.winner === match.team_away?.name
-                        ? 'text-state-win font-bold'
-                        : 'text-text-primary'
+                        ? "text-state-win font-bold"
+                        : "text-text-primary"
                     }
                   >
                     {item.awayTeam}
