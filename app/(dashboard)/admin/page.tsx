@@ -11,6 +11,8 @@ import {
   UserCheck,
   Settings,
   Newspaper,
+  AlertTriangle,
+  Zap,
 } from "lucide-react";
 
 const stats = (
@@ -18,6 +20,8 @@ const stats = (
   liveMatches: number,
   totalTeams: number,
   totalUsers: number,
+  rateLimitHits: number,
+  quotaErrors: number,
 ) => [
   {
     label: "Competitions",
@@ -42,6 +46,18 @@ const stats = (
     value: totalUsers,
     icon: Users,
     color: "text-text-muted",
+  },
+  {
+    label: "Rate Limits (24h)",
+    value: rateLimitHits,
+    icon: Zap,
+    color: rateLimitHits > 0 ? "text-accent-alert" : "text-text-muted",
+  },
+  {
+    label: "Quota Errors (24h)",
+    value: quotaErrors,
+    icon: AlertTriangle,
+    color: quotaErrors > 0 ? "text-accent-alert" : "text-text-muted",
   },
 ];
 
@@ -114,6 +130,8 @@ export default async function AdminPage() {
     { count: liveMatches },
     { count: totalTeams },
     { count: totalUsers },
+    { data: rateLimitData },
+    { data: quotaErrorData },
   ] = await Promise.all([
     supabase.from("comp_instances").select("*", { count: "exact", head: true }),
     supabase
@@ -122,7 +140,20 @@ export default async function AdminPage() {
       .eq("status", "live"),
     supabase.from("teams").select("*", { count: "exact", head: true }),
     supabase.from("profiles").select("*", { count: "exact", head: true }),
+    supabase
+      .from("api_quota_logs")
+      .select("count")
+      .eq("metric_type", "rate_limit")
+      .gte("recorded_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
+    supabase
+      .from("api_quota_logs")
+      .select("count")
+      .eq("metric_type", "quota_error")
+      .gte("recorded_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
   ]);
+
+  const rateLimitHits = rateLimitData?.reduce((sum, row) => sum + (row.count || 0), 0) ?? 0;
+  const quotaErrors = quotaErrorData?.reduce((sum, row) => sum + (row.count || 0), 0) ?? 0;
 
   return (
     <div className="space-y-8 font-body">
@@ -142,6 +173,8 @@ export default async function AdminPage() {
           liveMatches ?? 0,
           totalTeams ?? 0,
           totalUsers ?? 0,
+          rateLimitHits,
+          quotaErrors,
         ).map((stat) => {
           const Icon = stat.icon;
           return (

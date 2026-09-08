@@ -351,6 +351,75 @@ function slugify(value: string) {
 		.replace(/^-|-$/g, '');
 }
 
+async function logQuotaMetrics(
+	source: string,
+	rateLimitHits: number,
+	quotaErrors: number,
+	syncedCount: number,
+	game: string,
+) {
+	try {
+		const logsToInsert = [];
+
+		if (rateLimitHits > 0) {
+			logsToInsert.push({
+				source,
+				metric_type: 'rate_limit',
+				count: rateLimitHits,
+				endpoint: `/pandascore/matches?game=${game}`,
+				status_code: 429,
+				metadata: { game },
+			});
+		}
+
+		if (quotaErrors > 0) {
+			logsToInsert.push({
+				source,
+				metric_type: 'quota_error',
+				count: quotaErrors,
+				endpoint: `/pandascore/matches?game=${game}`,
+				status_code: 403,
+				metadata: { game },
+			});
+		}
+
+		if (syncedCount > 0) {
+			logsToInsert.push({
+				source,
+				metric_type: 'sync_success',
+				count: syncedCount,
+				endpoint: `/pandascore/matches?game=${game}`,
+				status_code: 200,
+				metadata: { game },
+			});
+		}
+
+		if (logsToInsert.length > 0) {
+			const { error } = await supabase
+				.from('api_quota_logs')
+				.insert(logsToInsert);
+
+			if (error) {
+				console.error('Failed to log quota metrics:', error);
+			} else {
+				console.log(
+					`Logged ${logsToInsert.length} quota metric entries`,
+				);
+			}
+		}
+	} catch (err) {
+		console.error('Error logging quota metrics:', err);
+		// Don't throw — metrics logging shouldn't block sync
+	}
+}
+
+function slugify(value: string) {
+	return value
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-|-$/g, '');
+}
+
 function inferStageType(
 	tournamentName: string,
 	hasBracket?: boolean | null,
@@ -1015,6 +1084,15 @@ Deno.serve(async (req: Request) => {
 
 		const synced = outcomes.filter((o) => o.ok).length;
 		const failed = outcomes.filter((o) => !o.ok);
+
+		// Log metrics to database for monitoring
+		await logQuotaMetrics(
+			'pandascore',
+			rateLimitHits,
+			quotaErrors,
+			synced,
+			game,
+		);
 
 		return new Response(
 			JSON.stringify({
