@@ -36,7 +36,7 @@ export default function HomeClient() {
     new Date().toISOString().slice(0, 10),
   );
 
-  const { tickerMatches, groups, liveCount, isLoading, toasts, dismissToast } =
+  const { tickerMatches, groups, liveCount, isLoading, toasts, dismissToast, hasMore, loadMore } =
     useLiveFeed(selectedDate);
 
   const { favorites } = useFavorites();
@@ -268,6 +268,19 @@ export default function HomeClient() {
                   ))}
                 </LeagueSection>
               ))}
+
+              {/* Load More Button */}
+              {hasMore && (
+                <div className="flex justify-center pt-4">
+                  <button
+                    onClick={loadMore}
+                    disabled={isLoading}
+                    className="px-6 py-3 bg-bg-surface border border-border-line hover:border-accent-readout/40 disabled:opacity-50 disabled:cursor-not-allowed rounded font-display text-sm font-bold uppercase tracking-wider text-text-primary hover:text-accent-readout transition-colors"
+                  >
+                    {isLoading ? "LOADING..." : "LOAD MORE MATCHES"}
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <EmptyState
