@@ -45,10 +45,9 @@ function GameLogo({ gameTitle }: { gameTitle: string }) {
     <Image
       src={src}
       alt={gameTitle}
-      width={18}
-      height={18}
-      className="rounded-sm object-contain"
-      style={{ width: "auto", height: "auto" }}
+      width={32}
+      height={32}
+      className="w-4 h-4 rounded-sm object-contain"
     />
   );
 }
