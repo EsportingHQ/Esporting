@@ -190,10 +190,12 @@ const MATCH_QUERY = `
   match_scores(home_current_score, away_current_score)
 `;
 
-export function useLiveFeed(date?: string) {
+export function useLiveFeed(date?: string, initialPageSize: number = 25) {
 	const [tickerMatches, setTickerMatches] = useState<TickerMatch[]>([]);
 	const [groups, setGroups] = useState<CompetitionGroup[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
+	const [hasMore, setHasMore] = useState(true);
+	const [pageSize, setPageSize] = useState(initialPageSize);
 	const [error, setError] = useState<Error | null>(null);
 	const [toasts, setToasts] = useState<ToastMessage[]>([]);
 	const { prefs } = useNotificationPrefs();
@@ -283,7 +285,7 @@ export function useLiveFeed(date?: string) {
 
 			const { data, error: fetchErr } = await query
 				.order('scheduled_at', { ascending: true, nullsFirst: false })
-				.limit(50);
+				.limit(pageSize);
 
 			if (fetchErr) throw fetchErr;
 
@@ -320,6 +322,9 @@ export function useLiveFeed(date?: string) {
 			const builtGroups = groupMatchesByCompetition(rowsWithComp);
 
 			setGroups(builtGroups);
+
+			// If we got fewer rows than requested, we've reached the end
+			setHasMore(rows.length >= pageSize);
 
 			const liveRows = rows
 				.filter((r) => r.status === 'live')
@@ -464,9 +469,18 @@ export function useLiveFeed(date?: string) {
 		prefs.matchStart,
 		prefs.matchEnd,
 		prefs.goalScored,
+		pageSize,
 	]);
 
 	const liveCount = groups.reduce((acc, g) => acc + g.liveCount, 0);
+
+	const loadMore = useCallback(() => {
+		setIsLoading(true);
+		setPageSize((prev) => {
+			const newSize = Math.min(prev + initialPageSize, 100); // Max 100
+			return newSize;
+		});
+	}, [initialPageSize]);
 
 	return {
 		tickerMatches,
@@ -476,5 +490,8 @@ export function useLiveFeed(date?: string) {
 		error,
 		toasts,
 		dismissToast,
+		hasMore,
+		pageSize,
+		loadMore,
 	};
 }
