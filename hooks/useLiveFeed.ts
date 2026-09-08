@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { MatchCardProps } from '@/components/broadcast/match-card';
+import { one } from '@/lib/utils/array';
+import { mapGameType } from '@/lib/utils/game-type';
 import { TickerMatch } from '@/components/broadcast/broadcast-ticker';
 import { ToastMessage } from '@/components/ui/ScoreToast';
 import { combineCompetitionName } from '@/lib/competitionName';
@@ -68,19 +70,6 @@ interface RawMatchRow {
 		| { home_current_score: number; away_current_score: number }[]
 		| { home_current_score: number; away_current_score: number }
 		| null;
-}
-
-function one<T>(value: T | T[] | null | undefined): T | null {
-	if (Array.isArray(value)) return value[0] ?? null;
-	return value ?? null;
-}
-
-function mapGameType(
-	gameTypeSlug: string | undefined,
-): 'football' | 'shooter' | 'br' {
-	if (gameTypeSlug === 'football') return 'football';
-	if (gameTypeSlug?.includes('br')) return 'br';
-	return 'shooter';
 }
 
 function mapStatusLabel(status: string, scheduledAt: string | null): string {

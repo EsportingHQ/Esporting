@@ -3,6 +3,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { MatchCardProps } from "@/components/broadcast/match-card";
+import { one } from "@/lib/utils/array";
+import { mapGameType } from "@/lib/utils/game-type";
 
 export interface CompetitionDetail {
   id: string;
@@ -55,11 +57,6 @@ export interface StageGroup {
   matches: MatchCardProps[];
 }
 
-function one<T>(value: T | T[] | null | undefined): T | null {
-  if (Array.isArray(value)) return value[0] ?? null;
-  return value ?? null;
-}
-
 interface RawTeamRef {
   id: string;
   name: string;
@@ -100,14 +97,6 @@ interface RawMatchRow {
     | { home_current_score: number; away_current_score: number }[]
     | null;
   comp_stages: RawStageRef | RawStageRef[] | null;
-}
-
-function mapGameType(
-  gameTypeSlug: string | undefined,
-): "football" | "shooter" | "br" {
-  if (gameTypeSlug === "football") return "football";
-  if (gameTypeSlug?.includes("br")) return "br";
-  return "shooter";
 }
 
 function mapTimeLabel(status: string, scheduledAt: string | null): string {

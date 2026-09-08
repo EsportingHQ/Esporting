@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { Users } from 'lucide-react';
 import { Match } from '@/hooks/useMatchRealtime';
 import { createClient } from '@/lib/supabase/client';
+import { one } from '@/lib/utils/array';
 
 interface LineupsTabProps {
 	match: Match;
@@ -16,10 +17,6 @@ type LineupPlayer = {
 	role: string;
 	position: string;
 };
-
-function one<T>(value: T | T[] | null | undefined): T | null {
-	return Array.isArray(value) ? (value[0] ?? null) : (value ?? null);
-}
 
 export function LineupsTab({ match }: LineupsTabProps) {
 	const [homeLineup, setHomeLineup] = useState<LineupPlayer[]>([]);

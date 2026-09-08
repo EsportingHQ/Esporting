@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { one } from "@/lib/utils/array";
 
 export interface CompetitionGameTitle {
   name: string;
@@ -29,10 +30,6 @@ export interface GameTitleOption {
   slug: string;
   gameTypeSlug: string;
   gameTypeName: string;
-}
-
-function one<T>(value: T | T[] | null | undefined): T | null {
-  return Array.isArray(value) ? (value[0] ?? null) : (value ?? null);
 }
 
 type RawGameTitleRow = {
