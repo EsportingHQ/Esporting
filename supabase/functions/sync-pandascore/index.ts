@@ -258,7 +258,12 @@ async function syncLineupForCompletedMatch(
 	}
 }
 
-async function getMatches(endpoint: string, limit = 10): Promise<PandaMatch[]> {
+async function getMatches(
+	endpoint: string,
+	limit = 10,
+	onRateLimit?: () => void,
+	onQuotaError?: () => void,
+): Promise<PandaMatch[]> {
 	const separator = endpoint.includes('?') ? '&' : '?';
 	const url = `https://api.pandascore.co${endpoint}${separator}per_page=${limit}`;
 
@@ -269,8 +274,29 @@ async function getMatches(endpoint: string, limit = 10): Promise<PandaMatch[]> {
 		},
 	});
 
+	// Rate limit detection: 429 Too Many Requests
+	if (response.status === 429) {
+		onRateLimit?.();
+		const retryAfter = response.headers.get('Retry-After');
+		const waitSeconds = retryAfter ? parseInt(retryAfter) : 60;
+		console.error(
+			`[PandaScore Rate Limited] 429 response. Retry-After: ${waitSeconds}s. URL: ${url}`,
+		);
+		// Don't retry automatically — let the cron scheduler handle backoff
+		throw new Error(
+			`PandaScore rate limited (429). Retry after ${waitSeconds}s`,
+		);
+	}
+
 	if (!response.ok) {
 		const errorBody = await response.text();
+		// Log quota-related errors separately for monitoring
+		if (response.status === 403) {
+			onQuotaError?.();
+			console.error(
+				`[PandaScore Quota Error] 403 Forbidden for ${url}: ${errorBody}`,
+			);
+		}
 		throw new Error(
 			`PandaScore ${response.status} for ${url}: ${errorBody}`,
 		);
@@ -282,13 +308,32 @@ async function getMatches(endpoint: string, limit = 10): Promise<PandaMatch[]> {
 async function getAllRelevantMatches(
 	baseEndpoint: string,
 	limit = 10,
+	onRateLimit?: () => void,
+	onQuotaError?: () => void,
 ): Promise<PandaMatch[]> {
-	const upcoming = await getMatches(`${baseEndpoint}/upcoming`, limit);
-	const running = await getMatches(`${baseEndpoint}/running`, limit);
-	const past = await getMatches(`${baseEndpoint}/past`, limit);
+	const upcoming = await getMatches(
+		`${baseEndpoint}/upcoming`,
+		limit,
+		onRateLimit,
+		onQuotaError,
+	);
+	const running = await getMatches(
+		`${baseEndpoint}/running`,
+		limit,
+		onRateLimit,
+		onQuotaError,
+	);
+	const past = await getMatches(
+		`${baseEndpoint}/past`,
+		limit,
+		onRateLimit,
+		onQuotaError,
+	);
 	const canceled = await getMatches(
 		`${baseEndpoint}?filter[status]=canceled`,
 		limit,
+		onRateLimit,
+		onQuotaError,
 	);
 
 	const map = new Map<string, PandaMatch>();
@@ -570,6 +615,10 @@ Deno.serve(async (req: Request) => {
 		);
 	}
 
+	// Track API errors for monitoring
+	let rateLimitHits = 0;
+	let quotaErrors = 0;
+
 	try {
 		const body = await req.json().catch(() => ({}));
 
@@ -587,7 +636,11 @@ Deno.serve(async (req: Request) => {
 			);
 		}
 
-		const matches = await getAllRelevantMatches(config.endpoint, limit);
+		const matches = await getAllRelevantMatches(config.endpoint, limit, () => {
+			rateLimitHits++;
+		}, () => {
+			quotaErrors++;
+		});
 
 		// ---- Step 1: filter out incomplete fixtures up front ----
 		type ValidMatch = {
@@ -969,6 +1022,11 @@ Deno.serve(async (req: Request) => {
 				game,
 				synced,
 				failed: failed.length,
+				metrics: {
+					rateLimitHits,
+					quotaErrors,
+					timestamp: new Date().toISOString(),
+				},
 				...(failed.length > 0 ? { errors: failed } : {}),
 			}),
 			{ headers: { 'Content-Type': 'application/json' } },
