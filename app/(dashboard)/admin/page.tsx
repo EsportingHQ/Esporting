@@ -63,6 +63,13 @@ const stats = (
 
 const actions = [
   {
+    label: "API Monitoring",
+    href: "/admin/monitoring",
+    description:
+      "Track PandaScore rate limits, quota usage, and sync metrics in real-time",
+    icon: Activity,
+  },
+  {
     label: "News Desk",
     href: "/admin/news",
     description:
