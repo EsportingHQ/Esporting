@@ -27,9 +27,11 @@ CREATE POLICY "Admins can view api quota logs"
   FOR SELECT
   USING (
     EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.id = auth.uid()
-      AND profiles.role = 'admin'
+      SELECT 1 FROM user_role_assignments ura
+      JOIN roles r ON ura.role_id = r.id
+      WHERE ura.user_id = auth.uid()
+      AND r.name = 'super_admin'
+      AND ura.revoked_at IS NULL
     )
   );
 
@@ -58,9 +60,11 @@ CREATE POLICY "Admins can manage alert settings"
   FOR ALL
   USING (
     EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.id = auth.uid()
-      AND profiles.role = 'admin'
+      SELECT 1 FROM user_role_assignments ura
+      JOIN roles r ON ura.role_id = r.id
+      WHERE ura.user_id = auth.uid()
+      AND r.name = 'super_admin'
+      AND ura.revoked_at IS NULL
     )
   );
 
