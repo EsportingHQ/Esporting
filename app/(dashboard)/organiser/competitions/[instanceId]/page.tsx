@@ -87,7 +87,7 @@ export default async function OrganiserCompetitionDetailPage({
     .order("registered_at", { ascending: false });
 
   const teamIds = (registrations ?? [])
-    .map((r) => (Array.isArray(r.teams) ? r.teams[0]?.id : r.teams?.id))
+    .map((r: any) => (Array.isArray(r.teams) ? r.teams[0]?.id : r.teams?.id))
     .filter(Boolean) as string[];
 
   const { data: rosterRows } = teamIds.length

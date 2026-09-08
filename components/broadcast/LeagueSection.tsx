@@ -47,7 +47,8 @@ function GameLogo({ gameTitle }: { gameTitle: string }) {
       alt={gameTitle}
       width={18}
       height={18}
-      className="h-4.5 w-auto rounded-sm object-contain"
+      className="rounded-sm object-contain"
+      style={{ width: "auto", height: "auto" }}
     />
   );
 }

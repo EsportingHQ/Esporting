@@ -1,142 +1,159 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 export interface FavoriteItem {
-  type: "team" | "competition";
-  id: string;
-  name: string;
-  addedAt: string;
+	type: 'team' | 'competition';
+	id: string;
+	name: string;
+	addedAt: string;
+}
+
+interface SuggestedFavorite {
+	type: 'team' | 'competition';
+	id: string;
+	name: string;
+	reason: string;
 }
 
 export function useFavorites() {
-  const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+	const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
+	const [isLoaded, setIsLoaded] = useState(false);
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("esporting_favorites");
-      if (stored) {
-        setFavorites(JSON.parse(stored));
-      }
-    } catch (e) {
-      console.error("Failed to load favorites from localStorage", e);
-    } finally {
-      setIsLoaded(true);
-    }
-  }, []);
+	useEffect(() => {
+		const loadFavorites = () => {
+			try {
+				const stored = localStorage.getItem('esporting_favorites');
 
-  const saveFavorites = (items: FavoriteItem[]) => {
-    setFavorites(items);
-    try {
-      localStorage.setItem("esporting_favorites", JSON.stringify(items));
-    } catch (e) {
-      console.error("Failed to save favorites to localStorage", e);
-    }
-  };
+				if (stored) {
+					const parsed = JSON.parse(stored);
 
-  const isFavorite = useCallback(
-    (type: "team" | "competition", id: string) => {
-      return favorites.some((item) => item.type === type && item.id === id);
-    },
-    [favorites],
-  );
+					if (Array.isArray(parsed)) {
+						setFavorites(parsed);
+					}
+				}
+			} catch (e) {
+				console.error('Failed to load favorites from localStorage', e);
+			} finally {
+				setIsLoaded(true);
+			}
+		};
 
-  const toggleFavorite = useCallback(
-    (type: "team" | "competition", id: string, name: string) => {
-      setFavorites((prev) => {
-        const exists = prev.some(
-          (item) => item.type === type && item.id === id,
-        );
-        let updated: FavoriteItem[];
-        if (exists) {
-          updated = prev.filter(
-            (item) => !(item.type === type && item.id === id),
-          );
-        } else {
-          updated = [
-            ...prev,
-            { type, id, name, addedAt: new Date().toISOString() },
-          ];
-        }
-        try {
-          localStorage.setItem("esporting_favorites", JSON.stringify(updated));
-        } catch (e) {}
-        return updated;
-      });
-    },
-    [],
-  );
+		// Defer the state update so the effect isn't synchronously
+		// triggering a cascading render.
+		const frame = requestAnimationFrame(loadFavorites);
 
-  // Timezone & locale based smart suggestions
-  const getSuggestedFavorites = useCallback(() => {
-    let timezone = "";
-    try {
-      timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-    } catch (e) {}
+		return () => cancelAnimationFrame(frame);
+	}, []);
 
-    const isAfricanRegion =
-      timezone.includes("Lagos") ||
-      timezone.includes("Africa") ||
-      timezone.includes("Cairo") ||
-      timezone.includes("Johannesburg");
+	const isFavorite = useCallback(
+		(type: 'team' | 'competition', id: string) => {
+			return favorites.some(
+				(item) => item.type === type && item.id === id,
+			);
+		},
+		[favorites],
+	);
 
-    if (isAfricanRegion) {
-      return [
-        {
-          type: "team" as const,
-          id: "1",
-          name: "Team Kuti",
-          reason: "Popular in your region (West Africa)",
-        },
-        {
-          type: "team" as const,
-          id: "2",
-          name: "Team Bello",
-          reason: "Popular in your region (West Africa)",
-        },
-        {
-          type: "competition" as const,
-          id: "c1",
-          name: "UI eSports League Season 1",
-          reason: "Top regional tournament",
-        },
-        {
-          type: "competition" as const,
-          id: "c2",
-          name: "CODM Battle Royale Arena",
-          reason: "Trending tournament",
-        },
-      ];
-    }
+	const toggleFavorite = useCallback(
+		(type: 'team' | 'competition', id: string, name: string) => {
+			setFavorites((prev) => {
+				const exists = prev.some(
+					(item) => item.type === type && item.id === id,
+				);
 
-    return [
-      {
-        type: "team" as const,
-        id: "1",
-        name: "Team Kuti",
-        reason: "Top performing FC 26 squad",
-      },
-      {
-        type: "team" as const,
-        id: "2",
-        name: "Team Bello",
-        reason: "Leading CODM MP squad",
-      },
-      {
-        type: "competition" as const,
-        id: "c1",
-        name: "UI eSports League Season 1",
-        reason: "Featured league",
-      },
-    ];
-  }, []);
+				const updated: FavoriteItem[] = exists
+					? prev.filter(
+							(item) => !(item.type === type && item.id === id),
+						)
+					: [
+							...prev,
+							{
+								type,
+								id,
+								name,
+								addedAt: new Date().toISOString(),
+							},
+						];
 
-  return {
-    favorites,
-    isLoaded,
-    isFavorite,
-    toggleFavorite,
-    suggestedFavorites: getSuggestedFavorites(),
-  };
+				try {
+					localStorage.setItem(
+						'esporting_favorites',
+						JSON.stringify(updated),
+					);
+				} catch (e) {
+					console.error(
+						'Failed to save favorites to localStorage',
+						e,
+					);
+				}
+
+				return updated;
+			});
+		},
+		[favorites],
+	);
+
+	const [suggestedFavorites, setSuggestedFavorites] = useState<
+		SuggestedFavorite[]
+	>([]);
+
+	useEffect(() => {
+		const supabase = createClient();
+
+		const loadSuggestions = async () => {
+			try {
+				const { data: comps, error: compsError } = await supabase
+					.from('comp_instances')
+					.select('id, name')
+					.eq('status', 'ongoing')
+					.is('deleted_at', null)
+					.order('created_at', { ascending: false })
+					.limit(2);
+
+				if (compsError) {
+					console.error('Failed to load competitions', compsError);
+				}
+
+				const { data: teams, error: teamsError } = await supabase
+					.from('teams')
+					.select('id, name')
+					.is('deleted_at', null)
+					.order('created_at', { ascending: false })
+					.limit(2);
+
+				if (teamsError) {
+					console.error('Failed to load teams', teamsError);
+				}
+
+				setSuggestedFavorites([
+					...(comps ?? []).map((c) => ({
+						type: 'competition' as const,
+						id: c.id,
+						name: c.name,
+						reason: 'Active competition',
+					})),
+					...(teams ?? []).map((t) => ({
+						type: 'team' as const,
+						id: t.id,
+						name: t.name,
+						reason: 'Recently active team',
+					})),
+				]);
+			} catch (error) {
+				console.error('Failed to load favorite suggestions', error);
+			}
+		};
+
+		loadSuggestions();
+	}, []);
+
+	return {
+		favorites,
+		isLoaded,
+		isFavorite,
+		toggleFavorite,
+		suggestedFavorites,
+	};
 }
