@@ -5,7 +5,7 @@ import Image from 'next/image';
 
 export function PlatformPreview() {
   return (
-    <section className="bg-bg-surface py-24 border-y border-border-line overflow-hidden">
+    <section className="bg-bg-surface py-16 sm:py-24 border-y border-border-line overflow-hidden">
       <div className="max-w-7xl mx-auto px-4">
         
         <div className="flex flex-col md:flex-row items-center gap-12">
@@ -58,7 +58,7 @@ export function PlatformPreview() {
                 initial={{ opacity: 0, scale: 0.8 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.8, duration: 0.5 }}
-                className="absolute top-8 right-8 z-20 glass-panel px-3 py-1.5 rounded flex items-center gap-2 border-accent-readout/50 text-accent-readout text-[10px] font-data font-bold tracking-widest shadow-lg"
+                className="hidden sm:flex absolute top-8 right-8 z-20 glass-panel px-3 py-1.5 rounded items-center gap-2 border-accent-readout/50 text-accent-readout text-[10px] font-data font-bold tracking-widest shadow-lg"
               >
                 <div className="w-2 h-2 rounded-full bg-accent-readout animate-pulse" />
                 DASHBOARD UI

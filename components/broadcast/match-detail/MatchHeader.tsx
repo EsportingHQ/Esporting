@@ -58,13 +58,13 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
       </div>
 
       {/* Flagship Scoreboard Area */}
-      <div className="py-8 px-4 max-w-4xl mx-auto">
+      <div className="py-6 md:py-8 px-4 max-w-4xl mx-auto">
         {!isBR ? (
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row items-center md:justify-between gap-6 md:gap-4">
             {/* Home Team */}
-            <div className="flex items-center gap-4 w-[40%]">
+            <div className="flex items-center justify-center md:justify-start gap-3 md:gap-4 w-full md:w-[40%]">
               <div className="relative">
-                <div className="w-12 h-12 md:w-14 md:h-14 bg-bg-void border border-border-line rounded flex items-center justify-center font-display font-black text-xl text-text-muted shrink-0 shadow-inner">
+                <div className="w-10 h-10 md:w-14 md:h-14 bg-bg-void border border-border-line rounded flex items-center justify-center font-display font-black text-lg md:text-xl text-text-muted shrink-0 shadow-inner">
                   {match.team_home?.logo_url ? 'LOGO' : match.team_home?.name.substring(0, 3).toUpperCase()}
                 </div>
                 {match.team_home_id && (
@@ -78,8 +78,8 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
                   </div>
                 )}
               </div>
-              <div className="flex flex-col min-w-0">
-                <span className="font-display font-black text-lg md:text-2xl text-text-primary leading-tight uppercase truncate">
+              <div className="flex flex-col min-w-0 text-center md:text-left">
+                <span className="font-display font-black text-xl md:text-2xl text-text-primary leading-tight uppercase truncate">
                   {match.team_home?.name}
                 </span>
                 <span className="text-[10px] font-data text-text-muted">HOME SQUAD</span>
@@ -87,7 +87,7 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
             </div>
 
             {/* Score Display */}
-            <div className="flex flex-col items-center justify-center shrink-0 min-w-[100px]">
+            <div className="flex flex-col items-center justify-center shrink-0">
               <div className="flex items-center gap-2 bg-bg-void border border-border-line px-5 py-2 rounded text-2xl md:text-4xl font-data font-bold tracking-wider text-text-primary shadow-inner">
                 {isShooter ? (
                   <>
@@ -119,19 +119,19 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
             </div>
 
             {/* Away Team */}
-            <div className="flex items-center justify-end gap-4 w-[40%] text-right">
+            <div className="flex items-center justify-center md:justify-end gap-3 md:gap-4 w-full md:w-[40%] flex-row-reverse md:flex-row text-center md:text-right">
               <div className="flex flex-col min-w-0">
-                <span className="font-display font-black text-lg md:text-2xl text-text-primary leading-tight uppercase truncate">
+                <span className="font-display font-black text-xl md:text-2xl text-text-primary leading-tight uppercase truncate">
                   {match.team_away?.name}
                 </span>
                 <span className="text-[10px] font-data text-text-muted">AWAY SQUAD</span>
               </div>
               <div className="relative">
-                <div className="w-12 h-12 md:w-14 md:h-14 bg-bg-void border border-border-line rounded flex items-center justify-center font-display font-black text-xl text-text-muted shrink-0 shadow-inner">
+                <div className="w-10 h-10 md:w-14 md:h-14 bg-bg-void border border-border-line rounded flex items-center justify-center font-display font-black text-lg md:text-xl text-text-muted shrink-0 shadow-inner">
                   {match.team_away?.logo_url ? 'LOGO' : match.team_away?.name.substring(0, 3).toUpperCase()}
                 </div>
                 {match.team_away_id && (
-                  <div className="absolute -top-2 -right-2 bg-bg-surface rounded-full border border-border-line p-0.5">
+                  <div className="absolute -top-2 -right-2 md:-top-2 md:-right-2 -top-2 -left-2 md:-left-auto bg-bg-surface rounded-full border border-border-line p-0.5">
                     <FavoriteStar
                       entityType="team"
                       entityId={match.team_away_id}

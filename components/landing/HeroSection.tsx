@@ -30,19 +30,26 @@ export function HeroSection() {
         </motion.div>
 
         {/* Headline */}
-        <div className="max-w-4xl flex flex-wrap justify-center gap-x-4 gap-y-2 mb-6">
-          {headline.map((word, idx) => (
-            <motion.span
-              key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.15, duration: 0.5, ease: "easeOut" }}
-              className="text-5xl md:text-7xl font-display font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-br from-text-primary to-text-muted"
-            >
-              {word}
-            </motion.span>
-          ))}
-        </div>
+        <motion.h1 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="flex flex-wrap justify-center font-display font-black text-4xl sm:text-5xl md:text-7xl text-text-primary tracking-tight leading-[0.9] uppercase gap-x-2 sm:gap-x-4 gap-y-1 sm:gap-y-2 mb-6"
+        >
+          <span className="block w-full text-center text-text-muted mb-2 text-xl sm:text-2xl tracking-widest font-bold">
+            THE NEXT GEN
+          </span>
+          <span>NIGERIA'S</span>
+          <span>LIVE</span>
+          <span className="text-accent-readout relative">
+            <span className="absolute -inset-1 blur-lg bg-accent-readout/30 rounded-full" />
+            <span className="relative">BROADCAST</span>
+          </span>
+          <span>HUB</span>
+          <span className="w-full text-center mt-2 text-text-muted text-xl sm:text-2xl tracking-widest font-bold">
+            FOR ESPORTS
+          </span>
+        </motion.h1>
 
         {/* Subtext */}
         <motion.p

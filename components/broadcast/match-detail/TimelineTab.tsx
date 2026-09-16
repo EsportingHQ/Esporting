@@ -78,13 +78,15 @@ export function TimelineTab({
 		<div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 			{/* Left 2 Cols: Event Stream */}
 			<div className="lg:col-span-2 space-y-6">
-				<div className="flex items-center gap-2 border-b border-border-line pb-2">
-					<Flame className="w-4 h-4 text-accent-signal" />
-					<h3 className="font-display font-black text-lg uppercase tracking-wider">
-						LIVE BROADCAST TIMELINE
-					</h3>
+				<div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 border-b border-border-line pb-2">
+					<div className="flex items-center gap-2">
+						<Flame className="w-4 h-4 text-accent-signal" />
+						<h3 className="font-display font-black text-lg uppercase tracking-wider">
+							LIVE BROADCAST TIMELINE
+						</h3>
+					</div>
 					{isLive && (
-						<span className="ml-auto text-[9px] font-data text-accent-signal flex items-center gap-1.5 bg-accent-signal/10 px-2 py-0.5 rounded border border-accent-signal/30 font-semibold">
+						<span className="sm:ml-auto text-[9px] font-data text-accent-signal flex items-center gap-1.5 bg-accent-signal/10 px-2 py-0.5 rounded border border-accent-signal/30 font-semibold">
 							<StatusDot status="live" size="sm" />
 							<span>TELEMETRY STREAM CONNECTED</span>
 						</span>

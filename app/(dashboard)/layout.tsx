@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { logout } from '@/lib/actions/auth';
 import Link from 'next/link';
+import { DashboardShell } from './DashboardShell';
 import {
 	Shield,
 	Activity,
@@ -115,60 +116,8 @@ export default async function DashboardLayout({
 	const { nav, title } = getNav(roles);
 
 	return (
-		<div className="min-h-screen bg-bg-void text-text-primary flex flex-col font-body antialiased">
-			{/* Top header */}
-			<header className="bg-bg-void border-b border-border-line px-6 py-4 flex items-center justify-between shrink-0">
-				<div className="flex items-center gap-6">
-					<Link
-						href="/"
-						className="font-display font-black text-xl tracking-widest text-text-primary uppercase hover:text-accent-readout transition-colors"
-					>
-						ESPORTING
-					</Link>
-					<span className="bg-accent-readout/10 border border-accent-readout/30 px-2.5 py-0.5 rounded text-[10px] font-display font-bold uppercase tracking-wider text-accent-readout">
-						{title} DECK
-					</span>
-				</div>
-				<div className="flex items-center gap-4 text-xs font-data text-text-muted">
-					<span>{user.email}</span>
-					<form>
-						<button
-							formAction={logout}
-							type="submit"
-							className="text-text-muted hover:text-state-loss flex items-center gap-1.5 transition-colors cursor-pointer font-display font-bold uppercase tracking-wider text-[11px]"
-						>
-							<LogOut className="w-3.5 h-3.5" />
-							<span>Sign out</span>
-						</button>
-					</form>
-				</div>
-			</header>
-
-			<div className="flex flex-1 overflow-hidden">
-				{/* Sidebar */}
-				<aside className="w-60 bg-bg-surface border-r border-border-line px-4 py-6 shrink-0">
-					<nav className="space-y-1">
-						{nav.map((item) => {
-							const Icon = item.icon;
-							return (
-								<Link
-									key={item.href}
-									href={item.href}
-									className="flex items-center gap-3 px-3 py-2.5 rounded text-xs font-display font-bold uppercase tracking-wider text-text-muted hover:text-text-primary hover:bg-bg-void border border-transparent hover:border-border-line transition-all"
-								>
-									<Icon className="w-4 h-4 text-accent-readout" />
-									<span>{item.label}</span>
-								</Link>
-							);
-						})}
-					</nav>
-				</aside>
-
-				{/* Page content */}
-				<main className="flex-1 overflow-y-auto px-8 py-8 bg-bg-void">
-					{children}
-				</main>
-			</div>
-		</div>
+		<DashboardShell nav={nav} userEmail={user.email ?? ''} title={title}>
+			{children}
+		</DashboardShell>
 	);
 }

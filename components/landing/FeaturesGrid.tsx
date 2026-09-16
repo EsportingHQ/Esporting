@@ -57,7 +57,7 @@ const itemVariants = {
 
 export function FeaturesGrid() {
   return (
-    <section className="bg-bg-void py-24 relative overflow-hidden">
+    <section className="bg-bg-void py-16 sm:py-24 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 relative z-10">
         
         <div className="text-center mb-16">

@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 export function CTASection() {
   return (
-    <section className="relative py-32 bg-bg-void overflow-hidden flex items-center justify-center">
+    <section className="relative py-20 sm:py-32 bg-bg-void overflow-hidden flex items-center justify-center">
       
       {/* Animated gradient background */}
       <div className="absolute inset-0 opacity-20 animate-gradient-shift bg-gradient-to-r from-accent-signal via-bg-void to-accent-readout pointer-events-none" />
@@ -17,7 +17,7 @@ export function CTASection() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
-          className="text-4xl md:text-6xl font-display font-black uppercase tracking-tighter mb-6 text-white"
+          className="text-3xl sm:text-4xl md:text-6xl font-display font-black uppercase tracking-tighter mb-6 text-white"
         >
           Ready to go <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-signal to-accent-readout">Live?</span>
         </motion.h2>

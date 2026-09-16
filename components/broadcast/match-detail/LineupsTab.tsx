@@ -54,11 +54,11 @@ export function LineupsTab({ match }: LineupsTabProps) {
                   href={`/players/${p.id}`}
                   className="bg-bg-void border border-border-line hover:border-accent-readout/40 px-3 py-2 rounded flex items-center justify-between transition-all group"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="w-5 h-5 rounded bg-border-line flex items-center justify-center font-data font-bold text-[10px] text-text-muted">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="w-5 h-5 rounded bg-border-line flex items-center justify-center font-data font-bold text-[10px] text-text-muted shrink-0">
                       {p.number}
                     </span>
-                    <span className="font-medium text-text-primary group-hover:text-accent-readout transition-colors">
+                    <span className="font-medium text-text-primary group-hover:text-accent-readout transition-colors truncate">
                       {p.name}
                     </span>
                   </div>
@@ -116,11 +116,11 @@ export function LineupsTab({ match }: LineupsTabProps) {
                   href={`/players/${p.id}`}
                   className="bg-bg-void border border-border-line hover:border-accent-readout/40 px-3 py-2 rounded flex items-center justify-between transition-all group"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="w-5 h-5 rounded bg-border-line flex items-center justify-center font-data font-bold text-[10px] text-text-muted">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="w-5 h-5 rounded bg-border-line flex items-center justify-center font-data font-bold text-[10px] text-text-muted shrink-0">
                       {p.number}
                     </span>
-                    <span className="font-medium text-text-primary group-hover:text-accent-readout transition-colors">
+                    <span className="font-medium text-text-primary group-hover:text-accent-readout transition-colors truncate">
                       {p.name}
                     </span>
                   </div>

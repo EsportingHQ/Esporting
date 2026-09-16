@@ -66,13 +66,13 @@ export function MatchCard({
           onClick();
         }
       }}
-      className={`bg-bg-surface border border-border-line hover:border-accent-readout/40 transition-all rounded p-3 select-none flex flex-col gap-3 focus-ring ${borderStatusClass} ${
+      className={`bg-bg-surface border border-border-line hover:border-accent-readout/40 transition-all rounded p-3 sm:p-4 select-none flex flex-col gap-3 focus-ring ${borderStatusClass} ${
         onClick || href ? 'cursor-pointer hover:shadow-lg' : ''
       }`}
     >
       {/* Header (Game info + status + favorite) */}
-      <div className="flex items-center justify-between text-[10px] tracking-wider text-text-muted">
-        <div className="flex items-center gap-2 truncate">
+      <div className="flex items-center justify-between text-[10px] tracking-wider text-text-muted gap-2">
+        <div className="flex items-center gap-2 min-w-0">
           {showFavorites && homeTeam.id && (
             <FavoriteStar
               entityType="team"
@@ -85,25 +85,25 @@ export function MatchCard({
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          {timeLabel && <span className="font-data">{timeLabel}</span>}
+          {timeLabel && <span className="font-data hidden sm:inline-block">{timeLabel}</span>}
           <EventBadge status={status} />
         </div>
       </div>
 
       {/* Main Scoreboard Area */}
-      <div className="flex items-center justify-between py-1">
+      <div className="flex items-center justify-between py-1 gap-2 sm:gap-4">
         {/* Home Team */}
-        <div className="flex items-center gap-3 w-[40%]">
+        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
           <div className="w-8 h-8 rounded-sm bg-bg-void border border-border-line flex items-center justify-center font-display font-bold text-xs text-text-muted shrink-0 shadow-inner">
             {homeTeam.shortCode}
           </div>
-          <span className="font-body font-medium text-sm text-text-primary truncate">
+          <span className="font-body font-medium text-sm text-text-primary truncate hidden sm:block">
             {homeTeam.name}
           </span>
         </div>
 
         {/* Score Readout with ScoreFlash animation wrapper */}
-        <div className="flex flex-col items-center justify-center min-w-[75px]">
+        <div className="flex flex-col items-center justify-center shrink-0">
           {gameType === 'shooter' && bestOf > 1 ? (
             /* Series map wins */
             <div className="flex items-center gap-1 bg-bg-void border border-border-line px-2.5 py-1 rounded font-data text-sm">
@@ -128,14 +128,20 @@ export function MatchCard({
         </div>
 
         {/* Away Team */}
-        <div className="flex items-center justify-end gap-3 w-[40%] text-right">
-          <span className="font-body font-medium text-sm text-text-primary truncate">
+        <div className="flex items-center justify-end gap-2 sm:gap-3 flex-1 min-w-0 text-right">
+          <span className="font-body font-medium text-sm text-text-primary truncate hidden sm:block">
             {awayTeam.name}
           </span>
           <div className="w-8 h-8 rounded-sm bg-bg-void border border-border-line flex items-center justify-center font-display font-bold text-xs text-text-muted shrink-0 shadow-inner">
             {awayTeam.shortCode}
           </div>
         </div>
+      </div>
+      
+      {/* Mobile only Team Names (stacked below when space is tight) */}
+      <div className="flex items-center justify-between sm:hidden text-xs font-medium text-text-primary mt-1">
+        <span className="truncate flex-1">{homeTeam.name}</span>
+        <span className="truncate flex-1 text-right">{awayTeam.name}</span>
       </div>
     </div>
   );

@@ -36,7 +36,7 @@ export function StatsCounter() {
 
   return (
     <div className="w-full bg-bg-surface border-y border-border-line font-data py-6 relative z-20">
-      <div className="max-w-7xl mx-auto px-4 flex flex-wrap justify-between gap-8 sm:gap-4">
+      <div className="max-w-7xl mx-auto px-4 flex flex-wrap justify-between gap-4 sm:gap-12">
         {stats.map((stat, idx) => (
           <div key={idx} className="flex flex-col items-center sm:items-start space-y-1 w-1/2 sm:w-auto">
             <span className="text-2xl md:text-4xl font-bold text-accent-readout tracking-tighter">

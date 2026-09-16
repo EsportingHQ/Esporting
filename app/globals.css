@@ -43,6 +43,22 @@
   }
 }
 
+/* Mobile optimizations */
+@utility tap-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+@media (max-width: 640px) {
+  .animate-glow-breathe {
+    animation-duration: 4s;
+    opacity: 0.6;
+  }
+  .animate-gradient-shift {
+    animation-duration: 20s;
+  }
+}
+
 /* Custom animations & helpers */
 @keyframes tally-breath {
   0%, 100% {
