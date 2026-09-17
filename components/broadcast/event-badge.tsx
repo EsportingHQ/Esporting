@@ -11,12 +11,12 @@ export function EventBadge({ status, className = '' }: EventBadgeProps) {
   const normalizedStatus = status.toLowerCase() as EventStatus;
 
   const styles: Record<EventStatus, string> = {
-    live: 'border-accent-signal/40 text-accent-signal bg-accent-signal/5 font-semibold',
-    scheduled: 'border-border-line text-text-muted bg-bg-surface/50',
-    delayed: 'border-amber-500/30 text-amber-400 bg-amber-500/5',
-    completed: 'border-state-win/30 text-state-win bg-state-win/5',
-    cancelled: 'border-state-alert/30 text-state-alert bg-state-alert/5',
-    walkover: 'border-state-alert/20 text-state-alert bg-state-alert/5',
+    live: 'border-accent-live/30 text-accent-live bg-accent-live/15 font-bold shadow-[0_0_12px_rgba(239,68,68,0.2)]',
+    scheduled: 'border-white/[0.08] text-text-muted bg-white/[0.03]',
+    delayed: 'border-amber-500/30 text-amber-400 bg-amber-500/10',
+    completed: 'border-state-win/30 text-state-win bg-state-win/10 font-semibold',
+    cancelled: 'border-state-alert/30 text-state-alert bg-state-alert/10',
+    walkover: 'border-state-alert/20 text-state-alert bg-state-alert/10',
   };
 
   const labels: Record<EventStatus, string> = {
@@ -33,7 +33,7 @@ export function EventBadge({ status, className = '' }: EventBadgeProps) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2 py-0.5 border rounded text-xs font-display tracking-wider ${currentStyle} ${className}`}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 border rounded-full text-[11px] font-display font-semibold tracking-wider ${currentStyle} ${className}`}
     >
       {normalizedStatus === 'live' && <TallyLight size="sm" />}
       <span>{currentLabel}</span>

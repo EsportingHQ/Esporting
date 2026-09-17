@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Bell } from 'lucide-react';
@@ -26,7 +26,7 @@ export function ScoreToast({ toasts, onDismiss }: ScoreToastProps) {
   return (
     <div
       aria-live="assertive"
-      className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"
+      className="fixed bottom-4 right-4 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-4 sm:px-0"
     >
       <AnimatePresence>
         {toasts.map((toast) => (
@@ -62,30 +62,30 @@ function ToastItem({
       exit={{ opacity: 0, x: 50, scale: 0.9 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
       role="alert"
-      className="pointer-events-auto bg-bg-elevated border border-accent-readout/40 rounded p-3 shadow-xl select-none flex items-start justify-between gap-3 text-xs"
+      className="pointer-events-auto glass-strong border border-accent-primary/40 rounded-2xl p-4 shadow-[0_15px_40px_rgba(0,0,0,0.6)] select-none flex items-start justify-between gap-3 text-xs backdrop-blur-2xl"
     >
-      <div className="flex items-start gap-2.5 flex-1 min-w-0">
-        <div className="w-7 h-7 rounded bg-accent-signal/20 border border-accent-signal/40 flex items-center justify-center text-accent-signal shrink-0 mt-0.5">
-          <Bell className="w-3.5 h-3.5" />
+      <div className="flex items-start gap-3 flex-1 min-w-0">
+        <div className="w-8 h-8 rounded-xl bg-accent-primary/15 border border-accent-primary/30 flex items-center justify-center text-accent-glow shrink-0 mt-0.5 shadow-[0_0_15px_rgba(217,70,239,0.2)]">
+          <Bell className="w-4 h-4" />
         </div>
 
         <Link href={href} onClick={() => onDismiss(toast.id)} className="flex-1 min-w-0 group">
           <div className="flex items-center justify-between gap-2">
-            <span className="font-display font-bold text-accent-readout text-[10px] uppercase">
+            <span className="font-display font-bold text-accent-glow text-[10px] uppercase tracking-wider">
               {toast.gameCode} • {toast.eventType}
             </span>
-            <span className="flex items-center gap-1 text-[9px] text-accent-signal font-data">
+            <span className="flex items-center gap-1.5 text-[10px] text-accent-live font-semibold">
               <StatusDot status="live" size="sm" />
-              <span>LIVE SCORE</span>
+              <span>LIVE</span>
             </span>
           </div>
 
-          <div className="font-display font-bold text-sm text-text-primary group-hover:text-accent-readout transition-colors truncate mt-0.5">
+          <div className="font-display font-bold text-sm text-white group-hover:text-accent-glow transition-colors truncate mt-1">
             {toast.homeTeam} vs {toast.awayTeam}
           </div>
 
-          <div className="font-data font-semibold text-xs text-accent-signal mt-0.5">
-            NEW SCORE: {toast.newScore}
+          <div className="font-data font-bold text-xs text-accent-live mt-1">
+            SCORE: {toast.newScore}
           </div>
         </Link>
       </div>
@@ -94,9 +94,9 @@ function ToastItem({
         type="button"
         onClick={() => onDismiss(toast.id)}
         aria-label="Dismiss notification"
-        className="p-1 text-text-muted hover:text-text-primary rounded hover:bg-bg-void transition-colors shrink-0"
+        className="p-1 text-text-muted hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors shrink-0"
       >
-        <X className="w-3.5 h-3.5" />
+        <X className="w-4 h-4" />
       </button>
     </motion.div>
   );

@@ -13,15 +13,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Esporting — Live eSports scores and tournament organizer',
-  description: 'Broadcast control room and live scores platform for gaming tournaments.',
+  title: 'Esporting — Nigeria’s Premier Live Esports Platform',
+  description: 'Track live scores, manage tournaments, and explore real-time match stats with modern interactive analytics.',
 };
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
-  themeColor: '#0B0F14',
+  themeColor: '#09090B',
 };
 
 export default function RootLayout({
@@ -33,7 +33,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} font-body bg-bg-void text-text-primary antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} font-body bg-bg-void text-text-primary antialiased selection:bg-accent-primary/30 selection:text-white`}
     >
       <head>
         <script
@@ -51,7 +51,10 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-screen flex flex-col">{children}</body>
+      <body className="min-h-screen flex flex-col relative bg-bg-void text-text-primary">
+        <div className="noise-overlay" aria-hidden="true" />
+        {children}
+      </body>
     </html>
   );
 }

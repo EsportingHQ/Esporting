@@ -11,13 +11,13 @@ export function StatusDot({ status, size = 'md', label, className = '' }: Status
   const normalized = status.toLowerCase();
 
   const sizeClasses = {
-    sm: 'w-1.5 h-1.5',
+    sm: 'w-2 h-2',
     md: 'w-2.5 h-2.5',
     lg: 'w-3.5 h-3.5',
   };
 
   const statusColors = {
-    live: 'bg-accent-signal',
+    live: 'bg-accent-live',
     completed: 'bg-state-win',
     upcoming: 'bg-text-muted',
     delayed: 'bg-amber-400',
@@ -36,7 +36,7 @@ export function StatusDot({ status, size = 'md', label, className = '' }: Status
       className={`relative inline-flex items-center justify-center shrink-0 ${sizeClasses[size]} ${className}`}
     >
       {normalized === 'live' && (
-        <span className="tally-pulse absolute inline-flex h-full w-full rounded-full bg-accent-signal opacity-75" />
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-live opacity-75" />
       )}
       <span className={`relative inline-flex rounded-full h-full w-full ${colorClass}`} />
       <span className="sr-only">{accessibleLabel}</span>

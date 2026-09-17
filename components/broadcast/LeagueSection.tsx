@@ -33,10 +33,10 @@ export function LeagueSection({
   const [isExpanded, setIsExpanded] = useState(defaultExpanded || liveCount > 0);
 
   return (
-    <div className={`bg-bg-surface border border-border-line rounded overflow-hidden ${className}`}>
+    <div className={`glass rounded-3xl border border-white/[0.08] overflow-hidden shadow-lg transition-all ${className}`}>
       {/* Header Bar */}
-      <div className="px-4 py-3 bg-bg-void/40 border-b border-border-line flex items-center justify-between select-none">
-        <div className="flex items-center gap-3">
+      <div className="px-5 py-3.5 bg-white/[0.03] border-b border-white/[0.06] flex items-center justify-between select-none">
+        <div className="flex items-center gap-3 min-w-0">
           <FavoriteStar
             entityType="competition"
             entityId={competitionId}
@@ -44,34 +44,36 @@ export function LeagueSection({
             size="sm"
           />
 
-          <div className="flex items-center gap-2">
-            <Trophy className="w-4 h-4 text-accent-readout shrink-0" />
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-7 h-7 rounded-lg bg-accent-primary/15 border border-accent-primary/25 flex items-center justify-center text-accent-glow shrink-0">
+              <Trophy className="w-3.5 h-3.5" />
+            </div>
             <Link
               href={`/competitions/${competitionSlug}`}
-              className="font-display font-bold text-sm uppercase tracking-wider text-text-primary hover:text-accent-readout transition-colors"
+              className="font-display font-bold text-sm tracking-wide text-white hover:text-accent-glow transition-colors truncate"
             >
               {competitionName}
             </Link>
           </div>
 
           {gameTitle && (
-            <span className="hidden sm:inline-block px-2 py-0.5 bg-bg-void border border-border-line text-[9px] font-display font-bold text-text-muted tracking-wider uppercase rounded-sm">
+            <span className="hidden sm:inline-block px-2.5 py-0.5 bg-white/[0.04] border border-white/[0.08] text-[10px] font-display font-semibold text-text-muted tracking-wider uppercase rounded-full">
               {gameTitle}
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
           {liveCount > 0 && (
-            <span className="text-[10px] font-data text-accent-signal flex items-center gap-1.5 bg-accent-signal/10 px-2 py-0.5 rounded border border-accent-signal/30 font-semibold">
+            <span className="text-[10px] font-display font-bold text-accent-live flex items-center gap-1.5 bg-accent-live/15 px-2.5 py-0.5 rounded-full border border-accent-live/30">
               <StatusDot status="live" size="sm" />
               <span>{liveCount} LIVE</span>
             </span>
           )}
 
           {totalCount > 0 && (
-            <span className="text-[10px] font-data text-text-muted">
-              {totalCount} {totalCount === 1 ? 'MATCH' : 'MATCHES'}
+            <span className="text-xs font-data text-text-muted hidden sm:inline-block">
+              {totalCount} {totalCount === 1 ? 'match' : 'matches'}
             </span>
           )}
 
@@ -80,7 +82,7 @@ export function LeagueSection({
             onClick={() => setIsExpanded(!isExpanded)}
             aria-expanded={isExpanded}
             aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${competitionName}`}
-            className="p-1 text-text-muted hover:text-text-primary rounded hover:bg-bg-void transition-all focus-ring"
+            className="p-1.5 text-text-muted hover:text-white rounded-lg hover:bg-white/[0.05] transition-all focus-ring"
           >
             <ChevronDown
               className={`w-4 h-4 transition-transform duration-200 ${
@@ -98,9 +100,9 @@ export function LeagueSection({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: 'easeInOut' }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
           >
-            <div className="p-3 space-y-3 divide-y divide-border-line/50">
+            <div className="p-4 space-y-3">
               {children}
             </div>
           </motion.div>

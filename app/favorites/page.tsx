@@ -7,11 +7,11 @@ import { FavoriteStar } from '@/components/broadcast/FavoriteStar';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useLiveFeed } from '@/hooks/useLiveFeed';
-import { Star, Trophy, Sparkles, Plus, ArrowRight } from 'lucide-react';
+import { Star, Sparkles, X } from 'lucide-react';
 
 export default function FavoritesPage() {
   const { favorites, suggestedFavorites, isFavorite, toggleFavorite } = useFavorites();
-  const { groups, isLoading } = useLiveFeed();
+  const { groups } = useLiveFeed();
 
   // Extract starred team and competition IDs
   const starredTeamIds = favorites.filter((f) => f.type === 'team').map((f) => f.id);
@@ -31,50 +31,56 @@ export default function FavoritesPage() {
     });
 
   return (
-    <div className="flex-1 flex flex-col bg-bg-void text-text-primary">
+    <div className="flex-1 flex flex-col bg-bg-void text-text-primary min-h-screen relative overflow-x-hidden">
+      {/* Ambient background glow */}
+      <div className="gradient-mesh pointer-events-none" aria-hidden="true">
+        <div className="mesh-orb" />
+      </div>
+
       <PublicNav />
 
-      <main className="max-w-7xl w-full mx-auto px-4 py-8 flex-1 space-y-8">
+      <main className="max-w-7xl w-full mx-auto px-4 sm:px-6 py-10 flex-1 space-y-8 relative z-10">
         {/* Header */}
-        <div className="border-b border-border-line pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <Star className="w-6 h-6 text-accent-favorite fill-accent-favorite" />
-              <h1 className="font-display font-black text-3xl tracking-wider uppercase">
-                YOUR FAVORITES FEED
-              </h1>
+        <div className="border-b border-white/[0.08] pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-favorite/10 border border-accent-favorite/25 text-accent-favorite text-xs font-display font-semibold mb-2">
+              <Star className="w-3.5 h-3.5 fill-accent-favorite" />
+              <span>CUSTOM WATCHLIST</span>
             </div>
-            <p className="text-xs text-text-muted font-data mt-1">
-              PERSONALIZED MATCH SCHEDULE AND STANDINGS FOR STARRED SQUADS AND LEAGUES
+            <h1 className="font-display font-black text-3xl sm:text-4xl text-white tracking-tight">
+              Starred Favorites
+            </h1>
+            <p className="text-sm text-text-muted font-body">
+              Personalized live fixtures and updates for your tracked teams and leagues.
             </p>
           </div>
         </div>
 
         {/* Starred Entities Bar */}
         {favorites.length > 0 && (
-          <div className="bg-bg-surface border border-border-line rounded p-4 space-y-3">
+          <div className="glass-strong border border-white/[0.08] rounded-3xl p-6 space-y-4 shadow-xl backdrop-blur-xl">
             <h2 className="font-display font-bold text-xs uppercase tracking-wider text-text-muted">
-              STARRED ENTITIES ({favorites.length})
+              Starred Entities ({favorites.length})
             </h2>
 
-            <div className="flex flex-wrap gap-2 text-xs font-body">
+            <div className="flex flex-wrap gap-2.5 text-xs font-body">
               {favorites.map((fav) => (
                 <div
                   key={`${fav.type}-${fav.id}`}
-                  className="px-3 py-1.5 bg-bg-void border border-border-line rounded flex items-center gap-2 group"
+                  className="px-3.5 py-2 bg-white/[0.03] border border-white/[0.08] rounded-2xl flex items-center gap-2.5 group hover:border-accent-favorite/40 transition-colors shadow-sm"
                 >
-                  <Star className="w-3.5 h-3.5 text-accent-favorite fill-accent-favorite" />
-                  <span className="font-semibold text-text-primary">{fav.name}</span>
-                  <span className="text-[9px] font-data text-text-muted uppercase bg-bg-surface px-1.5 rounded">
+                  <Star className="w-3.5 h-3.5 text-accent-favorite fill-accent-favorite drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]" />
+                  <span className="font-semibold text-white">{fav.name}</span>
+                  <span className="text-[10px] font-data text-text-muted uppercase bg-white/[0.05] px-2 py-0.5 rounded-full">
                     {fav.type}
                   </span>
                   <button
                     type="button"
                     onClick={() => toggleFavorite(fav.type, fav.id, fav.name)}
-                    className="text-text-muted hover:text-state-alert text-xs ml-1"
+                    className="text-text-muted hover:text-state-loss p-0.5 rounded transition-colors ml-1"
                     aria-label={`Remove ${fav.name} from favorites`}
                   >
-                    ×
+                    <X className="w-3 h-3" />
                   </button>
                 </div>
               ))}
@@ -83,10 +89,15 @@ export default function FavoritesPage() {
         )}
 
         {/* Matches Feed */}
-        <section className="space-y-4">
-          <h2 className="font-display font-bold text-sm uppercase tracking-wider text-text-primary border-b border-border-line pb-2">
-            MATCHES FEATURING YOUR FAVORITES
-          </h2>
+        <section className="space-y-5">
+          <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
+            <h2 className="font-display font-bold text-base text-white">
+              Matches Featuring Your Favorites
+            </h2>
+            <span className="text-xs font-data text-text-muted">
+              {personalizedMatches.length} {personalizedMatches.length === 1 ? 'match' : 'matches'}
+            </span>
+          </div>
 
           {personalizedMatches.length > 0 ? (
             <div className="grid grid-cols-1 gap-4">
@@ -101,20 +112,22 @@ export default function FavoritesPage() {
           ) : (
             <EmptyState
               icon={Star}
-              title="NO MATCHES FOR STARRED FAVORITES TODAY"
-              description="Star teams or leagues by clicking the star icon on match cards and competition pages to see their personalized live schedule."
-              actionLabel="EXPLORE COMPETITIONS REGISTRY"
+              title="No matches for starred favorites today"
+              description="Star teams or leagues across match cards and competition pages to build your live personalized schedule."
+              actionLabel="Explore Competitions Registry"
               actionHref="/competitions"
             />
           )}
         </section>
 
         {/* Smart Suggestions Section */}
-        <section className="bg-bg-surface border border-border-line rounded p-6 space-y-4">
-          <div className="flex items-center gap-2 border-b border-border-line pb-2">
-            <Sparkles className="w-4 h-4 text-accent-readout" />
-            <h2 className="font-display font-bold text-sm uppercase tracking-wider">
-              RECOMMENDED FOR YOU (BASED ON YOUR REGION & TIMEZONE)
+        <section className="glass rounded-3xl border border-white/[0.08] p-6 sm:p-8 space-y-6 shadow-xl">
+          <div className="flex items-center gap-2.5 border-b border-white/[0.08] pb-3">
+            <div className="p-1.5 rounded-lg bg-accent-primary/10 text-accent-glow">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <h2 className="font-display font-bold text-base text-white">
+              Recommended for You
             </h2>
           </div>
 
@@ -125,10 +138,10 @@ export default function FavoritesPage() {
               return (
                 <div
                   key={`${sug.type}-${sug.id}`}
-                  className="bg-bg-void border border-border-line rounded p-4 flex flex-col justify-between space-y-3 hover:border-accent-readout/40 transition-colors"
+                  className="bg-white/[0.02] border border-white/[0.08] rounded-2xl p-5 flex flex-col justify-between space-y-4 hover:border-accent-primary/40 hover:bg-white/[0.04] transition-all duration-200"
                 >
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-[9px] font-data text-accent-readout uppercase font-bold">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-[10px] font-data text-accent-glow uppercase font-bold">
                       <span>{sug.type}</span>
                       <FavoriteStar
                         entityType={sug.type}
@@ -137,10 +150,10 @@ export default function FavoritesPage() {
                         size="sm"
                       />
                     </div>
-                    <h3 className="font-display font-bold text-sm text-text-primary uppercase leading-tight">
+                    <h3 className="font-display font-bold text-base text-white leading-snug">
                       {sug.name}
                     </h3>
-                    <p className="text-[11px] text-text-muted font-body leading-relaxed">
+                    <p className="text-xs text-text-muted font-body leading-relaxed">
                       {sug.reason}
                     </p>
                   </div>
@@ -148,10 +161,10 @@ export default function FavoritesPage() {
                   <button
                     type="button"
                     onClick={() => toggleFavorite(sug.type, sug.id, sug.name)}
-                    className={`w-full py-1.5 rounded text-xs font-display font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all focus-ring ${
+                    className={`w-full py-2.5 rounded-xl text-xs font-display font-semibold tracking-wider flex items-center justify-center gap-2 transition-all focus-ring ${
                       active
-                        ? 'bg-accent-favorite/20 text-accent-favorite border border-accent-favorite/40'
-                        : 'bg-bg-surface hover:bg-bg-surface/80 border border-border-line text-text-muted hover:text-text-primary'
+                        ? 'bg-accent-favorite/20 text-accent-favorite border border-accent-favorite/40 font-bold'
+                        : 'btn-glass text-white hover:border-accent-primary/30'
                     }`}
                   >
                     <Star className={`w-3.5 h-3.5 ${active ? 'fill-accent-favorite' : ''}`} />

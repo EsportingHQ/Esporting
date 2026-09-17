@@ -3,7 +3,7 @@
 import { ReactNode, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LogOut, Menu, X } from 'lucide-react';
+import { LogOut, Menu, X, Zap } from 'lucide-react';
 import { logout } from '@/lib/actions/auth';
 
 type NavItem = {
@@ -36,49 +36,60 @@ export function DashboardShell({ children, nav, userEmail, title }: DashboardShe
 	}, [mobileSidebarOpen]);
 
 	return (
-		<div className="min-h-screen bg-bg-void text-text-primary flex flex-col font-body antialiased">
-			{/* Top header */}
-			<header className="bg-bg-void border-b border-border-line px-4 sm:px-6 py-4 flex items-center justify-between shrink-0 sticky top-0 z-30">
+		<div className="min-h-screen bg-bg-void text-text-primary flex flex-col font-body antialiased relative overflow-x-hidden">
+			{/* Ambient background mesh */}
+			<div className="gradient-mesh pointer-events-none" aria-hidden="true">
+				<div className="mesh-orb" />
+			</div>
+
+			{/* Top Header */}
+			<header className="glass-strong border-b border-white/[0.08] px-4 sm:px-6 py-3.5 flex items-center justify-between shrink-0 sticky top-0 z-30 backdrop-blur-xl">
 				<div className="flex items-center gap-3 sm:gap-6">
 					{/* Mobile Sidebar Toggle */}
 					<button
 						type="button"
 						onClick={() => setMobileSidebarOpen(true)}
-						className="md:hidden p-1.5 -ml-1.5 text-text-muted hover:text-text-primary rounded focus-ring"
+						className="md:hidden p-2 text-text-muted hover:text-white rounded-xl focus-ring"
 					>
 						<Menu className="w-5 h-5" />
 					</button>
 
 					<Link
 						href="/"
-						className="font-display font-black text-lg sm:text-xl tracking-widest text-text-primary uppercase hover:text-accent-readout transition-colors flex items-center gap-2"
+						className="flex items-center gap-2.5 group focus-ring rounded-xl py-1 px-1"
 					>
-						<span>ESPORTING</span>
+						<div className="w-8 h-8 rounded-xl bg-gradient-to-br from-accent-primary to-pink-600 flex items-center justify-center font-display font-black text-white shadow-[0_0_15px_rgba(217,70,239,0.35)]">
+							<Zap className="w-4 h-4 text-white fill-white/20" />
+						</div>
+						<span className="font-display font-black text-lg tracking-wider text-white group-hover:text-accent-glow transition-colors">
+							ESPORTING<span className="text-accent-primary">HQ</span>
+						</span>
 					</Link>
-					<span className="hidden sm:inline-block bg-accent-readout/10 border border-accent-readout/30 px-2.5 py-0.5 rounded text-[10px] font-display font-bold uppercase tracking-wider text-accent-readout">
-						{title} DECK
+					<span className="hidden sm:inline-block bg-accent-primary/15 border border-accent-primary/30 px-3 py-0.5 rounded-full text-[10px] font-display font-bold uppercase tracking-wider text-accent-glow">
+						{title} Control
 					</span>
 				</div>
-				<div className="flex items-center gap-4 text-xs font-data text-text-muted">
-					<span className="max-w-[120px] sm:max-w-none truncate">{userEmail}</span>
+
+				<div className="flex items-center gap-4 text-xs font-body text-text-muted">
+					<span className="max-w-[140px] sm:max-w-none truncate font-data text-xs">{userEmail}</span>
 					<form>
 						<button
 							formAction={logout}
 							type="submit"
-							className="text-text-muted hover:text-state-loss flex items-center gap-1.5 transition-colors cursor-pointer font-display font-bold uppercase tracking-wider text-[11px] p-2 -mr-2 min-h-[44px]"
+							className="text-text-muted hover:text-state-loss flex items-center gap-1.5 transition-colors cursor-pointer font-display font-semibold uppercase tracking-wider text-xs p-2 rounded-xl hover:bg-white/[0.04]"
 						>
-							<LogOut className="w-3.5 h-3.5" />
-							<span className="hidden sm:inline-block">Sign out</span>
+							<LogOut className="w-4 h-4" />
+							<span className="hidden sm:inline-block">Sign Out</span>
 						</button>
 					</form>
 				</div>
 			</header>
 
-			<div className="flex flex-1 overflow-hidden relative">
+			<div className="flex flex-1 overflow-hidden relative z-10">
 				{/* Mobile Sidebar Backdrop */}
 				{mobileSidebarOpen && (
 					<div
-						className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+						className="fixed inset-0 z-40 bg-black/70 backdrop-blur-md md:hidden"
 						onClick={() => setMobileSidebarOpen(false)}
 						aria-hidden="true"
 					/>
@@ -86,23 +97,23 @@ export function DashboardShell({ children, nav, userEmail, title }: DashboardShe
 
 				{/* Sidebar */}
 				<aside
-					className={`fixed inset-y-0 left-0 z-50 w-60 bg-bg-surface border-r border-border-line px-4 py-6 shrink-0 transform transition-transform duration-300 md:relative md:translate-x-0 ${
+					className={`fixed inset-y-0 left-0 z-50 w-64 glass-strong border-r border-white/[0.08] px-4 py-6 shrink-0 transform transition-transform duration-300 md:relative md:translate-x-0 backdrop-blur-xl ${
 						mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
 					}`}
 				>
 					<div className="flex items-center justify-between mb-8 md:hidden">
-						<span className="font-display font-bold text-sm tracking-wider text-text-muted uppercase">
-							{title} DECK
+						<span className="font-display font-bold text-sm tracking-wider text-white uppercase">
+							{title} Navigation
 						</span>
 						<button
 							onClick={() => setMobileSidebarOpen(false)}
-							className="p-2 -mr-2 text-text-muted hover:text-text-primary rounded"
+							className="p-2 text-text-muted hover:text-white rounded-xl"
 						>
 							<X className="w-5 h-5" />
 						</button>
 					</div>
 
-					<nav className="space-y-1">
+					<nav className="space-y-1.5">
 						{nav.map((item) => {
 							const Icon = item.icon;
 							const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -111,13 +122,13 @@ export function DashboardShell({ children, nav, userEmail, title }: DashboardShe
 									key={item.href}
 									href={item.href}
 									onClick={() => setMobileSidebarOpen(false)}
-									className={`flex items-center gap-3 px-3 py-3 md:py-2.5 rounded text-xs font-display font-bold uppercase tracking-wider transition-all min-h-[44px] md:min-h-0 ${
+									className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-display font-semibold tracking-wide transition-all ${
 										isActive
-											? 'bg-accent-readout/10 text-accent-readout border border-accent-readout/20'
-											: 'text-text-muted hover:bg-bg-void hover:text-text-primary border border-transparent hover:border-border-line'
+											? 'bg-accent-primary/20 text-white font-bold border border-accent-primary/40 shadow-[0_0_15px_rgba(217,70,239,0.15)]'
+											: 'text-text-muted hover:bg-white/[0.04] hover:text-white'
 									}`}
 								>
-									<Icon className="w-4 h-4 text-accent-readout" />
+									<Icon className={`w-4 h-4 ${isActive ? 'text-accent-glow' : 'text-text-muted'}`} />
 									<span>{item.label}</span>
 								</Link>
 							);
@@ -126,7 +137,7 @@ export function DashboardShell({ children, nav, userEmail, title }: DashboardShe
 				</aside>
 
 				{/* Page content */}
-				<main className="flex-1 overflow-y-auto px-4 py-6 sm:px-8 sm:py-8 bg-bg-void">
+				<main className="flex-1 overflow-y-auto px-4 py-6 sm:px-8 sm:py-8">
 					{children}
 				</main>
 			</div>
