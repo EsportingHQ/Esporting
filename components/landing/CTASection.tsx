@@ -2,7 +2,8 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowRight, Zap } from 'lucide-react';
+import Image from 'next/image';
+import { ArrowRight } from 'lucide-react';
 
 export function CTASection() {
   return (
@@ -22,9 +23,15 @@ export function CTASection() {
             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
             viewport={{ once: true }}
-            className="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent-primary to-pink-600 flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(217,70,239,0.4)] text-white"
+            className="flex justify-center mb-6"
           >
-            <Zap className="w-7 h-7 fill-white/20" />
+            <Image
+              src="/esportinghq-logo-stacked.png"
+              alt="EsportingHQ Logo"
+              width={140}
+              height={120}
+              className="h-24 w-auto object-contain drop-shadow-[0_0_25px_rgba(217,70,239,0.35)]"
+            />
           </motion.div>
 
           <motion.h2 

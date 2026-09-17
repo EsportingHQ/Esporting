@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import NextLink from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useFavorites } from '@/hooks/useFavorites';
-import { Star, Moon, Sun, Menu, X, Bell, Zap } from 'lucide-react';
+import Image from 'next/image';
+import { Star, Moon, Sun, Menu, X, Bell } from 'lucide-react';
 
 export function PublicNav() {
   const pathname = usePathname();
@@ -59,24 +60,15 @@ export function PublicNav() {
       <header className="w-full glass-strong border-b border-white/[0.08] text-sm select-none font-body sticky top-0 z-40 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           {/* Logo / Brand */}
-          <NextLink href="/" className="flex items-center gap-3 group focus-ring rounded-xl py-1 px-1">
-            <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-accent-primary via-fuchsia-600 to-pink-500 flex items-center justify-center font-display font-black text-lg text-white shadow-[0_0_20px_rgba(217,70,239,0.35)] group-hover:scale-105 transition-all duration-300">
-              <Zap className="w-5 h-5 text-white fill-white/20 drop-shadow" />
-              <div className="absolute inset-0 rounded-xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1.5">
-                <span className="font-display font-black text-lg tracking-wider text-white group-hover:text-accent-glow transition-colors">
-                  ESPORTING
-                </span>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-accent-primary/20 text-accent-glow border border-accent-primary/30">
-                  HQ
-                </span>
-              </div>
-              <span className="text-[9px] font-data text-text-muted tracking-widest leading-none">
-                LIVE ESPORTS PLATFORM
-              </span>
-            </div>
+          <NextLink href="/" className="flex items-center group focus-ring rounded-xl py-1 px-1">
+            <Image
+              src="/esportinghq-logo-white.png"
+              alt="EsportingHQ Logo"
+              width={180}
+              height={42}
+              priority
+              className="h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+            />
           </NextLink>
 
           {/* Desktop Navigation Links */}

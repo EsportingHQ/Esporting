@@ -1,4 +1,5 @@
 import { login } from '@/lib/actions/auth';
+import Image from 'next/image';
 
 export default async function LoginPage({
   searchParams,
@@ -11,11 +12,16 @@ export default async function LoginPage({
     <div className="min-h-screen flex items-center justify-center bg-bg-void">
       <div className="w-full max-w-md px-4">
         {/* Logo / Branding */}
-        <div className="text-center mb-10">
-          <h1 className="font-display font-black text-4xl tracking-widest uppercase text-text-primary">
-            ESPORTING
-          </h1>
-          <p className="text-xs font-data text-text-muted mt-1 tracking-wider uppercase">
+        <div className="flex flex-col items-center justify-center mb-8">
+          <Image
+            src="/esportinghq-logo-white.png"
+            alt="EsportingHQ Logo"
+            width={240}
+            height={56}
+            priority
+            className="h-12 w-auto object-contain mb-3"
+          />
+          <p className="text-xs font-data text-text-muted tracking-wider uppercase">
             BROADCAST CONTROL ACCESS
           </p>
         </div>

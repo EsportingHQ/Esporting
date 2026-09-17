@@ -2,8 +2,9 @@
 
 import { ReactNode, useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { LogOut, Menu, X, Zap } from 'lucide-react';
+import { LogOut, Menu, X } from 'lucide-react';
 import { logout } from '@/lib/actions/auth';
 
 type NavItem = {
@@ -56,14 +57,16 @@ export function DashboardShell({ children, nav, userEmail, title }: DashboardShe
 
 					<Link
 						href="/"
-						className="flex items-center gap-2.5 group focus-ring rounded-xl py-1 px-1"
+						className="flex items-center group focus-ring rounded-xl py-1 px-1"
 					>
-						<div className="w-8 h-8 rounded-xl bg-gradient-to-br from-accent-primary to-pink-600 flex items-center justify-center font-display font-black text-white shadow-[0_0_15px_rgba(217,70,239,0.35)]">
-							<Zap className="w-4 h-4 text-white fill-white/20" />
-						</div>
-						<span className="font-display font-black text-lg tracking-wider text-white group-hover:text-accent-glow transition-colors">
-							ESPORTING<span className="text-accent-primary">HQ</span>
-						</span>
+						<Image
+							src="/esportinghq-logo-white.png"
+							alt="EsportingHQ Logo"
+							width={160}
+							height={38}
+							priority
+							className="h-8 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+						/>
 					</Link>
 					<span className="hidden sm:inline-block bg-accent-primary/15 border border-accent-primary/30 px-3 py-0.5 rounded-full text-[10px] font-display font-bold uppercase tracking-wider text-accent-glow">
 						{title} Control
