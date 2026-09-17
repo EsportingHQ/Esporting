@@ -58,17 +58,17 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
       </div>
 
       {/* Flagship Scoreboard Area */}
-      <div className="py-6 md:py-8 px-4 max-w-4xl mx-auto">
+      <div className="py-5 sm:py-8 px-3 sm:px-4 max-w-4xl mx-auto">
         {!isBR ? (
-          <div className="flex flex-col md:flex-row items-center md:justify-between gap-6 md:gap-4">
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
             {/* Home Team */}
-            <div className="flex items-center justify-center md:justify-start gap-3 md:gap-4 w-full md:w-[40%]">
-              <div className="relative">
-                <div className="w-10 h-10 md:w-14 md:h-14 bg-bg-void border border-border-line rounded flex items-center justify-center font-display font-black text-lg md:text-xl text-text-muted shrink-0 shadow-inner">
+            <div className="flex items-center justify-start gap-2 sm:gap-4 flex-1 min-w-0">
+              <div className="relative shrink-0">
+                <div className="w-9 h-9 sm:w-12 sm:h-14 bg-bg-void border border-border-line rounded-xl flex items-center justify-center font-display font-black text-xs sm:text-lg text-text-muted shadow-inner">
                   {match.team_home?.logo_url ? 'LOGO' : match.team_home?.name.substring(0, 3).toUpperCase()}
                 </div>
                 {match.team_home_id && (
-                  <div className="absolute -top-2 -left-2 bg-bg-surface rounded-full border border-border-line p-0.5">
+                  <div className="absolute -top-1.5 -left-1.5 bg-bg-surface rounded-full border border-border-line p-0.5">
                     <FavoriteStar
                       entityType="team"
                       entityId={match.team_home_id}
@@ -78,60 +78,60 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
                   </div>
                 )}
               </div>
-              <div className="flex flex-col min-w-0 text-center md:text-left">
-                <span className="font-display font-black text-xl md:text-2xl text-text-primary leading-tight uppercase truncate">
+              <div className="flex flex-col min-w-0 text-left">
+                <span className="font-display font-black text-xs sm:text-xl md:text-2xl text-text-primary leading-tight uppercase truncate">
                   {match.team_home?.name}
                 </span>
-                <span className="text-[10px] font-data text-text-muted">HOME SQUAD</span>
+                <span className="text-[9px] sm:text-[10px] font-data text-text-muted hidden sm:inline">HOME SQUAD</span>
               </div>
             </div>
 
             {/* Score Display */}
             <div className="flex flex-col items-center justify-center shrink-0">
-              <div className="flex items-center gap-2 bg-bg-void border border-border-line px-5 py-2 rounded text-2xl md:text-4xl font-data font-bold tracking-wider text-text-primary shadow-inner">
+              <div className="flex items-center gap-1.5 sm:gap-2 bg-bg-void border border-border-line px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl text-lg sm:text-3xl md:text-4xl font-data font-bold tracking-wider text-text-primary shadow-inner">
                 {isShooter ? (
                   <>
                     <ScoreFlash value={score?.home_maps_won || 0} isLive={isLive} teamName={match.team_home?.name} />
-                    <span className="text-text-muted text-xl">:</span>
+                    <span className="text-text-muted text-sm sm:text-xl">:</span>
                     <ScoreFlash value={score?.away_maps_won || 0} isLive={isLive} teamName={match.team_away?.name} />
                   </>
                 ) : (
                   <>
                     <ScoreFlash value={score?.home_current_score || 0} isLive={isLive} teamName={match.team_home?.name} />
-                    <span className="text-text-muted text-xl">:</span>
+                    <span className="text-text-muted text-sm sm:text-xl">:</span>
                     <ScoreFlash value={score?.away_current_score || 0} isLive={isLive} teamName={match.team_away?.name} />
                   </>
                 )}
               </div>
 
               {isLive && (
-                <span className="mt-2 text-[10px] font-data text-accent-signal flex items-center gap-1.5 font-semibold">
+                <span className="mt-1.5 text-[9px] sm:text-[10px] font-data text-accent-signal flex items-center gap-1 font-semibold">
                   <StatusDot status="live" size="sm" />
-                  <span>LIVE IN PROGRESS</span>
+                  <span>LIVE</span>
                 </span>
               )}
 
               {isShooter && (
-                <span className="text-[9px] text-text-muted font-display tracking-widest mt-1 uppercase">
-                  BO{match.best_of} MAP SERIES
+                <span className="text-[8px] sm:text-[9px] text-text-muted font-display tracking-widest mt-0.5 uppercase">
+                  BO{match.best_of} SERIES
                 </span>
               )}
             </div>
 
             {/* Away Team */}
-            <div className="flex items-center justify-center md:justify-end gap-3 md:gap-4 w-full md:w-[40%] flex-row-reverse md:flex-row text-center md:text-right">
-              <div className="flex flex-col min-w-0">
-                <span className="font-display font-black text-xl md:text-2xl text-text-primary leading-tight uppercase truncate">
+            <div className="flex items-center justify-end gap-2 sm:gap-4 flex-1 min-w-0 text-right">
+              <div className="flex flex-col min-w-0 text-right">
+                <span className="font-display font-black text-xs sm:text-xl md:text-2xl text-text-primary leading-tight uppercase truncate">
                   {match.team_away?.name}
                 </span>
-                <span className="text-[10px] font-data text-text-muted">AWAY SQUAD</span>
+                <span className="text-[9px] sm:text-[10px] font-data text-text-muted hidden sm:inline">AWAY SQUAD</span>
               </div>
-              <div className="relative">
-                <div className="w-10 h-10 md:w-14 md:h-14 bg-bg-void border border-border-line rounded flex items-center justify-center font-display font-black text-lg md:text-xl text-text-muted shrink-0 shadow-inner">
+              <div className="relative shrink-0">
+                <div className="w-9 h-9 sm:w-12 sm:h-14 bg-bg-void border border-border-line rounded-xl flex items-center justify-center font-display font-black text-xs sm:text-lg text-text-muted shadow-inner">
                   {match.team_away?.logo_url ? 'LOGO' : match.team_away?.name.substring(0, 3).toUpperCase()}
                 </div>
                 {match.team_away_id && (
-                  <div className="absolute -top-2 -right-2 md:-top-2 md:-right-2 -top-2 -left-2 md:-left-auto bg-bg-surface rounded-full border border-border-line p-0.5">
+                  <div className="absolute -top-1.5 -right-1.5 bg-bg-surface rounded-full border border-border-line p-0.5">
                     <FavoriteStar
                       entityType="team"
                       entityId={match.team_away_id}
