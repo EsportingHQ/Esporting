@@ -1,45 +1,75 @@
-# Design System Document: Esporting Broadcast Interface
+# Design System Document: EsportingHQ
 
-## 1. Overview & Creative North Star: "The Telemetry Deck"
-This design system is built to capture the feeling of a live television broadcast control room—high-contrast, data-dense, and highly functional. Our Creative North Star is **"The Telemetry Deck."**
+## 1. Overview & Creative North Star: "Glassmorphic Arena"
+EsportingHQ is a premier real-time esports platform built with high performance, elegant glassmorphism, and modern SaaS aesthetics. Our Creative North Star is **"Glassmorphic Arena."**
 
-The interface feels like a mission control monitor. There is no decorative fluff. Layouts are strictly structured, tabular, and built for speed-reading. Hover states trigger crisp neon glows, and live updates roll, flash, or pulse in real-time.
+The interface combines frosted translucent surfaces, deep ambient gradient meshes, and glowing fuchsia accents with sub-second live score responsiveness. Layouts provide dense tabular esports telemetry without sacrificing modern whitespace and tactile micro-interactions.
 
 ---
 
-## 2. Colors & Surface Philosophy
-The palette is built around an ultra-dark background with bright neon telemetry accents.
+## 2. Color Palette & Tokens
+
+The palette is anchored on deep zinc-black canvases accented by radiant fuchsia gradients and crisp white elements.
 
 ### Color Tokens
-- **Void Background (bg-void):** `#08080a` (The canvas of space, deep charcoal black)
-- **Surface Layer (bg-surface):** `#111115` (Cards, sidebars, and control boxes)
-- **Border Line (border-line):** `#1f1f26` (Thin structural lines)
-- **Accent Readout (accent-readout):** `#00ffcc` (Electric Cyan. Main interactive element color, links, highlight statistics)
-- **Accent Signal (accent-signal):** `#ff3366` (Electric Magenta. Live pulse indicator, alerts, flash moments)
-- **Victory State (state-win):** `#00ff66` (High-visibility green for wins and completions)
-- **Loss State (state-loss):** `#ff3333` (Warning red for defeats and disqualifications)
-- **Alert State (state-alert):** `#ffaa00` (Amber yellow for delay notifications or correction tags)
+- **Canvas / Void (`bg-void`):** `#09090B` (Deepest charcoal/black backdrop)
+- **Glass Surface (`bg-surface`):** `#18181B` / `rgba(24, 24, 27, 0.6)` (Frosted blur cards)
+- **Elevated Glass (`bg-elevated`):** `#27272A` / `rgba(39, 39, 42, 0.8)` (Modals, drawers, and popovers)
+- **Glass Border (`border-line`):** `rgba(255, 255, 255, 0.08)` (Subtle translucent divider lines)
+- **Primary Accent (`accent-primary` / `accent-readout`):** `#D946EF` (Vibrant electric fuchsia)
+- **Accent Glow (`accent-glow`):** `#E879F9` (Soft fuchsia highlight)
+- **Live / Signal (`accent-live` / `accent-signal`):** `#EF4444` (Live match pulses, high-urgency alerts)
+- **Favorite (`accent-favorite`):** `#FBBF24` (Amber gold for starred squads and competitions)
+- **Victory State (`state-win`):** `#4ADE80` (Clear emerald green for wins)
+- **Loss / Danger (`state-loss`):** `#EF4444` (Defeats and cancellations)
+- **Warning (`state-alert`):** `#F59E0B` (Match delays and notices)
+- **Primary Text (`text-primary`):** `#FAFAFA` (Crisp high-contrast white)
+- **Muted Text (`text-muted`):** `#A1A1AA` (Subtle secondary information)
 
 ---
 
-## 3. Typography: Tactical Readouts
-We pair highly readable sans-serifs with tabular monospace figures to ensure clear hierarchy in fast-moving tables.
+## 3. Glassmorphism Utilities
 
-- **Display (Rajdhani):** Condensed, aggressive, uppercase. Use for title cards, team names in scoreboard blocks, and large numbers.
-- **Body (Inter):** Clean, neutral, high-legibility. Use for forms, description text, and dashboard navigation.
-- **Data (JetBrains Mono):** Tabular numbers, monospaced letters. Use for scores, timers, match statistics, and raw logs.
+Standardized glass surface classes across the design system:
+
+```css
+/* Standard translucent card with blur */
+.glass {
+  background: rgba(24, 24, 27, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Elevated glass with higher opacity and border brightness */
+.glass-strong {
+  background: rgba(24, 24, 27, 0.8);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Hover lift and glow effect */
+.glass-hover:hover {
+  background: rgba(24, 24, 27, 0.75);
+  border-color: rgba(217, 70, 239, 0.25);
+  box-shadow: 0 0 30px rgba(217, 70, 239, 0.08), 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+```
 
 ---
 
-## 4. Components
+## 4. Typography Hierarchy
 
-### Scoreboard (Head-to-Head)
-- A dark block (`bg-surface`) with a neon green tally light (`accent-signal` or `state-win` animation) pulsing when live.
-- Score digits use `RollDigit` component with vertical sliding translation.
+- **Display (`Geist Sans`, Bold / Black):** Used for headlines, hero typography, scores, and competition titles. Uppercase is reserved for primary headers and labels, while subtext and summaries use sentence-case for readability.
+- **Body (`Geist Sans`, Regular / Medium):** Neutral, readable, clean sans-serif for descriptions, article content, and metadata.
+- **Data (`Geist Mono`, Medium / Bold):** Monospaced tabular digits for scores, clocks, match timestamps, and numeric counters.
 
-### Ticker Bar
-- A scrolling marquee at the very bottom of the page showing live match tickers. Uses `JetBrains Mono` for rapid-fire data scanning.
+---
 
-### Control Panels (Dashboard)
-- Compact grid boxes with thin borders (`border-line`).
-- Interactive inputs are flat dark blocks (`bg-void`) with sharp border transitions to `accent-readout` on focus.
+## 5. Visual Depth & Motion
+
+1. **Ambient Gradient Mesh (`.gradient-mesh`):** Fluid radial glow orbs slowly drift behind content layers, imparting depth to the dark canvas.
+2. **Noise Texture (`.noise-overlay`):** Subtle SVG fractal grain (3% opacity) covers the viewport to eliminate color banding and create tactile texture.
+3. **3D Interactive Tilt (`.card-3d`):** Feature cards and previews employ subtle perspective tilting and elevation shadows on hover.
+4. **Live Ping Indicators:** Real-time matches utilize expanding radar rings (`animate-ping`) alongside solid live tally dots.

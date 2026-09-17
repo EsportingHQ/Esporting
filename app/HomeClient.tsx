@@ -7,13 +7,12 @@ import { BroadcastTicker } from '@/components/broadcast/broadcast-ticker';
 import { MatchCard } from '@/components/broadcast/match-card';
 import { MatchCardSkeleton } from '@/components/broadcast/MatchCardSkeleton';
 import { LeagueSection } from '@/components/broadcast/LeagueSection';
-import { StatusDot } from '@/components/broadcast/StatusDot';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ScoreToast } from '@/components/ui/ScoreToast';
 import { useLiveFeed } from '@/hooks/useLiveFeed';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useNewsArticles } from '@/hooks/useNewsArticles';
-import { Calendar, Newspaper, ArrowRight, Star } from 'lucide-react';
+import { Calendar, Newspaper, ArrowRight, Star, Flame, Zap } from 'lucide-react';
 
 type StatusFilter = 'all' | 'live' | 'upcoming' | 'finished';
 
@@ -35,9 +34,7 @@ export default function HomeClient() {
 	// Filter groups and matches
 	const filteredGroups = groups
 		.map((group) => {
-			// Filter matches within group
 			const matches = group.matches.filter((match) => {
-				// Status filter
 				if (statusFilter === 'live' && match.status !== 'live')
 					return false;
 				if (
@@ -54,7 +51,6 @@ export default function HomeClient() {
 				)
 					return false;
 
-				// Game category filter
 				if (gameFilter === 'football' && match.gameType !== 'football')
 					return false;
 				if (gameFilter === 'shooter' && match.gameType !== 'shooter')
@@ -89,38 +85,51 @@ export default function HomeClient() {
 		return b.liveCount - a.liveCount;
 	});
 
-	const statusTabs: { id: StatusFilter; label: string }[] = [
-		{ id: 'all', label: 'ALL' },
-		{ id: 'live', label: `LIVE (${liveCount})` },
-		{ id: 'upcoming', label: 'UPCOMING' },
-		{ id: 'finished', label: 'FINISHED' },
+	const statusTabs: { id: StatusFilter; label: string; count?: number }[] = [
+		{ id: 'all', label: 'All Matches' },
+		{ id: 'live', label: 'Live Now', count: liveCount },
+		{ id: 'upcoming', label: 'Upcoming' },
+		{ id: 'finished', label: 'Finished' },
 	];
 
 	return (
-		<div className="flex-1 flex flex-col bg-bg-void text-text-primary">
+		<div className="flex-1 flex flex-col bg-bg-void text-text-primary min-h-screen relative overflow-x-hidden">
+			{/* Ambient background glow */}
+			<div className="gradient-mesh pointer-events-none" aria-hidden="true">
+				<div className="mesh-orb" />
+			</div>
+
 			<PublicNav />
 			<BroadcastTicker matches={tickerMatches} />
 
 			{/* Live Toasts Overlay */}
 			<ScoreToast toasts={toasts} onDismiss={dismissToast} />
 
-			<main className="max-w-7xl w-full mx-auto px-3 py-4 sm:px-4 sm:py-8 flex-1 grid grid-cols-1 lg:grid-cols-3 gap-8">
+			<main className="max-w-7xl w-full mx-auto px-4 py-8 flex-1 grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10">
 				{/* Main Feed Column (2 cols wide on desktop) */}
 				<section className="lg:col-span-2 space-y-6">
 					{/* Header & Status Filter Bar */}
 					<div className="space-y-4">
-						<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border-line pb-3">
+						<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
 							<div className="flex items-center gap-3">
-								<Calendar className="w-5 h-5 text-accent-readout shrink-0" />
-								<h1 className="font-display font-bold text-xl uppercase tracking-wider truncate">
-									LIVE MATCH FEED & SCHEDULE
-								</h1>
+								<div className="w-9 h-9 rounded-xl bg-accent-primary/15 border border-accent-primary/25 flex items-center justify-center text-accent-glow">
+									<Calendar className="w-5 h-5" />
+								</div>
+								<div>
+									<h1 className="font-display font-black text-2xl text-white tracking-tight">
+										Live Matches & Schedule
+									</h1>
+									<p className="text-xs text-text-muted">Real-time head-to-head esports tracking</p>
+								</div>
 							</div>
 
 							<div className="flex items-center gap-2">
-								<span className="text-[10px] font-data text-text-muted flex items-center gap-1.5 bg-bg-surface px-2.5 py-1 rounded border border-border-line">
-									<StatusDot status="live" size="sm" />
-									<span className="font-semibold text-accent-signal">
+								<span className="text-xs font-display font-semibold text-white flex items-center gap-2 glass px-3.5 py-1.5 rounded-full border border-white/[0.1] shadow-sm">
+									<span className="relative flex h-2 w-2">
+										<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-live opacity-75" />
+										<span className="relative inline-flex rounded-full h-2 w-2 bg-accent-live" />
+									</span>
+									<span className="font-bold text-accent-live">
 										{liveCount} LIVE NOW
 									</span>
 								</span>
@@ -128,41 +137,51 @@ export default function HomeClient() {
 						</div>
 
 						{/* Filter Controls Row */}
-						<div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-bg-surface border border-border-line p-3 rounded">
+						<div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-strong border border-white/[0.08] p-3 rounded-2xl shadow-lg backdrop-blur-xl">
 							{/* Status Filter Tabs */}
-							<div className="w-full md:w-auto flex overflow-x-auto scrollbar-none border border-border-line rounded text-xs font-display font-bold">
+							<div className="w-full md:w-auto flex overflow-x-auto scrollbar-none bg-white/[0.03] p-1 rounded-xl border border-white/[0.06] text-xs font-display font-semibold">
 								{statusTabs.map((tab) => (
 									<button
 										key={tab.id}
 										onClick={() => setStatusFilter(tab.id)}
-										className={`min-h-[44px] px-4 uppercase transition-colors shrink-0 flex items-center justify-center ${
+										className={`min-h-[38px] px-4 rounded-lg transition-all shrink-0 flex items-center justify-center gap-1.5 ${
 											statusFilter === tab.id
-												? 'bg-accent-readout text-bg-void font-extrabold'
-												: 'bg-bg-void hover:bg-bg-void/50 text-text-muted hover:text-text-primary'
+												? 'bg-accent-primary text-white font-bold shadow-[0_0_15px_rgba(217,70,239,0.3)]'
+												: 'text-text-muted hover:text-white hover:bg-white/[0.04]'
 										}`}
 									>
-										{tab.label}
+										<span>{tab.label}</span>
+										{tab.count !== undefined && tab.count > 0 && (
+											<span className={`px-1.5 py-0.5 text-[10px] font-data rounded-full ${
+												statusFilter === tab.id ? 'bg-white/20 text-white' : 'bg-accent-live/20 text-accent-live font-bold'
+											}`}>
+												{tab.count}
+											</span>
+										)}
 									</button>
 								))}
 							</div>
 
 							{/* Game Category Pills */}
-							<div className="w-full md:w-auto flex items-center gap-2 overflow-x-auto scrollbar-none text-[11px] font-display font-bold">
-								{['all', 'football', 'shooter', 'br'].map(
-									(cat) => (
-										<button
-											key={cat}
-											onClick={() => setGameFilter(cat)}
-											className={`min-h-[44px] min-w-[70px] px-3 rounded uppercase border transition-colors shrink-0 flex items-center justify-center ${
-												gameFilter === cat
-													? 'bg-accent-readout/20 text-accent-readout border-accent-readout/40'
-													: 'bg-bg-void border-border-line text-text-muted hover:text-text-primary'
-											}`}
-										>
-											{cat}
-										</button>
-									),
-								)}
+							<div className="w-full md:w-auto flex items-center gap-2 overflow-x-auto scrollbar-none text-xs font-display font-semibold">
+								{[
+									{ id: 'all', label: 'All Games' },
+									{ id: 'football', label: 'Football' },
+									{ id: 'shooter', label: 'Shooters' },
+									{ id: 'br', label: 'Battle Royale' },
+								].map((cat) => (
+									<button
+										key={cat.id}
+										onClick={() => setGameFilter(cat.id)}
+										className={`min-h-[36px] px-3.5 rounded-xl border transition-all shrink-0 flex items-center justify-center ${
+											gameFilter === cat.id
+												? 'bg-accent-primary/20 text-white border-accent-primary/40 shadow-[0_0_12px_rgba(217,70,239,0.15)] font-bold'
+												: 'bg-white/[0.02] border-white/[0.06] text-text-muted hover:text-white hover:bg-white/[0.05]'
+										}`}
+									>
+										{cat.label}
+									</button>
+								))}
 							</div>
 						</div>
 					</div>
@@ -197,9 +216,9 @@ export default function HomeClient() {
 					) : (
 						<EmptyState
 							icon={Calendar}
-							title="NO MATCHES FOUND"
+							title="No matches found"
 							description="No live, upcoming, or finished matches match your selected filters."
-							actionLabel="RESET FILTERS"
+							actionLabel="Reset filters"
 							onAction={() => {
 								setStatusFilter('all');
 								setGameFilter('all');
@@ -212,24 +231,24 @@ export default function HomeClient() {
 				<section className="hidden lg:block space-y-6">
 					{/* Favorites Quick List */}
 					{favorites.length > 0 && (
-						<div className="bg-bg-surface border border-border-line rounded p-4 space-y-3">
-							<div className="flex items-center gap-2 border-b border-border-line pb-2">
+						<div className="glass rounded-3xl border border-white/[0.08] p-5 space-y-4 shadow-xl">
+							<div className="flex items-center gap-2.5 border-b border-white/[0.08] pb-3">
 								<Star className="w-4 h-4 text-accent-favorite fill-accent-favorite" />
-								<h3 className="font-display font-bold text-xs tracking-wider uppercase">
-									YOUR STARRED FAVORITES
+								<h3 className="font-display font-bold text-sm tracking-wide text-white">
+									Starred Favorites
 								</h3>
 							</div>
 
-							<div className="space-y-1.5 text-xs font-body">
+							<div className="space-y-2 text-xs font-body">
 								{favorites.map((fav) => (
 									<div
 										key={`${fav.type}-${fav.id}`}
-										className="p-2 bg-bg-void border border-border-line rounded flex items-center justify-between"
+										className="p-3 bg-white/[0.03] border border-white/[0.06] rounded-xl flex items-center justify-between hover:border-accent-primary/30 transition-colors"
 									>
-										<span className="font-semibold truncate">
+										<span className="font-semibold text-white truncate">
 											{fav.name}
 										</span>
-										<span className="text-[9px] font-data text-text-muted uppercase bg-bg-surface px-1.5 rounded">
+										<span className="text-[10px] font-data text-text-muted uppercase bg-white/[0.05] px-2 py-0.5 rounded-full border border-white/[0.05]">
 											{fav.type}
 										</span>
 									</div>
@@ -238,30 +257,32 @@ export default function HomeClient() {
 
 							<Link
 								href="/favorites"
-								className="block text-center text-[10px] font-display font-bold text-accent-readout hover:underline pt-1"
+								className="block text-center text-xs font-display font-semibold text-accent-glow hover:underline pt-1"
 							>
-								GO TO FAVORITES FEED →
+								View all favorites →
 							</Link>
 						</div>
 					)}
 
 					{/* Broadcast Bulletin */}
-					<div className="bg-bg-surface border border-border-line rounded p-4 space-y-4">
-						<div className="flex items-center gap-2 border-b border-border-line pb-2">
-							<Newspaper className="w-4 h-4 text-accent-readout" />
-							<h3 className="font-display font-bold text-sm tracking-wider uppercase">
-								BROADCAST BULLETIN
+					<div className="glass rounded-3xl border border-white/[0.08] p-6 space-y-5 shadow-xl">
+						<div className="flex items-center gap-2.5 border-b border-white/[0.08] pb-3">
+							<div className="p-1.5 rounded-lg bg-accent-primary/10 text-accent-glow">
+								<Newspaper className="w-4 h-4" />
+							</div>
+							<h3 className="font-display font-bold text-base text-white">
+								Community Bulletin
 							</h3>
 						</div>
 
-						<div className="divide-y divide-border-line">
+						<div className="divide-y divide-white/[0.06]">
 							{newsItems.map((item) => (
 								<article
 									key={item.id}
-									className="py-3 first:pt-0 last:pb-0 space-y-2"
+									className="py-3.5 first:pt-0 last:pb-0 space-y-2"
 								>
-									<div className="flex items-center justify-between text-[9px] font-data">
-										<span className="text-accent-readout font-bold tracking-wider">
+									<div className="flex items-center justify-between text-[10px] font-data">
+										<span className="text-accent-glow font-bold tracking-wider px-2 py-0.5 rounded-full bg-accent-primary/10 border border-accent-primary/20">
 											{item.tag}
 										</span>
 										<span className="text-text-muted">
@@ -276,11 +297,11 @@ export default function HomeClient() {
 										href={`/news/${item.slug}`}
 										className="block group"
 									>
-										<h4 className="font-display font-bold text-sm text-text-primary group-hover:text-accent-readout transition-colors leading-tight">
+										<h4 className="font-display font-bold text-sm text-white group-hover:text-accent-glow transition-colors leading-snug">
 											{item.title}
 										</h4>
 									</Link>
-									<p className="text-xs text-text-muted line-clamp-2 leading-relaxed">
+									<p className="text-xs text-text-muted line-clamp-2 leading-relaxed font-body">
 										{item.excerpt ??
 											'No summary available.'}
 									</p>
@@ -290,7 +311,7 @@ export default function HomeClient() {
 
 						<Link
 							href="/news"
-							className="flex items-center justify-center gap-2 w-full py-2 bg-bg-void hover:bg-bg-void/50 border border-border-line hover:border-accent-readout/40 rounded font-display text-xs font-semibold tracking-wider text-text-muted hover:text-text-primary transition-all focus-ring"
+							className="flex items-center justify-center gap-2 w-full py-2.5 btn-glass text-xs font-display font-bold tracking-wider text-white rounded-xl"
 						>
 							<span>VIEW ALL BULLETIN POSTS</span>
 							<ArrowRight className="w-3.5 h-3.5" />
@@ -299,16 +320,18 @@ export default function HomeClient() {
 				</section>
 			</main>
 
-			{/* Broadcast Footer */}
-			<footer className="bg-bg-surface border-t border-border-line py-4 select-none text-[10px] text-text-muted">
+			{/* Modern Glass Footer */}
+			<footer className="glass-strong border-t border-white/[0.08] py-8 relative z-20 select-none text-xs text-text-muted mt-auto">
 				<div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
-					<span className="font-data">
-						© 2026 ESPORTINGHQ. ALL SYSTEM BROADCASTS LIVE.
-					</span>
-					<div className="flex items-center gap-4 font-display font-semibold tracking-wider">
-						<span className="flex items-center gap-1.5">
-							<StatusDot status="completed" size="sm" />
-							<span>NETWORK STATUS: NOMINAL</span>
+					<div className="flex items-center gap-2 font-display font-bold text-white text-sm">
+						<Zap className="w-4 h-4 text-accent-primary" />
+						<span>ESPORTINGHQ</span>
+						<span className="text-xs text-text-muted font-normal">© {new Date().getFullYear()}</span>
+					</div>
+					<div className="flex items-center gap-2 font-display text-xs">
+						<span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-state-win/10 border border-state-win/20 text-state-win font-semibold">
+							<span className="w-1.5 h-1.5 rounded-full bg-state-win animate-pulse" />
+							Telemetry Feed Nominal
 						</span>
 					</div>
 				</div>

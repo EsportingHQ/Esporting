@@ -3,7 +3,7 @@ import { PublicNav } from '@/components/layout/public-nav';
 import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
-import { Calendar, User, ArrowLeft } from 'lucide-react';
+import { Calendar, User, ArrowLeft, ArrowRight } from 'lucide-react';
 
 type ArticleRow = {
 	id: string;
@@ -65,41 +65,46 @@ export default async function NewsDetailPage({
 		.limit(3);
 
 	return (
-		<div className="flex-1 flex flex-col bg-bg-void text-text-primary">
+		<div className="flex-1 flex flex-col bg-bg-void text-text-primary min-h-screen relative overflow-x-hidden">
+			{/* Ambient background glow */}
+			<div className="gradient-mesh pointer-events-none" aria-hidden="true">
+				<div className="mesh-orb" />
+			</div>
+
 			<PublicNav />
 
-			<main className="max-w-4xl w-full mx-auto px-4 py-8 flex-1 space-y-8">
+			<main className="max-w-4xl w-full mx-auto px-4 sm:px-6 py-10 flex-1 space-y-8 relative z-10">
 				<Link
 					href="/news"
-					className="inline-flex items-center gap-1.5 text-xs font-display font-bold text-accent-readout hover:underline uppercase tracking-wider"
+					className="inline-flex items-center gap-2 text-xs font-display font-bold text-accent-glow hover:text-white uppercase tracking-wider transition-colors"
 				>
-					<ArrowLeft className="w-3.5 h-3.5" />
+					<ArrowLeft className="w-4 h-4" />
 					<span>BACK TO BULLETIN DESK</span>
 				</Link>
 
-				<article className="bg-bg-surface border border-border-line rounded p-6 sm:p-8 space-y-6">
-					<div className="space-y-3">
+				<article className="glass-strong border border-white/[0.08] rounded-3xl p-6 sm:p-10 space-y-6 shadow-2xl backdrop-blur-2xl">
+					<div className="space-y-4">
 						<div className="flex flex-wrap gap-2">
 							{competition && (
-								<span className="px-2 py-0.5 bg-accent-readout/10 border border-accent-readout/30 text-[9px] font-display font-bold text-accent-readout tracking-wider uppercase rounded-sm">
+								<span className="px-3 py-1 bg-accent-primary/15 border border-accent-primary/25 text-xs font-display font-bold text-accent-glow tracking-wider uppercase rounded-full">
 									{competition}
 								</span>
 							)}
 
 							{game && (
-								<span className="px-2 py-0.5 bg-bg-void border border-border-line text-[9px] font-display font-bold text-text-muted tracking-wider uppercase rounded-sm">
+								<span className="px-3 py-1 bg-white/[0.04] border border-white/[0.08] text-xs font-display font-semibold text-text-muted tracking-wider uppercase rounded-full">
 									{game}
 								</span>
 							)}
 						</div>
 
-						<h1 className="font-display font-black text-2xl sm:text-3xl tracking-wide uppercase leading-tight">
+						<h1 className="font-display font-black text-2xl sm:text-4xl text-white tracking-tight leading-snug">
 							{article.title}
 						</h1>
 
-						<div className="flex flex-wrap items-center gap-4 text-xs font-data text-text-muted border-t border-border-line pt-4">
+						<div className="flex flex-wrap items-center gap-4 text-xs font-data text-text-muted border-t border-white/[0.08] pt-4">
 							<span className="flex items-center gap-1.5">
-								<Calendar className="w-3.5 h-3.5" />
+								<Calendar className="w-4 h-4 text-accent-glow" />
 								<span>
 									{article.published_at
 										? new Date(
@@ -110,20 +115,20 @@ export default async function NewsDetailPage({
 							</span>
 
 							<span className="flex items-center gap-1.5">
-								<User className="w-3.5 h-3.5" />
+								<User className="w-4 h-4 text-text-muted" />
 								<span>By {authorName}</span>
 							</span>
 						</div>
 					</div>
 
-					<div className="text-sm font-body text-text-primary leading-relaxed space-y-4 whitespace-pre-wrap pt-2">
+					<div className="text-sm sm:text-base font-body text-text-primary leading-relaxed space-y-4 whitespace-pre-wrap pt-2">
 						{article.body}
 					</div>
 				</article>
 
-				<section className="space-y-4">
-					<h3 className="font-display font-black text-sm uppercase tracking-wider text-text-muted">
-						RELATED BROADCASTS
+				<section className="space-y-4 pt-4">
+					<h3 className="font-display font-bold text-sm uppercase tracking-wider text-text-muted">
+						Related Articles
 					</h3>
 
 					<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -131,17 +136,18 @@ export default async function NewsDetailPage({
 							<Link
 								key={post.id}
 								href={`/news/${post.slug}`}
-								className="block"
+								className="block group"
 							>
-								<div className="bg-bg-surface border border-border-line hover:border-accent-readout/30 rounded p-4 h-full flex flex-col justify-between transition-all">
+								<div className="glass glass-hover border border-white/[0.08] rounded-2xl p-5 h-full flex flex-col justify-between transition-all group-hover:border-accent-primary/40">
 									<div className="space-y-2">
-										<h4 className="font-display font-bold text-sm text-text-primary line-clamp-2 uppercase leading-tight">
+										<h4 className="font-display font-bold text-sm text-white group-hover:text-accent-glow transition-colors line-clamp-2 leading-snug">
 											{post.title}
 										</h4>
 									</div>
 
-									<span className="text-[10px] font-display font-bold text-text-muted hover:text-text-primary uppercase tracking-wider mt-4 block">
-										READ POST →
+									<span className="text-xs font-display font-semibold text-accent-glow flex items-center gap-1 mt-4">
+										<span>Read Post</span>
+										<ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
 									</span>
 								</div>
 							</Link>

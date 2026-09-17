@@ -5,10 +5,10 @@ import { PublicNav } from '@/components/layout/public-nav';
 import { NotificationToggle } from '@/components/ui/NotificationToggle';
 import { ScoreToast, ToastMessage } from '@/components/ui/ScoreToast';
 import { useNotificationPrefs } from '@/hooks/useNotificationPrefs';
-import { Bell, ShieldCheck, Check, Sparkles } from 'lucide-react';
+import { Bell, Check, Sparkles } from 'lucide-react';
 
 export default function NotificationSettingsPage() {
-  const { prefs, updatePrefs, isLoaded } = useNotificationPrefs();
+  const { prefs, updatePrefs } = useNotificationPrefs();
   const [testToasts, setTestToasts] = useState<ToastMessage[]>([]);
   const [savedFeedback, setSavedFeedback] = useState(false);
 
@@ -38,51 +38,55 @@ export default function NotificationSettingsPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-bg-void text-text-primary">
+    <div className="flex-1 flex flex-col bg-bg-void text-text-primary min-h-screen relative overflow-x-hidden">
+      {/* Ambient background glow */}
+      <div className="gradient-mesh pointer-events-none" aria-hidden="true">
+        <div className="mesh-orb" />
+      </div>
+
       <PublicNav />
 
       {/* Test Toast Overlay */}
       <ScoreToast toasts={testToasts} onDismiss={dismissTestToast} />
 
-      <main className="max-w-4xl w-full mx-auto px-4 py-8 flex-1 space-y-8">
+      <main className="max-w-4xl w-full mx-auto px-4 sm:px-6 py-10 flex-1 space-y-8 relative z-10">
         {/* Header */}
-        <div className="border-b border-border-line pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <Bell className="w-6 h-6 text-accent-readout" />
-              <h1 className="font-display font-black text-3xl tracking-wider uppercase">
-                ALERT PREFERENCES
-              </h1>
+        <div className="border-b border-white/[0.08] pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-primary/10 border border-accent-primary/25 text-accent-glow text-xs font-display font-semibold mb-2">
+              <Bell className="w-3.5 h-3.5" />
+              <span>NOTIFICATION PREFERENCES</span>
             </div>
-            <p className="text-xs text-text-muted font-data mt-1">
-              CONFIGURE IN-APP LIVE SCORE TOASTS AND BROADCAST ANNOUNCEMENT NOTIFICATIONS
+            <h1 className="font-display font-black text-3xl sm:text-4xl text-white tracking-tight">
+              Alert Settings
+            </h1>
+            <p className="text-sm text-text-muted font-body">
+              Configure real-time score toasts, match start triggers, and official league bulletins.
             </p>
           </div>
 
           {savedFeedback && (
-            <span className="text-xs font-data text-state-win flex items-center gap-1.5 bg-state-win/10 px-3 py-1.5 rounded border border-state-win/30">
+            <span className="text-xs font-display font-bold text-state-win flex items-center gap-1.5 bg-state-win/10 px-3.5 py-2 rounded-full border border-state-win/30 shadow-sm">
               <Check className="w-4 h-4" />
-              <span>PREFERENCES SAVED</span>
+              <span>Preferences Saved</span>
             </span>
           )}
         </div>
 
         {/* Master Switch Panel */}
-        <div className="bg-bg-surface border border-accent-readout/30 rounded p-6 space-y-6">
-          <div className="flex items-center justify-between border-b border-border-line pb-4">
-            <div>
-              <h2 className="font-display font-bold text-base text-accent-readout uppercase">
-                FAVORITE SQUADS FILTER
-              </h2>
-              <p className="text-xs text-text-muted font-body mt-0.5">
-                When enabled, live score toasts are strictly limited to squads and competitions on your favorites list.
-              </p>
-            </div>
+        <div className="glass-strong border border-accent-primary/30 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl backdrop-blur-xl">
+          <div className="border-b border-white/[0.08] pb-4">
+            <h2 className="font-display font-bold text-base text-accent-glow">
+              Favorite Squads Filter
+            </h2>
+            <p className="text-xs text-text-muted font-body mt-1">
+              When enabled, score toasts and alerts will only fire for teams and competitions on your starred list.
+            </p>
           </div>
 
           <NotificationToggle
             id="favorite-teams-only"
-            label="FAVORITE SQUADS ONLY"
+            label="Favorite squads only"
             description="Suppress alerts for matches not involving your starred teams or leagues"
             checked={prefs.favoriteTeamsOnly}
             onChange={(val) => handleToggle('favoriteTeamsOnly', val)}
@@ -90,15 +94,15 @@ export default function NotificationSettingsPage() {
         </div>
 
         {/* Alert Trigger Rules */}
-        <div className="bg-bg-surface border border-border-line rounded p-6 space-y-6">
-          <h2 className="font-display font-bold text-sm uppercase tracking-wider text-text-primary border-b border-border-line pb-3">
-            NOTIFICATION EVENT TRIGGERS
+        <div className="glass rounded-3xl border border-white/[0.08] p-6 sm:p-8 space-y-6 shadow-xl">
+          <h2 className="font-display font-bold text-base text-white border-b border-white/[0.08] pb-4">
+            Event Triggers
           </h2>
 
-          <div className="divide-y divide-border-line">
+          <div className="divide-y divide-white/[0.06]">
             <NotificationToggle
               id="goal-scored"
-              label="GOALS & SCORE UPDATES"
+              label="Goals & score updates"
               description="Trigger real-time score toasts whenever a goal, point, or map win is recorded in live matches"
               checked={prefs.goalScored}
               onChange={(val) => handleToggle('goalScored', val)}
@@ -106,23 +110,23 @@ export default function NotificationSettingsPage() {
 
             <NotificationToggle
               id="match-start"
-              label="MATCH KICK-OFF ALERTS"
-              description="Notify when a scheduled match shifts status to LIVE"
+              label="Match kick-off alerts"
+              description="Notify when a scheduled match shifts status to live"
               checked={prefs.matchStart}
               onChange={(val) => handleToggle('matchStart', val)}
             />
 
             <NotificationToggle
               id="match-end"
-              label="FINAL RESULTS ALERTS"
-              description="Receive notifications summarizing final match scores when matches reach COMPLETED status"
+              label="Final results alerts"
+              description="Receive notifications summarizing final match scores when matches reach completed status"
               checked={prefs.matchEnd}
               onChange={(val) => handleToggle('matchEnd', val)}
             />
 
             <NotificationToggle
               id="status-change"
-              label="BROADCAST DELAYS & ANNOUNCEMENTS"
+              label="Broadcast delays & announcements"
               description="Alert on match delays, technical timeouts, and official organizer notes"
               checked={prefs.statusChange}
               onChange={(val) => handleToggle('statusChange', val)}
@@ -131,23 +135,23 @@ export default function NotificationSettingsPage() {
         </div>
 
         {/* Test Toast Preview Box */}
-        <div className="bg-bg-surface border border-border-line rounded p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="glass rounded-3xl border border-white/[0.08] p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl">
           <div className="space-y-1 text-center sm:text-left">
             <div className="flex items-center gap-2 justify-center sm:justify-start">
-              <Sparkles className="w-4 h-4 text-accent-favorite" />
-              <h3 className="font-display font-bold text-sm uppercase">PREVIEW NOTIFICATION TOAST</h3>
+              <Sparkles className="w-4 h-4 text-accent-glow" />
+              <h3 className="font-display font-bold text-base text-white">Preview Toast Notification</h3>
             </div>
             <p className="text-xs text-text-muted font-body">
-              Click the button to send a simulated score toast overlay.
+              Click the button to test how real-time match events appear on your screen.
             </p>
           </div>
 
           <button
             type="button"
             onClick={triggerTestToast}
-            className="px-4 py-2 bg-bg-void border border-accent-readout/40 hover:bg-accent-readout/10 text-accent-readout font-display font-bold text-xs uppercase tracking-wider rounded transition-all focus-ring shrink-0"
+            className="btn-glass px-5 py-3 text-xs font-display font-bold tracking-wider rounded-xl hover:border-accent-primary/40 focus-ring shrink-0 text-white"
           >
-            TEST TOAST NOTIFICATION
+            TEST TOAST OVERLAY
           </button>
         </div>
       </main>

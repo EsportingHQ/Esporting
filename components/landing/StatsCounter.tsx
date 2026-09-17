@@ -1,11 +1,11 @@
 'use client';
 
-import { motion, useInView } from 'framer-motion';
+import { useInView } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 
 function Counter({ from = 0, to, duration = 2, suffix = '' }: { from?: number, to: number, duration?: number, suffix?: string }) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const isInView = useInView(ref, { once: true, margin: "-50px" });
   const [count, setCount] = useState(from);
 
   useEffect(() => {
@@ -23,29 +23,39 @@ function Counter({ from = 0, to, duration = 2, suffix = '' }: { from?: number, t
     }
   }, [isInView, to, from, duration]);
 
-  return <span ref={ref}>{count}{suffix}</span>;
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
 }
 
 export function StatsCounter() {
   const stats = [
-    { label: 'LIVE MATCHES', value: 12, suffix: '+' },
-    { label: 'COMPETITIONS', value: 50, suffix: '+' },
-    { label: 'ACTIVE TEAMS', value: 200, suffix: '+' },
-    { label: 'PLAYERS', value: 5000, suffix: '+' },
+    { label: 'Live Matches Tracked', value: 12, suffix: '+', note: 'Real-time telemetry' },
+    { label: 'Active Competitions', value: 50, suffix: '+', note: 'Leagues & cups' },
+    { label: 'Registered Teams', value: 200, suffix: '+', note: 'Clubs nationwide' },
+    { label: 'Verified Players', value: 5000, suffix: '+', note: 'Active roster' },
   ];
 
   return (
-    <div className="w-full bg-bg-surface border-y border-border-line font-data py-6 relative z-20">
-      <div className="max-w-7xl mx-auto px-4 flex flex-wrap justify-between gap-4 sm:gap-12">
-        {stats.map((stat, idx) => (
-          <div key={idx} className="flex flex-col items-center sm:items-start space-y-1 w-1/2 sm:w-auto">
-            <span className="text-2xl md:text-4xl font-bold text-accent-readout tracking-tighter">
-              <Counter to={stat.value} suffix={stat.suffix} />
-            </span>
-            <span className="text-[10px] md:text-xs text-text-muted tracking-widest uppercase">{stat.label}</span>
-          </div>
-        ))}
+    <section className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 py-6 -mt-8 sm:-mt-12">
+      <div className="glass-strong rounded-3xl border border-white/[0.1] shadow-[0_20px_60px_rgba(0,0,0,0.5)] p-6 sm:p-10 backdrop-blur-2xl">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 divide-y sm:divide-y-0 sm:divide-x divide-white/[0.08]">
+          {stats.map((stat, idx) => (
+            <div 
+              key={idx} 
+              className={`flex flex-col items-center text-center space-y-1.5 ${idx !== 0 ? 'pt-4 sm:pt-0 sm:pl-6' : ''}`}
+            >
+              <div className="text-3xl sm:text-4xl lg:text-5xl font-black font-display text-gradient-fuchsia tracking-tight">
+                <Counter to={stat.value} suffix={stat.suffix} />
+              </div>
+              <div className="text-xs sm:text-sm font-display font-bold text-white tracking-wide">
+                {stat.label}
+              </div>
+              <div className="text-[11px] font-body text-text-muted">
+                {stat.note}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

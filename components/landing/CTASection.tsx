@@ -2,57 +2,82 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
+import { ArrowRight } from 'lucide-react';
 
 export function CTASection() {
   return (
-    <section className="relative py-20 sm:py-32 bg-bg-void overflow-hidden flex items-center justify-center">
-      
-      {/* Animated gradient background */}
-      <div className="absolute inset-0 opacity-20 animate-gradient-shift bg-gradient-to-r from-accent-signal via-bg-void to-accent-readout pointer-events-none" />
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-30 pointer-events-none" />
+    <section className="relative py-28 sm:py-36 overflow-hidden flex items-center justify-center">
+      {/* Background ambient lighting */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-gradient-to-r from-accent-primary/20 via-pink-600/15 to-purple-600/20 rounded-full blur-[140px] animate-gradient-shift" />
+      </div>
 
-      <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
-        <motion.h2 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="text-3xl sm:text-4xl md:text-6xl font-display font-black uppercase tracking-tighter mb-6 text-white"
-        >
-          Ready to go <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-signal to-accent-readout">Live?</span>
-        </motion.h2>
-        
-        <motion.p 
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.6 }}
-          viewport={{ once: true }}
-          className="text-text-muted font-body text-lg mb-10 max-w-2xl mx-auto"
-        >
-          Join the waitlist or log into your control panel to start managing tournaments on Nigeria's first live esporting hub.
-        </motion.p>
+      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 w-full">
+        <div className="glass-strong rounded-3xl sm:rounded-[36px] border border-white/[0.12] p-8 sm:p-16 text-center shadow-[0_30px_100px_rgba(0,0,0,0.6)] relative overflow-hidden backdrop-blur-2xl">
+          {/* Subtle top light strip */}
+          <div className="absolute top-0 left-1/4 right-1/4 h-[1px] bg-gradient-to-r from-transparent via-accent-primary/60 to-transparent" />
 
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
-          viewport={{ once: true }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4"
-        >
-          <Link
-            href="/login"
-            className="w-full sm:w-auto px-8 py-3.5 bg-accent-readout text-bg-void font-display font-bold tracking-wider rounded hover:bg-white transition-colors focus-ring"
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+            className="flex justify-center mb-6"
           >
-            JOIN WAITLIST / SIGN UP
-          </Link>
+            <Image
+              src="/esportinghq-logo-stacked.png"
+              alt="EsportingHQ Logo"
+              width={140}
+              height={120}
+              className="h-24 w-auto object-contain drop-shadow-[0_0_25px_rgba(217,70,239,0.35)]"
+            />
+          </motion.div>
 
-          <Link
-            href="/feed"
-            className="w-full sm:w-auto px-8 py-3.5 bg-transparent text-text-primary font-display font-bold tracking-wider border border-border-line hover:border-text-primary rounded transition-colors focus-ring"
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="text-3xl sm:text-5xl md:text-6xl font-display font-black tracking-tight text-white mb-6 uppercase"
           >
-            VIEW LIVE FEED
-          </Link>
-        </motion.div>
+            Ready to Elevate Your{' '}
+            <span className="text-gradient-fuchsia">Esporting Experience?</span>
+          </motion.h2>
+          
+          <motion.p 
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ delay: 0.15, duration: 0.6 }}
+            viewport={{ once: true }}
+            className="text-text-muted font-body text-base sm:text-lg mb-10 max-w-2xl mx-auto leading-relaxed"
+          >
+            Join players, tournament organizers, and broadcast creators already powering live competitive gaming with EsportingHQ.
+          </motion.p>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            viewport={{ once: true }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4"
+          >
+            <Link
+              href="/login"
+              className="w-full sm:w-auto btn-primary px-9 py-4 text-sm font-display font-bold tracking-wider rounded-xl flex items-center justify-center gap-2 group shadow-[0_0_35px_rgba(217,70,239,0.4)]"
+            >
+              <span>GET STARTED FREE</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+
+            <Link
+              href="/feed"
+              className="w-full sm:w-auto btn-glass px-9 py-4 text-sm font-display font-semibold tracking-wider rounded-xl flex items-center justify-center gap-2 hover:border-accent-primary/40"
+            >
+              EXPLORE LIVE MATCHES
+            </Link>
+          </motion.div>
+        </div>
       </div>
     </section>
   );

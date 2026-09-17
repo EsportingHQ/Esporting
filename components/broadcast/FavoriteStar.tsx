@@ -39,13 +39,13 @@ export function FavoriteStar({
       onClick={handleToggle}
       aria-label={active ? `Remove ${entityName} from favorites` : `Add ${entityName} to favorites`}
       aria-pressed={active}
-      className={`p-1 rounded hover:bg-bg-void/60 transition-all focus-ring text-text-muted hover:text-accent-favorite ${
+      className={`p-1 rounded-lg hover:bg-white/[0.06] transition-all focus-ring text-text-muted hover:text-accent-favorite ${
         active ? 'text-accent-favorite' : ''
       } ${className}`}
     >
       <Star
-        className={`${iconSizes[size]} transition-transform duration-200 ${
-          active ? 'fill-accent-favorite text-accent-favorite scale-110' : ''
+        className={`${iconSizes[size]} transition-all duration-200 ${
+          active ? 'fill-accent-favorite text-accent-favorite scale-110 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]' : ''
         }`}
       />
     </button>
