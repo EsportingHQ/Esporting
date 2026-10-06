@@ -79,8 +79,9 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
                 )}
               </div>
               <div className="flex flex-col min-w-0 text-left">
-                <span className="font-display font-black text-xs sm:text-xl md:text-2xl text-text-primary leading-tight uppercase truncate">
-                  {match.team_home?.name}
+                <span title={match.team_home?.name} className="font-display font-black text-xs sm:text-xl md:text-2xl text-text-primary leading-tight uppercase truncate">
+                  <span className="sm:hidden">{match.team_home?.name.substring(0, 3).toUpperCase()}</span>
+                  <span className="hidden sm:inline">{match.team_home?.name}</span>
                 </span>
                 <span className="text-[9px] sm:text-[10px] font-data text-text-muted hidden sm:inline">HOME SQUAD</span>
               </div>
@@ -121,8 +122,9 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
             {/* Away Team */}
             <div className="flex items-center justify-end gap-2 sm:gap-4 flex-1 min-w-0 text-right">
               <div className="flex flex-col min-w-0 text-right">
-                <span className="font-display font-black text-xs sm:text-xl md:text-2xl text-text-primary leading-tight uppercase truncate">
-                  {match.team_away?.name}
+                <span title={match.team_away?.name} className="font-display font-black text-xs sm:text-xl md:text-2xl text-text-primary leading-tight uppercase truncate">
+                  <span className="sm:hidden">{match.team_away?.name.substring(0, 3).toUpperCase()}</span>
+                  <span className="hidden sm:inline">{match.team_away?.name}</span>
                 </span>
                 <span className="text-[9px] sm:text-[10px] font-data text-text-muted hidden sm:inline">AWAY SQUAD</span>
               </div>

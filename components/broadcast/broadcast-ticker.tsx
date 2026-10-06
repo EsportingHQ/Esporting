@@ -60,14 +60,14 @@ export function BroadcastTicker({ matches }: BroadcastTickerProps) {
                     {match.gameCode}
                   </span>
                   <div className="flex items-center gap-2 font-data text-xs">
-                    <span className="text-white uppercase tracking-tight max-w-[80px] truncate font-medium">
-                      {match.homeTeam}
+                    <span title={match.homeTeam} className="text-white uppercase tracking-tight max-w-[80px] truncate font-medium">
+                      {match.homeTeam.substring(0, 3).toUpperCase()}
                     </span>
                     <span className="font-bold text-accent-live px-1 bg-white/[0.04] rounded">{match.homeScore}</span>
                     <span className="text-text-muted text-[10px]">-</span>
                     <span className="font-bold text-accent-live px-1 bg-white/[0.04] rounded">{match.awayScore}</span>
-                    <span className="text-white uppercase tracking-tight max-w-[80px] truncate font-medium">
-                      {match.awayTeam}
+                    <span title={match.awayTeam} className="text-white uppercase tracking-tight max-w-[80px] truncate font-medium">
+                      {match.awayTeam.substring(0, 3).toUpperCase()}
                     </span>
                   </div>
                 </div>
@@ -119,7 +119,7 @@ export function BroadcastTicker({ matches }: BroadcastTickerProps) {
 
               {/* Scoreboard layout */}
               <div className="flex items-center gap-2 font-data">
-                <span className="text-white uppercase tracking-tight max-w-[90px] truncate font-medium text-xs">
+                <span title={match.homeTeam} className="text-white uppercase tracking-tight max-w-[120px] truncate font-medium text-xs">
                   {match.homeTeam}
                 </span>
                 <div className="flex items-center bg-white/[0.04] px-2.5 py-1 rounded-lg border border-white/[0.08] font-bold text-white shadow-inner">
@@ -127,7 +127,7 @@ export function BroadcastTicker({ matches }: BroadcastTickerProps) {
                   <span className="mx-1.5 text-text-muted text-xs font-normal">:</span>
                   <RollDigit value={match.awayScore} className="text-accent-live" />
                 </div>
-                <span className="text-white uppercase tracking-tight max-w-[90px] truncate font-medium text-xs">
+                <span title={match.awayTeam} className="text-white uppercase tracking-tight max-w-[120px] truncate font-medium text-xs">
                   {match.awayTeam}
                 </span>
               </div>

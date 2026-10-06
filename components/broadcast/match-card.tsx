@@ -104,10 +104,12 @@ export function MatchCard({
             {homeTeam.shortCode}
           </div>
           <div className="flex flex-col min-w-0">
-            <span className={`font-body font-semibold text-xs sm:text-sm truncate transition-colors ${
+            <span 
+              title={homeTeam.name}
+              className={`font-body font-semibold text-xs sm:text-sm truncate transition-colors ${
               isHomeWinner ? 'text-state-win font-bold' : isAwayWinner ? 'text-white/60' : 'text-white'
             }`}>
-              <span className="sm:hidden">{homeTeam.name}</span>
+              <span className="sm:hidden">{homeTeam.shortCode || homeTeam.name}</span>
               <span className="hidden sm:inline">{homeTeam.name}</span>
             </span>
           </div>
@@ -133,10 +135,12 @@ export function MatchCard({
         {/* Away Team */}
         <div className="flex items-center justify-end gap-2 sm:gap-3 flex-1 min-w-0 text-right">
           <div className="flex flex-col min-w-0 items-end">
-            <span className={`font-body font-semibold text-xs sm:text-sm truncate transition-colors ${
+            <span 
+              title={awayTeam.name}
+              className={`font-body font-semibold text-xs sm:text-sm truncate transition-colors ${
               isAwayWinner ? 'text-state-win font-bold' : isHomeWinner ? 'text-white/60' : 'text-white'
             }`}>
-              <span className="sm:hidden">{awayTeam.name}</span>
+              <span className="sm:hidden">{awayTeam.shortCode || awayTeam.name}</span>
               <span className="hidden sm:inline">{awayTeam.name}</span>
             </span>
           </div>
