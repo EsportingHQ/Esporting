@@ -48,7 +48,7 @@ export function MatchCard({
     ? 'border-l-4 border-l-accent-live shadow-[inset_4px_0_15px_rgba(239,68,68,0.12)]'
     : isCompleted
     ? 'border-l-4 border-l-state-win'
-    : 'border-l-4 border-l-white/[0.1]';
+    : 'border-l-4 border-l-text-primary/[0.1]';
 
   const accessibleLabel = `${homeTeam.name} ${homeScore}, ${awayTeam.name} ${awayScore}. ${gameTitle}. Status: ${status}. ${timeLabel || ''}`;
 
@@ -76,21 +76,20 @@ export function MatchCard({
         {/* Home Team */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center font-display font-black text-[11px] sm:text-xs text-white shrink-0 shadow-inner group-hover:border-accent-primary/30 transition-colors">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-text-primary/[0.04] border border-text-primary/[0.08] flex items-center justify-center font-display font-black text-[11px] sm:text-xs text-text-primary shrink-0 shadow-inner group-hover:border-accent-primary/30 transition-colors">
               {homeTeam.shortCode}
             </div>
             <div className="flex flex-col min-w-0">
               <span 
                 title={homeTeam.name}
-                className={`font-body font-semibold text-xs sm:text-sm truncate transition-colors ${
-                isHomeWinner ? 'text-state-win font-bold' : 'text-white'
+                className={`font-body font-semibold text-xs sm:text-sm transition-colors ${
+                isHomeWinner ? 'text-state-win font-bold' : 'text-text-primary'
               }`}>
-                <span className="sm:hidden">{homeTeam.shortCode || homeTeam.name}</span>
-                <span className="hidden sm:inline">{homeTeam.name}</span>
+                {homeTeam.name}
               </span>
             </div>
           </div>
-          <div className="font-data text-base sm:text-lg font-bold flex items-center justify-end min-w-[1.5rem] sm:min-w-[2rem]">
+          <div className={`font-data text-base sm:text-lg font-bold flex items-center justify-end min-w-[1.5rem] sm:min-w-[2rem] ${isHomeWinner ? 'text-state-win' : 'text-text-primary'}`}>
             <ScoreFlash value={gameType === 'shooter' && bestOf > 1 ? homeMapsWon : homeScore} isLive={isLive} teamName={homeTeam.name} />
           </div>
         </div>
@@ -98,28 +97,27 @@ export function MatchCard({
         {/* Away Team */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center font-display font-black text-[11px] sm:text-xs text-white shrink-0 shadow-inner group-hover:border-accent-primary/30 transition-colors">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-text-primary/[0.04] border border-text-primary/[0.08] flex items-center justify-center font-display font-black text-[11px] sm:text-xs text-text-primary shrink-0 shadow-inner group-hover:border-accent-primary/30 transition-colors">
               {awayTeam.shortCode}
             </div>
             <div className="flex flex-col min-w-0">
               <span 
                 title={awayTeam.name}
-                className={`font-body font-semibold text-xs sm:text-sm truncate transition-colors ${
-                isAwayWinner ? 'text-state-win font-bold' : 'text-white'
+                className={`font-body font-semibold text-xs sm:text-sm transition-colors ${
+                isAwayWinner ? 'text-state-win font-bold' : 'text-text-primary'
               }`}>
-                <span className="sm:hidden">{awayTeam.shortCode || awayTeam.name}</span>
-                <span className="hidden sm:inline">{awayTeam.name}</span>
+                {awayTeam.name}
               </span>
             </div>
           </div>
-          <div className="font-data text-base sm:text-lg font-bold flex items-center justify-end min-w-[1.5rem] sm:min-w-[2rem]">
+          <div className={`font-data text-base sm:text-lg font-bold flex items-center justify-end min-w-[1.5rem] sm:min-w-[2rem] ${isAwayWinner ? 'text-state-win' : 'text-text-primary'}`}>
             <ScoreFlash value={gameType === 'shooter' && bestOf > 1 ? awayMapsWon : awayScore} isLive={isLive} teamName={awayTeam.name} />
           </div>
         </div>
       </div>
 
       {/* Footer (Game info + status + favorite + time label) */}
-      <div className="flex items-center justify-between text-xs tracking-wider text-text-muted gap-2 pt-3 mt-1 border-t border-white/[0.05]">
+      <div className="flex items-center justify-between text-xs tracking-wider text-text-muted gap-2 pt-3 mt-1 border-t border-text-primary/[0.05]">
         <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
           {showFavorites && homeTeam.id && (
             <FavoriteStar

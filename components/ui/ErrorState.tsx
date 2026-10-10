@@ -23,7 +23,7 @@ export function ErrorState({
         <AlertCircle className="w-6 h-6" />
       </div>
       <div className="space-y-1.5 max-w-md">
-        <h3 className="font-display font-bold text-base text-white">
+        <h3 className="font-display font-bold text-base text-text-primary">
           {title}
         </h3>
         <p className="text-xs text-text-muted font-body leading-relaxed">{description}</p>
@@ -33,7 +33,7 @@ export function ErrorState({
         <button
           type="button"
           onClick={onRetry}
-          className="inline-flex items-center gap-2 px-5 py-2.5 btn-glass text-xs font-display font-semibold tracking-wider text-white rounded-xl hover:border-accent-primary/40 focus-ring mt-2"
+          className="inline-flex items-center gap-2 px-5 py-2.5 btn-glass text-xs font-display font-semibold tracking-wider text-text-primary rounded-xl hover:border-accent-primary/40 focus-ring mt-2"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           <span>RETRY CONNECTION</span>

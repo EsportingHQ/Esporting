@@ -33,9 +33,9 @@ export function LeagueSection({
   const [isExpanded, setIsExpanded] = useState(defaultExpanded || liveCount > 0);
 
   return (
-    <div className={`glass rounded-3xl border border-white/[0.08] overflow-hidden shadow-lg transition-all ${className}`}>
+    <div className={`glass rounded-3xl border border-text-primary/[0.08] overflow-hidden shadow-lg transition-all ${className}`}>
       {/* Header Bar */}
-      <div className="px-5 py-3.5 bg-white/[0.03] border-b border-white/[0.06] flex items-center justify-between select-none">
+      <div className="px-5 py-3.5 bg-text-primary/[0.03] border-b border-text-primary/[0.06] flex items-center justify-between select-none">
         <div className="flex items-center gap-3 min-w-0">
           <FavoriteStar
             entityType="competition"
@@ -50,14 +50,14 @@ export function LeagueSection({
             </div>
             <Link
               href={`/competitions/${competitionSlug}`}
-              className="font-display font-bold text-sm tracking-wide text-white hover:text-accent-glow transition-colors truncate"
+              className="font-display font-bold text-sm tracking-wide text-text-primary hover:text-accent-glow transition-colors truncate"
             >
               {competitionName}
             </Link>
           </div>
 
           {gameTitle && (
-            <span className="hidden sm:inline-block px-2.5 py-0.5 bg-white/[0.04] border border-white/[0.08] text-[10px] font-display font-semibold text-text-muted tracking-wider uppercase rounded-full">
+            <span className="hidden sm:inline-block px-2.5 py-0.5 bg-text-primary/[0.04] border border-text-primary/[0.08] text-[10px] font-display font-semibold text-text-muted tracking-wider uppercase rounded-full">
               {gameTitle}
             </span>
           )}
@@ -82,7 +82,7 @@ export function LeagueSection({
             onClick={() => setIsExpanded(!isExpanded)}
             aria-expanded={isExpanded}
             aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${competitionName}`}
-            className="p-1.5 text-text-muted hover:text-white rounded-lg hover:bg-white/[0.05] transition-all focus-ring"
+            className="p-1.5 text-text-muted hover:text-text-primary rounded-lg hover:bg-text-primary/[0.05] transition-all focus-ring"
           >
             <ChevronDown
               className={`w-4 h-4 transition-transform duration-200 ${

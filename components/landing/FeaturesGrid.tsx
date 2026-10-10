@@ -15,7 +15,7 @@ const features = [
     icon: Trophy,
     title: 'Tournament Organizer',
     desc: 'Create single-elimination, double-elimination, round-robin, and league tables with automated seeding.',
-    gradient: 'from-purple-500 to-indigo-500',
+    gradient: 'from-fuchsia-600 to-indigo-500',
     badge: 'Automation'
   },
   {
@@ -70,7 +70,7 @@ export function FeaturesGrid() {
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-accent-primary/10 border border-accent-primary/25 text-accent-glow text-xs font-display font-semibold mb-4">
             SYSTEM CAPABILITIES
           </div>
-          <h2 className="text-3xl sm:text-5xl font-display font-black tracking-tight text-white mb-4">
+          <h2 className="text-3xl sm:text-5xl font-display font-black tracking-tight text-text-primary mb-4">
             Engineered for Competitive Precision
           </h2>
           <p className="text-text-muted font-body text-base sm:text-lg">
@@ -98,17 +98,17 @@ export function FeaturesGrid() {
 
                 <div className="w-full flex items-center justify-between">
                   <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${feat.gradient} p-0.5 shadow-lg`}>
-                    <div className="w-full h-full bg-bg-surface/90 rounded-[14px] flex items-center justify-center text-white">
+                    <div className="w-full h-full bg-bg-surface/90 rounded-[14px] flex items-center justify-center text-text-primary">
                       <Icon className="w-6 h-6" />
                     </div>
                   </div>
-                  <span className="text-[11px] font-display font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-text-muted">
+                  <span className="text-[11px] font-display font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-text-primary/[0.04] border border-text-primary/[0.08] text-text-muted">
                     {feat.badge}
                   </span>
                 </div>
 
                 <div>
-                  <h3 className="font-display font-bold text-xl text-white mb-2.5 group-hover:text-accent-glow transition-colors">
+                  <h3 className="font-display font-bold text-xl text-text-primary mb-2.5 group-hover:text-accent-glow transition-colors">
                     {feat.title}
                   </h3>
                   <p className="text-sm font-body text-text-muted leading-relaxed">

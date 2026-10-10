@@ -27,7 +27,7 @@ export function TabBar({
   return (
     <div
       role="tablist"
-      className={`flex border-b border-white/[0.08] gap-2 font-display font-semibold tracking-wider text-xs select-none overflow-x-auto scrollbar-none ${className}`}
+      className={`flex border-b border-text-primary/[0.08] gap-2 font-display font-semibold tracking-wider text-xs select-none overflow-x-auto scrollbar-none ${className}`}
     >
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
@@ -41,7 +41,7 @@ export function TabBar({
             id={`tab-${tab.id}`}
             onClick={() => onTabChange(tab.id)}
             className={`relative px-4 py-3 flex items-center gap-2 transition-colors shrink-0 focus-ring ${
-              isActive ? 'text-white font-bold' : 'text-text-muted hover:text-white'
+              isActive ? 'text-text-primary font-bold' : 'text-text-muted hover:text-text-primary'
             }`}
           >
             {tab.icon && <span className="w-3.5 h-3.5 flex items-center justify-center">{tab.icon}</span>}
@@ -52,7 +52,7 @@ export function TabBar({
                 className={`px-2 py-0.5 text-[10px] font-data rounded-full ${
                   isActive
                     ? 'bg-accent-primary/25 text-accent-glow font-bold border border-accent-primary/30'
-                    : 'bg-white/[0.05] text-text-muted'
+                    : 'bg-text-primary/[0.05] text-text-muted'
                 }`}
               >
                 {tab.badge}

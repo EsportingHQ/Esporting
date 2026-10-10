@@ -25,7 +25,7 @@ export function BroadcastTicker({ matches }: BroadcastTickerProps) {
   return (
     <>
       {/* Mobile Collapsed State (hidden on md and up) */}
-      <div className="md:hidden w-full glass border-b border-white/[0.08]">
+      <div className="md:hidden w-full glass border-b border-text-primary/[0.08]">
         {!isExpanded ? (
           <button
             type="button"
@@ -37,11 +37,11 @@ export function BroadcastTicker({ matches }: BroadcastTickerProps) {
             <span className="text-text-muted text-[10px] ml-1">TAP TO EXPAND</span>
           </button>
         ) : (
-          <div className="flex flex-col font-body select-none divide-y divide-white/[0.06]">
+          <div className="flex flex-col font-body select-none divide-y divide-text-primary/[0.06]">
             <button
               type="button"
               onClick={() => setIsExpanded(false)}
-              className="w-full flex items-center justify-between px-4 py-3 min-h-[44px] font-display font-bold text-accent-live tracking-wider text-xs bg-white/[0.02] focus-ring"
+              className="w-full flex items-center justify-between px-4 py-3 min-h-[44px] font-display font-bold text-accent-live tracking-wider text-xs bg-text-primary/[0.02] focus-ring"
             >
               <div className="flex items-center gap-2">
                 <TallyLight size="sm" />
@@ -53,20 +53,20 @@ export function BroadcastTicker({ matches }: BroadcastTickerProps) {
             {matches.map((match) => (
               <div
                 key={match.id}
-                className="flex items-center justify-between gap-2 px-4 py-3 min-h-[44px] hover:bg-white/[0.04] transition-colors"
+                className="flex items-center justify-between gap-2 px-4 py-3 min-h-[44px] hover:bg-text-primary/[0.04] transition-colors"
               >
                 <div className="flex flex-col gap-1">
                   <span className="font-display font-bold text-accent-glow tracking-wider text-[10px]">
                     {match.gameCode}
                   </span>
                   <div className="flex items-center gap-2 font-data text-xs">
-                    <span title={match.homeTeam} className="text-white uppercase tracking-tight max-w-[80px] truncate font-medium">
+                    <span title={match.homeTeam} className="text-text-primary uppercase tracking-tight max-w-[80px] truncate font-medium">
                       {match.homeTeam.substring(0, 3).toUpperCase()}
                     </span>
-                    <span className="font-bold text-accent-live px-1 bg-white/[0.04] rounded">{match.homeScore}</span>
+                    <span className="font-bold text-accent-live px-1 bg-text-primary/[0.04] rounded">{match.homeScore}</span>
                     <span className="text-text-muted text-[10px]">-</span>
-                    <span className="font-bold text-accent-live px-1 bg-white/[0.04] rounded">{match.awayScore}</span>
-                    <span title={match.awayTeam} className="text-white uppercase tracking-tight max-w-[80px] truncate font-medium">
+                    <span className="font-bold text-accent-live px-1 bg-text-primary/[0.04] rounded">{match.awayScore}</span>
+                    <span title={match.awayTeam} className="text-text-primary uppercase tracking-tight max-w-[80px] truncate font-medium">
                       {match.awayTeam.substring(0, 3).toUpperCase()}
                     </span>
                   </div>
@@ -99,10 +99,10 @@ export function BroadcastTicker({ matches }: BroadcastTickerProps) {
       </div>
 
       {/* Desktop Horizontal Ticker (hidden on small screens) */}
-      <div className="hidden md:block w-full glass-strong border-b border-white/[0.08] text-xs font-body select-none">
-        <div className="flex overflow-x-auto scrollbar-none items-center h-11 divide-x divide-white/[0.06]">
+      <div className="hidden md:block w-full glass-strong border-b border-text-primary/[0.08] text-xs font-body select-none">
+        <div className="flex overflow-x-auto scrollbar-none items-center h-11 divide-x divide-text-primary/[0.06]">
           {/* Ticker title */}
-          <div className="flex items-center gap-2 px-5 font-display font-bold text-accent-glow tracking-wider shrink-0 select-none bg-accent-primary/10 h-full border-r border-white/[0.08]">
+          <div className="flex items-center gap-2 px-5 font-display font-bold text-accent-glow tracking-wider shrink-0 select-none bg-accent-primary/10 h-full border-r border-text-primary/[0.08]">
             <TallyLight size="sm" />
             <span className="text-[11px]">LIVE TICKER</span>
           </div>
@@ -111,7 +111,7 @@ export function BroadcastTicker({ matches }: BroadcastTickerProps) {
           {matches.map((match) => (
             <div
               key={match.id}
-              className="flex items-center gap-4 px-5 h-full shrink-0 hover:bg-white/[0.04] transition-colors cursor-pointer"
+              className="flex items-center gap-4 px-5 h-full shrink-0 hover:bg-text-primary/[0.04] transition-colors cursor-pointer"
             >
               <span className="font-display font-bold text-accent-glow tracking-wider text-[10px] px-1.5 py-0.5 rounded bg-accent-primary/15 border border-accent-primary/25">
                 {match.gameCode}
@@ -119,15 +119,15 @@ export function BroadcastTicker({ matches }: BroadcastTickerProps) {
 
               {/* Scoreboard layout */}
               <div className="flex items-center gap-2 font-data">
-                <span title={match.homeTeam} className="text-white uppercase tracking-tight max-w-[120px] truncate font-medium text-xs">
+                <span title={match.homeTeam} className="text-text-primary uppercase tracking-tight max-w-[120px] truncate font-medium text-xs">
                   {match.homeTeam}
                 </span>
-                <div className="flex items-center bg-white/[0.04] px-2.5 py-1 rounded-lg border border-white/[0.08] font-bold text-white shadow-inner">
+                <div className="flex items-center bg-text-primary/[0.04] px-2.5 py-1 rounded-lg border border-text-primary/[0.08] font-bold text-text-primary shadow-inner">
                   <RollDigit value={match.homeScore} className="text-accent-live" />
                   <span className="mx-1.5 text-text-muted text-xs font-normal">:</span>
                   <RollDigit value={match.awayScore} className="text-accent-live" />
                 </div>
-                <span title={match.awayTeam} className="text-white uppercase tracking-tight max-w-[120px] truncate font-medium text-xs">
+                <span title={match.awayTeam} className="text-text-primary uppercase tracking-tight max-w-[120px] truncate font-medium text-xs">
                   {match.awayTeam}
                 </span>
               </div>

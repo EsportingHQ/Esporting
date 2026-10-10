@@ -39,7 +39,7 @@ export function FavoriteStar({
       onClick={handleToggle}
       aria-label={active ? `Remove ${entityName} from favorites` : `Add ${entityName} to favorites`}
       aria-pressed={active}
-      className={`p-1 rounded-lg hover:bg-white/[0.06] transition-all focus-ring text-text-muted hover:text-accent-favorite ${
+      className={`p-1 rounded-lg hover:bg-text-primary/[0.06] transition-all focus-ring text-text-muted hover:text-accent-favorite ${
         active ? 'text-accent-favorite' : ''
       } ${className}`}
     >

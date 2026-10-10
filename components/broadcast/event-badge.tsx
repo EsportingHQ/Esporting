@@ -12,7 +12,7 @@ export function EventBadge({ status, className = '' }: EventBadgeProps) {
 
   const styles: Record<EventStatus, string> = {
     live: 'border-accent-live/30 text-accent-live bg-accent-live/15 font-bold shadow-[0_0_12px_rgba(239,68,68,0.2)]',
-    scheduled: 'border-white/[0.08] text-text-muted bg-white/[0.03]',
+    scheduled: 'border-text-primary/[0.08] text-text-muted bg-text-primary/[0.03]',
     delayed: 'border-amber-500/30 text-amber-400 bg-amber-500/10',
     completed: 'border-state-win/30 text-state-win bg-state-win/10 font-semibold',
     cancelled: 'border-state-alert/30 text-state-alert bg-state-alert/10',

@@ -148,7 +148,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} font-body bg-bg-void text-text-primary antialiased selection:bg-accent-primary/30 selection:text-white`}
+      className={`${geistSans.variable} ${geistMono.variable} font-body bg-bg-void text-text-primary antialiased selection:bg-accent-primary/30 selection:text-text-primary`}
     >
       <head>
         <script

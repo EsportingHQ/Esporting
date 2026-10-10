@@ -10,11 +10,11 @@ export function CTASection() {
     <section className="relative py-28 sm:py-36 overflow-hidden flex items-center justify-center">
       {/* Background ambient lighting */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-gradient-to-r from-accent-primary/20 via-pink-600/15 to-purple-600/20 rounded-full blur-[140px] animate-gradient-shift" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-gradient-to-r from-accent-primary/20 via-pink-600/15 to-fuchsia-600/20 rounded-full blur-[140px] animate-gradient-shift" />
       </div>
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 w-full">
-        <div className="glass-strong rounded-3xl sm:rounded-[36px] border border-white/[0.12] p-8 sm:p-16 text-center shadow-[0_30px_100px_rgba(0,0,0,0.6)] relative overflow-hidden backdrop-blur-2xl">
+        <div className="glass-strong rounded-3xl sm:rounded-[36px] border border-text-primary/[0.12] p-8 sm:p-16 text-center shadow-[0_30px_100px_rgba(0,0,0,0.6)] relative overflow-hidden backdrop-blur-2xl">
           {/* Subtle top light strip */}
           <div className="absolute top-0 left-1/4 right-1/4 h-[1px] bg-gradient-to-r from-transparent via-accent-primary/60 to-transparent" />
 
@@ -39,7 +39,7 @@ export function CTASection() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="text-3xl sm:text-5xl md:text-6xl font-display font-black tracking-tight text-white mb-6 uppercase"
+            className="text-3xl sm:text-5xl md:text-6xl font-display font-black tracking-tight text-text-primary mb-6 uppercase"
           >
             Ready to Elevate Your{' '}
             <span className="text-gradient-fuchsia">Esporting Experience?</span>

@@ -80,7 +80,7 @@ function ToastItem({
             </span>
           </div>
 
-          <div className="font-display font-bold text-sm text-white group-hover:text-accent-glow transition-colors truncate mt-1">
+          <div className="font-display font-bold text-sm text-text-primary group-hover:text-accent-glow transition-colors truncate mt-1">
             {toast.homeTeam} vs {toast.awayTeam}
           </div>
 
@@ -94,7 +94,7 @@ function ToastItem({
         type="button"
         onClick={() => onDismiss(toast.id)}
         aria-label="Dismiss notification"
-        className="p-1 text-text-muted hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors shrink-0"
+        className="p-1 text-text-muted hover:text-text-primary rounded-lg hover:bg-text-primary/[0.06] transition-colors shrink-0"
       >
         <X className="w-4 h-4" />
       </button>

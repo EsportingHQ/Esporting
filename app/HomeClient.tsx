@@ -110,13 +110,13 @@ export default function HomeClient() {
 				<section className="lg:col-span-2 space-y-6">
 					{/* Header & Status Filter Bar */}
 					<div className="space-y-4">
-						<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
+						<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-text-primary/[0.08] pb-4">
 							<div className="flex items-center gap-3">
 								<div className="w-9 h-9 rounded-xl bg-accent-primary/15 border border-accent-primary/25 flex items-center justify-center text-accent-glow">
 									<Calendar className="w-5 h-5" />
 								</div>
 								<div>
-									<h1 className="font-display font-black text-2xl text-white tracking-tight">
+									<h1 className="font-display font-black text-2xl text-text-primary tracking-tight">
 										Live Matches & Schedule
 									</h1>
 									<p className="text-xs text-text-muted">Real-time head-to-head esports tracking</p>
@@ -124,7 +124,7 @@ export default function HomeClient() {
 							</div>
 
 							<div className="flex items-center gap-2">
-								<span className="text-xs font-display font-semibold text-white flex items-center gap-2 glass px-3.5 py-1.5 rounded-full border border-white/[0.1] shadow-sm">
+								<span className="text-xs font-display font-semibold text-text-primary flex items-center gap-2 glass px-3.5 py-1.5 rounded-full border border-text-primary/[0.1] shadow-sm">
 									<span className="relative flex h-2 w-2">
 										<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-live opacity-75" />
 										<span className="relative inline-flex rounded-full h-2 w-2 bg-accent-live" />
@@ -137,9 +137,9 @@ export default function HomeClient() {
 						</div>
 
 						{/* Filter Controls Row */}
-						<div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-strong border border-white/[0.08] p-3 rounded-2xl shadow-lg backdrop-blur-xl">
+						<div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-strong border border-text-primary/[0.08] p-3 rounded-2xl shadow-lg backdrop-blur-xl">
 							{/* Status Filter Tabs */}
-							<div className="w-full md:w-auto flex overflow-x-auto scrollbar-none bg-white/[0.03] p-1 rounded-xl border border-white/[0.06] text-xs font-display font-semibold">
+							<div className="w-full md:w-auto flex overflow-x-auto scrollbar-none bg-text-primary/[0.03] p-1 rounded-xl border border-text-primary/[0.06] text-xs font-display font-semibold">
 								{statusTabs.map((tab) => (
 									<button
 										key={tab.id}
@@ -147,7 +147,7 @@ export default function HomeClient() {
 										className={`min-h-[38px] px-4 rounded-lg transition-all shrink-0 flex items-center justify-center gap-1.5 ${
 											statusFilter === tab.id
 												? 'bg-accent-primary text-white font-bold shadow-[0_0_15px_rgba(217,70,239,0.3)]'
-												: 'text-text-muted hover:text-white hover:bg-white/[0.04]'
+												: 'text-text-muted hover:text-text-primary hover:bg-text-primary/[0.04]'
 										}`}
 									>
 										<span>{tab.label}</span>
@@ -175,8 +175,8 @@ export default function HomeClient() {
 										onClick={() => setGameFilter(cat.id)}
 										className={`min-h-[36px] px-3.5 rounded-xl border transition-all shrink-0 flex items-center justify-center ${
 											gameFilter === cat.id
-												? 'bg-accent-primary/20 text-white border-accent-primary/40 shadow-[0_0_12px_rgba(217,70,239,0.15)] font-bold'
-												: 'bg-white/[0.02] border-white/[0.06] text-text-muted hover:text-white hover:bg-white/[0.05]'
+												? 'bg-accent-primary/20 text-accent-primary border-accent-primary/40 shadow-[0_0_12px_rgba(217,70,239,0.15)] font-bold'
+												: 'bg-text-primary/[0.02] border-text-primary/[0.06] text-text-muted hover:text-text-primary hover:bg-text-primary/[0.05]'
 										}`}
 									>
 										{cat.label}
@@ -231,10 +231,10 @@ export default function HomeClient() {
 				<section className="hidden lg:block space-y-6">
 					{/* Favorites Quick List */}
 					{favorites.length > 0 && (
-						<div className="glass rounded-3xl border border-white/[0.08] p-5 space-y-4 shadow-xl">
-							<div className="flex items-center gap-2.5 border-b border-white/[0.08] pb-3">
+						<div className="glass rounded-3xl border border-text-primary/[0.08] p-5 space-y-4 shadow-xl">
+							<div className="flex items-center gap-2.5 border-b border-text-primary/[0.08] pb-3">
 								<Star className="w-4 h-4 text-accent-favorite fill-accent-favorite" />
-								<h3 className="font-display font-bold text-sm tracking-wide text-white">
+								<h3 className="font-display font-bold text-sm tracking-wide text-text-primary">
 									Starred Favorites
 								</h3>
 							</div>
@@ -243,12 +243,12 @@ export default function HomeClient() {
 								{favorites.map((fav) => (
 									<div
 										key={`${fav.type}-${fav.id}`}
-										className="p-3 bg-white/[0.03] border border-white/[0.06] rounded-xl flex items-center justify-between hover:border-accent-primary/30 transition-colors"
+										className="p-3 bg-text-primary/[0.03] border border-text-primary/[0.06] rounded-xl flex items-center justify-between hover:border-accent-primary/30 transition-colors"
 									>
-										<span className="font-semibold text-white truncate">
+										<span className="font-semibold text-text-primary truncate">
 											{fav.name}
 										</span>
-										<span className="text-[10px] font-data text-text-muted uppercase bg-white/[0.05] px-2 py-0.5 rounded-full border border-white/[0.05]">
+										<span className="text-[10px] font-data text-text-muted uppercase bg-text-primary/[0.05] px-2 py-0.5 rounded-full border border-text-primary/[0.05]">
 											{fav.type}
 										</span>
 									</div>
@@ -265,17 +265,17 @@ export default function HomeClient() {
 					)}
 
 					{/* Broadcast Bulletin */}
-					<div className="glass rounded-3xl border border-white/[0.08] p-6 space-y-5 shadow-xl">
-						<div className="flex items-center gap-2.5 border-b border-white/[0.08] pb-3">
+					<div className="glass rounded-3xl border border-text-primary/[0.08] p-6 space-y-5 shadow-xl">
+						<div className="flex items-center gap-2.5 border-b border-text-primary/[0.08] pb-3">
 							<div className="p-1.5 rounded-lg bg-accent-primary/10 text-accent-glow">
 								<Newspaper className="w-4 h-4" />
 							</div>
-							<h3 className="font-display font-bold text-base text-white">
+							<h3 className="font-display font-bold text-base text-text-primary">
 								Community Bulletin
 							</h3>
 						</div>
 
-						<div className="divide-y divide-white/[0.06]">
+						<div className="divide-y divide-text-primary/[0.06]">
 							{newsItems.map((item) => (
 								<article
 									key={item.id}
@@ -297,7 +297,7 @@ export default function HomeClient() {
 										href={`/news/${item.slug}`}
 										className="block group"
 									>
-										<h4 className="font-display font-bold text-sm text-white group-hover:text-accent-glow transition-colors leading-snug">
+										<h4 className="font-display font-bold text-sm text-text-primary group-hover:text-accent-glow transition-colors leading-snug">
 											{item.title}
 										</h4>
 									</Link>
@@ -311,7 +311,7 @@ export default function HomeClient() {
 
 						<Link
 							href="/news"
-							className="flex items-center justify-center gap-2 w-full py-2.5 btn-glass text-xs font-display font-bold tracking-wider text-white rounded-xl"
+							className="flex items-center justify-center gap-2 w-full py-2.5 btn-glass text-xs font-display font-bold tracking-wider text-text-primary rounded-xl"
 						>
 							<span>VIEW ALL BULLETIN POSTS</span>
 							<ArrowRight className="w-3.5 h-3.5" />
@@ -321,9 +321,9 @@ export default function HomeClient() {
 			</main>
 
 			{/* Modern Glass Footer */}
-			<footer className="glass-strong border-t border-white/[0.08] py-8 relative z-20 select-none text-xs text-text-muted mt-auto">
+			<footer className="glass-strong border-t border-text-primary/[0.08] py-8 relative z-20 select-none text-xs text-text-muted mt-auto">
 				<div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
-					<div className="flex items-center gap-2 font-display font-bold text-white text-sm">
+					<div className="flex items-center gap-2 font-display font-bold text-text-primary text-sm">
 						<Zap className="w-4 h-4 text-accent-primary" />
 						<span>ESPORTINGHQ</span>
 						<span className="text-xs text-text-muted font-normal">© {new Date().getFullYear()}</span>

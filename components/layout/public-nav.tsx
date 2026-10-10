@@ -34,7 +34,7 @@ export function PublicNav() {
 
   return (
     <>
-      <header className="w-full glass-strong border-b border-white/[0.08] text-sm select-none font-body sticky top-0 z-40 transition-colors duration-300">
+      <header className="w-full glass-strong border-b border-text-primary/[0.08] text-sm select-none font-body sticky top-0 z-40 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           {/* Logo / Brand */}
           <NextLink href="/" className="flex items-center group focus-ring rounded-xl py-1 px-1">
@@ -49,7 +49,7 @@ export function PublicNav() {
           </NextLink>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1.5 font-display font-semibold tracking-wide bg-white/[0.03] p-1.5 rounded-full border border-white/[0.06] backdrop-blur-md" aria-label="Main Navigation">
+          <nav className="hidden md:flex items-center gap-1.5 font-display font-semibold tracking-wide bg-text-primary/[0.03] p-1.5 rounded-full border border-text-primary/[0.06] backdrop-blur-md" aria-label="Main Navigation">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
 
@@ -60,8 +60,8 @@ export function PublicNav() {
                   aria-current={isActive ? 'page' : undefined}
                   className={`flex items-center gap-2 text-xs transition-all duration-200 rounded-full px-4 py-2 min-h-[36px] ${
                     isActive
-                      ? 'bg-accent-primary/20 text-white font-bold border border-accent-primary/40 shadow-[0_0_15px_rgba(217,70,239,0.2)]'
-                      : 'text-text-muted hover:text-white hover:bg-white/[0.06]'
+                      ? 'bg-accent-primary/20 text-accent-primary font-bold border border-accent-primary/40 shadow-[0_0_15px_rgba(217,70,239,0.2)]'
+                      : 'text-text-muted hover:text-text-primary hover:bg-text-primary/[0.06]'
                   }`}
                 >
                   {link.label === 'FAVORITES' && (
@@ -85,7 +85,7 @@ export function PublicNav() {
               href="/settings/notifications"
               title="Alert Preferences"
               aria-label="Alert preferences"
-              className="p-2.5 rounded-xl border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.08] hover:border-accent-primary/40 text-text-muted hover:text-white transition-all duration-200 focus-ring min-h-[42px] min-w-[42px] flex items-center justify-center shadow-sm"
+              className="p-2.5 rounded-xl border border-text-primary/[0.08] bg-text-primary/[0.03] hover:bg-text-primary/[0.08] hover:border-accent-primary/40 text-text-muted hover:text-text-primary transition-all duration-200 focus-ring min-h-[42px] min-w-[42px] flex items-center justify-center shadow-sm"
             >
               <Bell className="w-4 h-4" />
             </NextLink>
@@ -107,9 +107,9 @@ export function PublicNav() {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-expanded={mobileMenuOpen}
               aria-label="Toggle navigation menu"
-              className="md:hidden p-2.5 border border-white/[0.08] bg-white/[0.03] text-text-muted hover:text-white rounded-xl focus-ring min-h-[42px] min-w-[42px] flex items-center justify-center relative z-50 transition-all"
+              className="md:hidden p-2.5 border border-text-primary/[0.08] bg-text-primary/[0.03] text-text-muted hover:text-text-primary rounded-xl focus-ring min-h-[42px] min-w-[42px] flex items-center justify-center relative z-50 transition-all"
             >
-              {mobileMenuOpen ? <X className="w-5 h-5 text-white" /> : <Menu className="w-5 h-5" />}
+              {mobileMenuOpen ? <X className="w-5 h-5 text-text-primary" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
@@ -126,7 +126,7 @@ export function PublicNav() {
 
       {/* Mobile Drawer Menu Content */}
       <div
-        className={`fixed top-16 left-0 right-0 z-40 md:hidden glass-strong border-b border-white/[0.1] shadow-2xl transition-all duration-300 ease-in-out transform origin-top ${
+        className={`fixed top-16 left-0 right-0 z-40 md:hidden glass-strong border-b border-text-primary/[0.1] shadow-2xl transition-all duration-300 ease-in-out transform origin-top ${
           mobileMenuOpen ? 'scale-y-100 opacity-100 visible' : 'scale-y-0 opacity-0 invisible'
         }`}
       >
@@ -141,8 +141,8 @@ export function PublicNav() {
                 onClick={() => setMobileMenuOpen(false)}
                 className={`flex items-center justify-between p-3.5 rounded-xl border transition-all ${
                   isActive
-                    ? 'bg-accent-primary/20 text-white font-bold border-accent-primary/40 shadow-[0_0_15px_rgba(217,70,239,0.15)]'
-                    : 'text-text-muted hover:text-white bg-white/[0.02] border-white/[0.04]'
+                    ? 'bg-accent-primary/20 text-accent-primary font-bold border-accent-primary/40 shadow-[0_0_15px_rgba(217,70,239,0.15)]'
+                    : 'text-text-muted hover:text-text-primary bg-text-primary/[0.02] border-text-primary/[0.04]'
                 }`}
               >
                 <div className="flex items-center gap-3">

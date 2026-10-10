@@ -106,13 +106,13 @@ export default async function NewsDetailPage({
 			<main className="max-w-4xl w-full mx-auto px-4 sm:px-6 py-10 flex-1 space-y-8 relative z-10">
 				<Link
 					href="/news"
-					className="inline-flex items-center gap-2 text-xs font-display font-bold text-accent-glow hover:text-white uppercase tracking-wider transition-colors"
+					className="inline-flex items-center gap-2 text-xs font-display font-bold text-accent-glow hover:text-text-primary uppercase tracking-wider transition-colors"
 				>
 					<ArrowLeft className="w-4 h-4" />
 					<span>BACK TO BULLETIN DESK</span>
 				</Link>
 
-				<article className="glass-strong border border-white/[0.08] rounded-3xl p-6 sm:p-10 space-y-6 shadow-2xl backdrop-blur-2xl">
+				<article className="glass-strong border border-text-primary/[0.08] rounded-3xl p-6 sm:p-10 space-y-6 shadow-2xl backdrop-blur-2xl">
 					<div className="space-y-4">
 						<div className="flex flex-wrap gap-2">
 							{competition && (
@@ -122,17 +122,17 @@ export default async function NewsDetailPage({
 							)}
 
 							{game && (
-								<span className="px-3 py-1 bg-white/[0.04] border border-white/[0.08] text-xs font-display font-semibold text-text-muted tracking-wider uppercase rounded-full">
+								<span className="px-3 py-1 bg-text-primary/[0.04] border border-text-primary/[0.08] text-xs font-display font-semibold text-text-muted tracking-wider uppercase rounded-full">
 									{game}
 								</span>
 							)}
 						</div>
 
-						<h1 className="font-display font-black text-2xl sm:text-4xl text-white tracking-tight leading-snug">
+						<h1 className="font-display font-black text-2xl sm:text-4xl text-text-primary tracking-tight leading-snug">
 							{article.title}
 						</h1>
 
-						<div className="flex flex-wrap items-center gap-4 text-xs font-data text-text-muted border-t border-white/[0.08] pt-4">
+						<div className="flex flex-wrap items-center gap-4 text-xs font-data text-text-muted border-t border-text-primary/[0.08] pt-4">
 							<span className="flex items-center gap-1.5">
 								<Calendar className="w-4 h-4 text-accent-glow" />
 								<span>
@@ -168,9 +168,9 @@ export default async function NewsDetailPage({
 								href={`/news/${post.slug}`}
 								className="block group"
 							>
-								<div className="glass glass-hover border border-white/[0.08] rounded-2xl p-5 h-full flex flex-col justify-between transition-all group-hover:border-accent-primary/40">
+								<div className="glass glass-hover border border-text-primary/[0.08] rounded-2xl p-5 h-full flex flex-col justify-between transition-all group-hover:border-accent-primary/40">
 									<div className="space-y-2">
-										<h4 className="font-display font-bold text-sm text-white group-hover:text-accent-glow transition-colors line-clamp-2 leading-snug">
+										<h4 className="font-display font-bold text-sm text-text-primary group-hover:text-accent-glow transition-colors line-clamp-2 leading-snug">
 											{post.title}
 										</h4>
 									</div>

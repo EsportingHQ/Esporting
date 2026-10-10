@@ -44,13 +44,13 @@ export function DashboardShell({ children, nav, userEmail, title }: DashboardShe
 			</div>
 
 			{/* Top Header */}
-			<header className="glass-strong border-b border-white/[0.08] px-4 sm:px-6 py-3.5 flex items-center justify-between shrink-0 sticky top-0 z-30 backdrop-blur-xl">
+			<header className="glass-strong border-b border-text-primary/[0.08] px-4 sm:px-6 py-3.5 flex items-center justify-between shrink-0 sticky top-0 z-30 backdrop-blur-xl">
 				<div className="flex items-center gap-3 sm:gap-6">
 					{/* Mobile Sidebar Toggle */}
 					<button
 						type="button"
 						onClick={() => setMobileSidebarOpen(true)}
-						className="md:hidden p-2 text-text-muted hover:text-white rounded-xl focus-ring"
+						className="md:hidden p-2 text-text-muted hover:text-text-primary rounded-xl focus-ring"
 					>
 						<Menu className="w-5 h-5" />
 					</button>
@@ -79,7 +79,7 @@ export function DashboardShell({ children, nav, userEmail, title }: DashboardShe
 						<button
 							formAction={logout}
 							type="submit"
-							className="text-text-muted hover:text-state-loss flex items-center gap-1.5 transition-colors cursor-pointer font-display font-semibold uppercase tracking-wider text-xs p-2 rounded-xl hover:bg-white/[0.04]"
+							className="text-text-muted hover:text-state-loss flex items-center gap-1.5 transition-colors cursor-pointer font-display font-semibold uppercase tracking-wider text-xs p-2 rounded-xl hover:bg-text-primary/[0.04]"
 						>
 							<LogOut className="w-4 h-4" />
 							<span className="hidden sm:inline-block">Sign Out</span>
@@ -100,17 +100,17 @@ export function DashboardShell({ children, nav, userEmail, title }: DashboardShe
 
 				{/* Sidebar */}
 				<aside
-					className={`fixed inset-y-0 left-0 z-50 w-64 glass-strong border-r border-white/[0.08] px-4 py-6 shrink-0 transform transition-transform duration-300 md:relative md:translate-x-0 backdrop-blur-xl ${
+					className={`fixed inset-y-0 left-0 z-50 w-64 glass-strong border-r border-text-primary/[0.08] px-4 py-6 shrink-0 transform transition-transform duration-300 md:relative md:translate-x-0 backdrop-blur-xl ${
 						mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
 					}`}
 				>
 					<div className="flex items-center justify-between mb-8 md:hidden">
-						<span className="font-display font-bold text-sm tracking-wider text-white uppercase">
+						<span className="font-display font-bold text-sm tracking-wider text-text-primary uppercase">
 							{title} Navigation
 						</span>
 						<button
 							onClick={() => setMobileSidebarOpen(false)}
-							className="p-2 text-text-muted hover:text-white rounded-xl"
+							className="p-2 text-text-muted hover:text-text-primary rounded-xl"
 						>
 							<X className="w-5 h-5" />
 						</button>
@@ -127,8 +127,8 @@ export function DashboardShell({ children, nav, userEmail, title }: DashboardShe
 									onClick={() => setMobileSidebarOpen(false)}
 									className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-display font-semibold tracking-wide transition-all ${
 										isActive
-											? 'bg-accent-primary/20 text-white font-bold border border-accent-primary/40 shadow-[0_0_15px_rgba(217,70,239,0.15)]'
-											: 'text-text-muted hover:bg-white/[0.04] hover:text-white'
+											? 'bg-accent-primary/20 text-accent-primary font-bold border border-accent-primary/40 shadow-[0_0_15px_rgba(217,70,239,0.15)]'
+											: 'text-text-muted hover:bg-text-primary/[0.04] hover:text-text-primary'
 									}`}
 								>
 									<Icon className={`w-4 h-4 ${isActive ? 'text-accent-glow' : 'text-text-muted'}`} />

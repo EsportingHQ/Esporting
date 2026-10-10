@@ -133,13 +133,13 @@ export default function CompetitionsPage() {
 
       <main className="max-w-7xl w-full mx-auto px-4 sm:px-6 py-10 flex-1 space-y-8 relative z-10">
         {/* Header Title */}
-        <div className="border-b border-white/[0.08] pb-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="border-b border-text-primary/[0.08] pb-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-1">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-primary/10 border border-accent-primary/25 text-accent-glow text-xs font-display font-semibold mb-2">
               <Trophy className="w-3.5 h-3.5" />
               <span>TOURNAMENT DIRECTORY</span>
             </div>
-            <h1 className="font-display font-black text-3xl sm:text-4xl text-white tracking-tight">
+            <h1 className="font-display font-black text-3xl sm:text-4xl text-text-primary tracking-tight">
               Competition Registry
             </h1>
             <p className="text-sm text-text-muted font-body">
@@ -157,8 +157,8 @@ export default function CompetitionsPage() {
         </div>
 
         {/* Filter Console Panel */}
-        <div className="glass-strong border border-white/[0.08] rounded-2xl p-4 sm:p-5 flex flex-wrap items-center gap-5 text-xs select-none shadow-lg backdrop-blur-xl">
-          <div className="flex items-center gap-2 text-white font-display font-bold">
+        <div className="glass-strong border border-text-primary/[0.08] rounded-2xl p-4 sm:p-5 flex flex-wrap items-center gap-5 text-xs select-none shadow-lg backdrop-blur-xl">
+          <div className="flex items-center gap-2 text-text-primary font-display font-bold">
             <Filter className="w-4 h-4 text-accent-glow" />
             <span>Filter By:</span>
           </div>
@@ -166,7 +166,7 @@ export default function CompetitionsPage() {
           {/* Game title pills */}
           <div className="flex items-center gap-2">
             <span className="text-text-muted">Game:</span>
-            <div className="flex bg-white/[0.03] p-1 rounded-xl border border-white/[0.06] overflow-hidden">
+            <div className="flex bg-text-primary/[0.03] p-1 rounded-xl border border-text-primary/[0.06] overflow-hidden">
               {[
                 { id: 'all', label: 'All' },
                 { id: 'fc26', label: 'FC 26' },
@@ -179,7 +179,7 @@ export default function CompetitionsPage() {
                   className={`px-3 py-1 font-display font-semibold rounded-lg transition-all ${
                     selectedGame === g.id
                       ? 'bg-accent-primary text-white font-bold shadow-[0_0_12px_rgba(217,70,239,0.3)]'
-                      : 'text-text-muted hover:text-white hover:bg-white/[0.04]'
+                      : 'text-text-muted hover:text-text-primary hover:bg-text-primary/[0.04]'
                   }`}
                 >
                   {g.label}
@@ -191,7 +191,7 @@ export default function CompetitionsPage() {
           {/* Status filter */}
           <div className="flex items-center gap-2">
             <span className="text-text-muted">Status:</span>
-            <div className="flex bg-white/[0.03] p-1 rounded-xl border border-white/[0.06] overflow-hidden">
+            <div className="flex bg-text-primary/[0.03] p-1 rounded-xl border border-text-primary/[0.06] overflow-hidden">
               {[
                 { id: 'all', label: 'All' },
                 { id: 'ongoing', label: 'Ongoing' },
@@ -204,7 +204,7 @@ export default function CompetitionsPage() {
                   className={`px-3 py-1 font-display font-semibold rounded-lg transition-all ${
                     selectedStatus === status.id
                       ? 'bg-accent-primary text-white font-bold shadow-[0_0_12px_rgba(217,70,239,0.3)]'
-                      : 'text-text-muted hover:text-white hover:bg-white/[0.04]'
+                      : 'text-text-muted hover:text-text-primary hover:bg-text-primary/[0.04]'
                   }`}
                 >
                   {status.label}
@@ -223,7 +223,7 @@ export default function CompetitionsPage() {
           {filteredComps.map((comp) => (
             <div
               key={comp.id}
-              className="glass glass-hover rounded-3xl border border-white/[0.08] p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 group hover:border-accent-primary/40 hover:shadow-[0_15px_40px_rgba(217,70,239,0.12)] hover:-translate-y-1"
+              className="glass glass-hover rounded-3xl border border-text-primary/[0.08] p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 group hover:border-accent-primary/40 hover:shadow-[0_15px_40px_rgba(217,70,239,0.12)] hover:-translate-y-1"
             >
               <div className="space-y-4">
                 {/* Header row */}
@@ -259,7 +259,7 @@ export default function CompetitionsPage() {
 
                 {/* Title */}
                 <Link href={`/competitions/${comp.slug}`}>
-                  <h2 className="font-display font-bold text-xl text-white group-hover:text-accent-glow transition-colors leading-snug">
+                  <h2 className="font-display font-bold text-xl text-text-primary group-hover:text-accent-glow transition-colors leading-snug">
                     {comp.name}
                   </h2>
                 </Link>
@@ -269,7 +269,7 @@ export default function CompetitionsPage() {
                   {comp.gameTitles.map((title) => (
                     <span
                       key={title}
-                      className="px-2.5 py-0.5 bg-white/[0.04] border border-white/[0.08] text-[10px] font-display font-semibold text-text-muted tracking-wider uppercase rounded-full"
+                      className="px-2.5 py-0.5 bg-text-primary/[0.04] border border-text-primary/[0.08] text-[10px] font-display font-semibold text-text-muted tracking-wider uppercase rounded-full"
                     >
                       {title}
                     </span>
@@ -278,7 +278,7 @@ export default function CompetitionsPage() {
               </div>
 
               {/* Stats Footer Row */}
-              <div className="grid grid-cols-3 gap-3 border-t border-white/[0.08] mt-6 pt-4 text-xs font-body">
+              <div className="grid grid-cols-3 gap-3 border-t border-text-primary/[0.08] mt-6 pt-4 text-xs font-body">
                 <div>
                   <span className="block text-[10px] text-text-muted font-display font-bold uppercase tracking-wider">
                     Prize Pool
@@ -289,7 +289,7 @@ export default function CompetitionsPage() {
                   <span className="block text-[10px] text-text-muted font-display font-bold uppercase tracking-wider">
                     Rosters
                   </span>
-                  <span className="text-white flex items-center gap-1 font-medium font-data text-sm">
+                  <span className="text-text-primary flex items-center gap-1 font-medium font-data text-sm">
                     <Users className="w-3.5 h-3.5 text-text-muted" />
                     <span>{comp.teamCount} Teams</span>
                   </span>

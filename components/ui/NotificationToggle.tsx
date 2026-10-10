@@ -24,7 +24,7 @@ export function NotificationToggle({
   return (
     <div className={`flex items-center justify-between gap-4 py-3 select-none ${className}`}>
       <div className="space-y-0.5 max-w-md">
-        <label htmlFor={id} className="font-display font-semibold text-sm text-white cursor-pointer">
+        <label htmlFor={id} className="font-display font-semibold text-sm text-text-primary cursor-pointer">
           {label}
         </label>
         {description && (
@@ -41,7 +41,7 @@ export function NotificationToggle({
         disabled={disabled}
         onClick={() => !disabled && onChange(!checked)}
         className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-ring ${
-          checked ? 'bg-accent-primary shadow-[0_0_15px_rgba(217,70,239,0.4)]' : 'bg-white/[0.1] border-white/[0.1]'
+          checked ? 'bg-accent-primary shadow-[0_0_15px_rgba(217,70,239,0.4)]' : 'bg-text-primary/[0.1] border-text-primary/[0.1]'
         } ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
       >
         <motion.span

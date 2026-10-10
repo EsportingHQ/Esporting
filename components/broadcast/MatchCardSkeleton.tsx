@@ -13,7 +13,7 @@ export function MatchCardSkeleton({ count = 1, className = '' }: MatchCardSkelet
       {items.map((_, i) => (
         <div
           key={i}
-          className="glass rounded-2xl p-3 sm:p-5 border border-white/[0.08] flex flex-col gap-2.5 sm:gap-3.5 select-none"
+          className="glass rounded-2xl p-3 sm:p-5 border border-text-primary/[0.08] flex flex-col gap-2.5 sm:gap-3.5 select-none"
           aria-hidden="true"
         >
           {/* Top header bar skeleton */}

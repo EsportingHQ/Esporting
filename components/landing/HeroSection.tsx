@@ -10,7 +10,7 @@ export function HeroSection() {
       {/* Background ambient lighting */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-gradient-to-b from-accent-primary/20 via-pink-600/10 to-transparent rounded-full blur-[120px]" />
-        <div className="absolute top-1/3 -left-32 w-96 h-96 bg-purple-600/10 rounded-full blur-[100px]" />
+        <div className="absolute top-1/3 -left-32 w-96 h-96 bg-fuchsia-600/10 rounded-full blur-[100px]" />
         <div className="absolute top-1/3 -right-32 w-96 h-96 bg-fuchsia-600/10 rounded-full blur-[100px]" />
       </div>
 
@@ -20,7 +20,7 @@ export function HeroSection() {
           initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full glass border border-white/[0.12] text-xs font-display font-semibold text-white/90 shadow-[0_0_20px_rgba(217,70,239,0.15)] mb-8"
+          className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full glass border border-text-primary/[0.12] text-xs font-display font-semibold text-text-primary/90 shadow-[0_0_20px_rgba(217,70,239,0.15)] mb-8"
         >
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-live opacity-75" />
@@ -34,7 +34,7 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className="font-display font-black text-4xl sm:text-6xl md:text-7xl lg:text-8xl text-white tracking-tight leading-[1.05] uppercase max-w-5xl mb-6"
+          className="font-display font-black text-4xl sm:text-6xl md:text-7xl lg:text-8xl text-text-primary tracking-tight leading-[1.05] uppercase max-w-5xl mb-6"
         >
           The Next Generation of{' '}
           <span className="relative inline-block">
@@ -65,7 +65,7 @@ export function HeroSection() {
             href="/feed"
             className="w-full sm:w-auto btn-primary px-8 py-4 text-sm font-display font-bold tracking-wider rounded-xl flex items-center justify-center gap-2.5 group shadow-[0_0_30px_rgba(217,70,239,0.35)]"
           >
-            <Radio className="w-4 h-4 text-white animate-pulse" />
+            <Radio className="w-4 h-4 text-text-primary animate-pulse" />
             <span>EXPLORE LIVE MATCHES</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
@@ -91,7 +91,7 @@ export function HeroSection() {
               <Flame className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-sm font-display font-bold text-white">Instant Sync</div>
+              <div className="text-sm font-display font-bold text-text-primary">Instant Sync</div>
               <div className="text-xs text-text-muted">Sub-second score updates</div>
             </div>
           </div>
@@ -101,17 +101,17 @@ export function HeroSection() {
               <Trophy className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-sm font-display font-bold text-white">Auto Brackets</div>
+              <div className="text-sm font-display font-bold text-text-primary">Auto Brackets</div>
               <div className="text-xs text-text-muted">Dynamic tournament ladders</div>
             </div>
           </div>
 
           <div className="glass glass-hover p-4 rounded-2xl flex items-center gap-3.5 text-left">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-fuchsia-600/10 border border-fuchsia-600/20 flex items-center justify-center text-fuchsia-600 shrink-0">
               <Users className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-sm font-display font-bold text-white">5,000+ Players</div>
+              <div className="text-sm font-display font-bold text-text-primary">5,000+ Players</div>
               <div className="text-xs text-text-muted">Verified Nigerian talent</div>
             </div>
           </div>

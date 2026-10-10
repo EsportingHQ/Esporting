@@ -22,7 +22,7 @@
   --color-accent-favorite: #FBBF24;
 
   /* ── State Colors ── */
-  --color-state-win: #4ADE80;
+  --color-state-win: #0EA5E9;
   --color-state-loss: #EF4444;
   --color-state-alert: #F59E0B;
 
@@ -122,7 +122,7 @@
   /* Selection highlight */
   ::selection {
     background: rgba(217, 70, 239, 0.3);
-    color: #FAFAFA;
+    color: var(--color-text-primary, #FAFAFA);
   }
 }
 
@@ -234,7 +234,7 @@
   height: 500px;
   bottom: -10%;
   right: -5%;
-  background: radial-gradient(circle, #7C3AED 0%, transparent 70%);
+  background: radial-gradient(circle, #C026D3 0%, transparent 70%);
   animation: mesh-float-2 25s ease-in-out infinite;
 }
 
@@ -525,11 +525,11 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-bg-void, #000000);
+  background: var(--color-bg-void);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
   border-radius: 3px;
 }
 

@@ -16,7 +16,7 @@ export function SearchInput({
   className = '',
 }: SearchInputProps) {
   return (
-    <div className={`relative flex items-center w-full glass rounded-xl border border-white/[0.1] focus-within:border-accent-primary/60 focus-within:shadow-[0_0_20px_rgba(217,70,239,0.2)] transition-all ${className}`}>
+    <div className={`relative flex items-center w-full glass rounded-xl border border-text-primary/[0.1] focus-within:border-accent-primary/60 focus-within:shadow-[0_0_20px_rgba(217,70,239,0.2)] transition-all ${className}`}>
       <Search className="w-4 h-4 text-text-muted absolute left-3.5 pointer-events-none" />
       <input
         type="search"
@@ -25,14 +25,14 @@ export function SearchInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-transparent border-none pl-10 pr-9 py-2.5 text-xs font-body text-white placeholder:text-text-muted/60 focus:outline-none transition-colors"
+        className="w-full bg-transparent border-none pl-10 pr-9 py-2.5 text-xs font-body text-text-primary placeholder:text-text-muted/60 focus:outline-none transition-colors"
       />
       {value && (
         <button
           type="button"
           onClick={() => onChange('')}
           aria-label="Clear search"
-          className="absolute right-3 p-1 text-text-muted hover:text-white rounded-lg hover:bg-white/[0.08] transition-colors"
+          className="absolute right-3 p-1 text-text-muted hover:text-text-primary rounded-lg hover:bg-text-primary/[0.08] transition-colors"
         >
           <X className="w-3.5 h-3.5" />
         </button>

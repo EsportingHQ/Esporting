@@ -36,8 +36,8 @@ export function StatsCounter() {
 
   return (
     <section className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 py-6 -mt-8 sm:-mt-12">
-      <div className="glass-strong rounded-3xl border border-white/[0.1] shadow-[0_20px_60px_rgba(0,0,0,0.5)] p-6 sm:p-10 backdrop-blur-2xl">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 divide-y sm:divide-y-0 sm:divide-x divide-white/[0.08]">
+      <div className="glass-strong rounded-3xl border border-text-primary/[0.1] shadow-[0_20px_60px_rgba(0,0,0,0.5)] p-6 sm:p-10 backdrop-blur-2xl">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 divide-y sm:divide-y-0 sm:divide-x divide-text-primary/[0.08]">
           {stats.map((stat, idx) => (
             <div 
               key={idx} 
@@ -46,7 +46,7 @@ export function StatsCounter() {
               <div className="text-3xl sm:text-4xl lg:text-5xl font-black font-display text-gradient-fuchsia tracking-tight">
                 <Counter to={stat.value} suffix={stat.suffix} />
               </div>
-              <div className="text-xs sm:text-sm font-display font-bold text-white tracking-wide">
+              <div className="text-xs sm:text-sm font-display font-bold text-text-primary tracking-wide">
                 {stat.label}
               </div>
               <div className="text-[11px] font-body text-text-muted">

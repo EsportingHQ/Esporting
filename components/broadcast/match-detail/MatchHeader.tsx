@@ -41,7 +41,7 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
               <span>BACK TO DIVISION HUB</span>
             </Link>
             <span className="text-text-muted">/</span>
-            <span className="font-display font-semibold text-text-primary uppercase truncate">
+            <span className="font-display font-semibold text-text-primary uppercase">
               {match.game_title?.name} — STAGE PLAYOFFS
             </span>
           </div>
@@ -79,7 +79,7 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
                 )}
               </div>
               <div className="flex flex-col min-w-0 text-left">
-                <span title={match.team_home?.name} className="font-display font-black text-xs sm:text-xl md:text-2xl text-text-primary leading-tight uppercase truncate">
+                <span title={match.team_home?.name} className="font-display font-black text-xs sm:text-xl md:text-2xl text-text-primary leading-tight uppercase">
                   <span className="sm:hidden">{match.team_home?.name.substring(0, 3).toUpperCase()}</span>
                   <span className="hidden sm:inline">{match.team_home?.name}</span>
                 </span>
@@ -122,7 +122,7 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
             {/* Away Team */}
             <div className="flex items-center justify-end gap-2 sm:gap-4 flex-1 min-w-0 text-right">
               <div className="flex flex-col min-w-0 text-right">
-                <span title={match.team_away?.name} className="font-display font-black text-xs sm:text-xl md:text-2xl text-text-primary leading-tight uppercase truncate">
+                <span title={match.team_away?.name} className="font-display font-black text-xs sm:text-xl md:text-2xl text-text-primary leading-tight uppercase">
                   <span className="sm:hidden">{match.team_away?.name.substring(0, 3).toUpperCase()}</span>
                   <span className="hidden sm:inline">{match.team_away?.name}</span>
                 </span>

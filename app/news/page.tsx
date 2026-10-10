@@ -85,12 +85,12 @@ export default async function NewsPage() {
 			<PublicNav />
 
 			<main className="max-w-7xl w-full mx-auto px-4 sm:px-6 py-10 flex-1 space-y-8 relative z-10">
-				<div className="border-b border-white/[0.08] pb-6">
+				<div className="border-b border-text-primary/[0.08] pb-6">
 					<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-primary/10 border border-accent-primary/25 text-accent-glow text-xs font-display font-semibold mb-2">
 						<Newspaper className="w-3.5 h-3.5" />
 						<span>NEWS & MEDIA</span>
 					</div>
-					<h1 className="font-display font-black text-3xl sm:text-4xl text-white tracking-tight">
+					<h1 className="font-display font-black text-3xl sm:text-4xl text-text-primary tracking-tight">
 						Community Bulletin
 					</h1>
 					<p className="text-sm text-text-muted font-body mt-1">
@@ -102,7 +102,7 @@ export default async function NewsPage() {
 					{articles.map((article) => (
 						<article
 							key={article.id}
-							className="glass glass-hover rounded-3xl border border-white/[0.08] p-7 flex flex-col justify-between transition-all duration-300 group hover:border-accent-primary/40 hover:shadow-[0_15px_40px_rgba(217,70,239,0.12)] hover:-translate-y-1"
+							className="glass glass-hover rounded-3xl border border-text-primary/[0.08] p-7 flex flex-col justify-between transition-all duration-300 group hover:border-accent-primary/40 hover:shadow-[0_15px_40px_rgba(217,70,239,0.12)] hover:-translate-y-1"
 						>
 							<div className="space-y-4">
 								<div className="flex flex-wrap items-center gap-2 text-xs font-data text-text-muted">
@@ -113,7 +113,7 @@ export default async function NewsPage() {
 									)}
 
 									{article.game && (
-										<span className="px-2.5 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.08] uppercase tracking-wider font-semibold text-[10px] text-text-muted">
+										<span className="px-2.5 py-0.5 rounded-full bg-text-primary/[0.04] border border-text-primary/[0.08] uppercase tracking-wider font-semibold text-[10px] text-text-muted">
 											{article.game}
 										</span>
 									)}
@@ -134,7 +134,7 @@ export default async function NewsPage() {
 									href={`/news/${article.slug}`}
 									className="block group"
 								>
-									<h3 className="font-display font-bold text-xl text-white group-hover:text-accent-glow transition-colors leading-snug">
+									<h3 className="font-display font-bold text-xl text-text-primary group-hover:text-accent-glow transition-colors leading-snug">
 										{article.title}
 									</h3>
 								</Link>
@@ -144,10 +144,10 @@ export default async function NewsPage() {
 								</p>
 							</div>
 
-							<div className="border-t border-white/[0.08] mt-6 pt-4">
+							<div className="border-t border-text-primary/[0.08] mt-6 pt-4">
 								<Link
 									href={`/news/${article.slug}`}
-									className="inline-flex items-center gap-2 text-xs font-display font-bold text-accent-glow hover:text-white uppercase tracking-wider group-hover:translate-x-1 transition-all"
+									className="inline-flex items-center gap-2 text-xs font-display font-bold text-accent-glow hover:text-text-primary uppercase tracking-wider group-hover:translate-x-1 transition-all"
 								>
 									<span>READ ARTICLE</span>
 									<ArrowRight className="w-3.5 h-3.5" />
@@ -158,9 +158,9 @@ export default async function NewsPage() {
 				</div>
 
 				{articles.length === 0 && (
-					<div className="glass border border-dashed border-white/[0.1] rounded-3xl p-12 text-center text-text-muted">
+					<div className="glass border border-dashed border-text-primary/[0.1] rounded-3xl p-12 text-center text-text-muted">
 						<Tag className="w-6 h-6 mx-auto mb-2 text-accent-glow" />
-						<p className="font-display font-bold text-sm tracking-wide text-white">
+						<p className="font-display font-bold text-sm tracking-wide text-text-primary">
 							No published bulletin posts yet
 						</p>
 						<p className="text-xs text-text-muted mt-1">

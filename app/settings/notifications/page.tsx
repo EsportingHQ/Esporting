@@ -51,13 +51,13 @@ export default function NotificationSettingsPage() {
 
       <main className="max-w-4xl w-full mx-auto px-4 sm:px-6 py-10 flex-1 space-y-8 relative z-10">
         {/* Header */}
-        <div className="border-b border-white/[0.08] pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="border-b border-text-primary/[0.08] pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-primary/10 border border-accent-primary/25 text-accent-glow text-xs font-display font-semibold mb-2">
               <Bell className="w-3.5 h-3.5" />
               <span>NOTIFICATION PREFERENCES</span>
             </div>
-            <h1 className="font-display font-black text-3xl sm:text-4xl text-white tracking-tight">
+            <h1 className="font-display font-black text-3xl sm:text-4xl text-text-primary tracking-tight">
               Alert Settings
             </h1>
             <p className="text-sm text-text-muted font-body">
@@ -75,7 +75,7 @@ export default function NotificationSettingsPage() {
 
         {/* Master Switch Panel */}
         <div className="glass-strong border border-accent-primary/30 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl backdrop-blur-xl">
-          <div className="border-b border-white/[0.08] pb-4">
+          <div className="border-b border-text-primary/[0.08] pb-4">
             <h2 className="font-display font-bold text-base text-accent-glow">
               Favorite Squads Filter
             </h2>
@@ -94,12 +94,12 @@ export default function NotificationSettingsPage() {
         </div>
 
         {/* Alert Trigger Rules */}
-        <div className="glass rounded-3xl border border-white/[0.08] p-6 sm:p-8 space-y-6 shadow-xl">
-          <h2 className="font-display font-bold text-base text-white border-b border-white/[0.08] pb-4">
+        <div className="glass rounded-3xl border border-text-primary/[0.08] p-6 sm:p-8 space-y-6 shadow-xl">
+          <h2 className="font-display font-bold text-base text-text-primary border-b border-text-primary/[0.08] pb-4">
             Event Triggers
           </h2>
 
-          <div className="divide-y divide-white/[0.06]">
+          <div className="divide-y divide-text-primary/[0.06]">
             <NotificationToggle
               id="goal-scored"
               label="Goals & score updates"
@@ -135,11 +135,11 @@ export default function NotificationSettingsPage() {
         </div>
 
         {/* Test Toast Preview Box */}
-        <div className="glass rounded-3xl border border-white/[0.08] p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl">
+        <div className="glass rounded-3xl border border-text-primary/[0.08] p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl">
           <div className="space-y-1 text-center sm:text-left">
             <div className="flex items-center gap-2 justify-center sm:justify-start">
               <Sparkles className="w-4 h-4 text-accent-glow" />
-              <h3 className="font-display font-bold text-base text-white">Preview Toast Notification</h3>
+              <h3 className="font-display font-bold text-base text-text-primary">Preview Toast Notification</h3>
             </div>
             <p className="text-xs text-text-muted font-body">
               Click the button to test how real-time match events appear on your screen.
@@ -149,7 +149,7 @@ export default function NotificationSettingsPage() {
           <button
             type="button"
             onClick={triggerTestToast}
-            className="btn-glass px-5 py-3 text-xs font-display font-bold tracking-wider rounded-xl hover:border-accent-primary/40 focus-ring shrink-0 text-white"
+            className="btn-glass px-5 py-3 text-xs font-display font-bold tracking-wider rounded-xl hover:border-accent-primary/40 focus-ring shrink-0 text-text-primary"
           >
             TEST TOAST OVERLAY
           </button>
