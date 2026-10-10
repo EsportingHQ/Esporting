@@ -28,7 +28,7 @@
 
   /* ── Text ── */
   --color-text-primary: #FAFAFA;
-  --color-text-muted: #A1A1AA;
+  --color-text-muted: #D4D4D8;
 
   /* ── Skeleton ── */
   --color-bg-skeleton: #171717;
@@ -51,7 +51,7 @@
   --color-accent-glow: #E879F9;
   --color-accent-surface: rgba(217, 70, 239, 0.08);
   --color-text-primary: #FAFAFA;
-  --color-text-muted: #A1A1AA;
+  --color-text-muted: #D4D4D8;
   --color-bg-skeleton: #171717;
   --color-bg-skeleton-highlight: #262626;
 }
@@ -68,7 +68,7 @@
   --color-accent-surface: rgba(192, 38, 211, 0.08);
   --color-accent-readout: #C026D3;
   --color-text-primary: #000000;
-  --color-text-muted: #6B7280;
+  --color-text-muted: #4B5563;
   --color-bg-skeleton: #E5E5E5;
   --color-bg-skeleton-highlight: #D4D4D4;
 }
@@ -81,7 +81,7 @@
   --color-border-line: rgba(255, 255, 255, 0.06);
   --color-border-strong: rgba(255, 255, 255, 0.10);
   --color-text-primary: #F1F5F9;
-  --color-text-muted: #94A3B8;
+  --color-text-muted: #CBD5E1;
   --color-bg-skeleton: #27272E;
   --color-bg-skeleton-highlight: #3F3F48;
 }
@@ -99,7 +99,7 @@
     --color-accent-surface: rgba(192, 38, 211, 0.08);
     --color-accent-readout: #C026D3;
     --color-text-primary: #000000;
-    --color-text-muted: #6B7280;
+    --color-text-muted: #4B5563;
     --color-bg-skeleton: #E5E5E5;
     --color-bg-skeleton-highlight: #D4D4D4;
   }
