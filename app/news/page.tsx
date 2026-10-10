@@ -7,9 +7,13 @@ import { Clock, ArrowRight, Tag, Newspaper } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Esports News & Updates',
-  description: 'Stay updated with the latest esports news, match reports, roster changes, and tournament coverage across the globe.',
+  description:
+    'Stay updated with the latest esports news, match reports, roster changes, and tournament coverage across the globe.',
+  alternates: {
+    canonical: '/news',
+  },
   openGraph: {
-    title: 'Esports News & Updates | EsportingHQ',
+    title: 'Esports News & Updates | Esporting',
     description: 'Latest esports news, match reports, and tournament coverage.',
     url: 'https://esportinghq.com/news',
   },

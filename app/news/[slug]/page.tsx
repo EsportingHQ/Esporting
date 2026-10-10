@@ -43,13 +43,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   return {
     title: article.title,
-    description: article.excerpt || `Read ${article.title} on EsportingHQ.`,
+    description: article.excerpt || `Read ${article.title} on Esporting.`,
+    alternates: {
+      canonical: `/news/${slug}`,
+    },
     openGraph: {
-      title: `${article.title} | EsportingHQ`,
-      description: article.excerpt || `Read ${article.title} on EsportingHQ.`,
+      title: `${article.title} | Esporting`,
+      description: article.excerpt || `Read ${article.title} on Esporting.`,
       url: `https://esportinghq.com/news/${slug}`,
       type: 'article',
-    }
+    },
   };
 }
 

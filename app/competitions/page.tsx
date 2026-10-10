@@ -3,10 +3,15 @@ import CompetitionsClient from './CompetitionsClient';
 
 export const metadata: Metadata = {
   title: 'Competitions & Tournaments',
-  description: 'Browse active and upcoming esports competitions, brackets, and live standings across FIFA, Call of Duty, and more.',
+  description:
+    'Browse active and upcoming esports competitions, tournament brackets, and live standings across FIFA, Call of Duty, and top competitive games.',
+  alternates: {
+    canonical: '/competitions',
+  },
   openGraph: {
-    title: 'Competitions & Tournaments | EsportingHQ',
-    description: 'Browse active and upcoming esports competitions, brackets, and live standings.',
+    title: 'Competitions & Tournaments | Esporting',
+    description:
+      'Browse active and upcoming esports competitions, tournament brackets, and live standings.',
     url: 'https://esportinghq.com/competitions',
   },
 };

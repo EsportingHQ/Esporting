@@ -1,38 +1,46 @@
-import { MetadataRoute } from 'next';
+import type { MetadataRoute } from 'next';
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://esportinghq.com';
+const BASE_URL = 'https://esportinghq.com';
 
-  return [
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const routes: MetadataRoute.Sitemap = [
     {
-      url: baseUrl,
+      url: `${BASE_URL}`,
       lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 1,
+      changeFrequency: 'hourly',
+      priority: 1.0,
     },
     {
-      url: `${baseUrl}/news`,
+      url: `${BASE_URL}/competitions`,
       lastModified: new Date(),
-      changeFrequency: 'daily',
+      changeFrequency: 'hourly',
       priority: 0.9,
     },
     {
-      url: `${baseUrl}/competitions`,
+      url: `${BASE_URL}/feed`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.85,
+    },
+    {
+      url: `${BASE_URL}/news`,
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/teams`,
+      url: `${BASE_URL}/teams`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.7,
     },
     {
-      url: `${baseUrl}/players`,
+      url: `${BASE_URL}/players`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
-      priority: 0.6,
+      priority: 0.7,
     },
   ];
+
+  return routes;
 }
