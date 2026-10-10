@@ -42,8 +42,8 @@ export default function RootLayout({
               (function() {
                 try {
                   var saved = localStorage.getItem('esporting_theme');
-                  if (saved === 'dimmed') {
-                    document.documentElement.setAttribute('data-theme', 'dimmed');
+                  if (saved && saved !== 'system') {
+                    document.documentElement.setAttribute('data-theme', saved);
                   }
                 } catch (e) {}
               })();

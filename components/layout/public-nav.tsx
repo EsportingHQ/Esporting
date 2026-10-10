@@ -5,22 +5,13 @@ import NextLink from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useFavorites } from '@/hooks/useFavorites';
 import Image from 'next/image';
-import { Star, Moon, Sun, Menu, X, Bell } from 'lucide-react';
+import { Star, Menu, X, Bell } from 'lucide-react';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 export function PublicNav() {
   const pathname = usePathname();
   const { favorites } = useFavorites();
-  const [theme, setTheme] = useState<'dark' | 'dimmed'>('dark');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('esporting_theme');
-      if (saved === 'dimmed') {
-        setTheme('dimmed');
-      }
-    } catch (e) {}
-  }, []);
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
@@ -33,20 +24,6 @@ export function PublicNav() {
       document.body.style.overflow = 'unset';
     };
   }, [mobileMenuOpen]);
-
-  const toggleTheme = () => {
-    const nextTheme = theme === 'dark' ? 'dimmed' : 'dark';
-    setTheme(nextTheme);
-    try {
-      if (nextTheme === 'dimmed') {
-        document.documentElement.setAttribute('data-theme', 'dimmed');
-        localStorage.setItem('esporting_theme', 'dimmed');
-      } else {
-        document.documentElement.removeAttribute('data-theme');
-        localStorage.setItem('esporting_theme', 'dark');
-      }
-    } catch (e) {}
-  };
 
   const navLinks = [
     { href: '/feed', label: 'LIVE SCORES' },
@@ -114,15 +91,7 @@ export function PublicNav() {
             </NextLink>
 
             {/* Theme switcher toggle */}
-            <button
-              type="button"
-              onClick={toggleTheme}
-              title={theme === 'dark' ? 'Switch to Dimmed Theme' : 'Switch to Dark Theme'}
-              aria-label={theme === 'dark' ? 'Switch to Dimmed Theme' : 'Switch to Dark Theme'}
-              className="p-2.5 rounded-xl border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.08] hover:border-accent-primary/40 text-text-muted hover:text-white transition-all duration-200 focus-ring min-h-[42px] min-w-[42px] flex items-center justify-center shadow-sm"
-            >
-              {theme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4 text-accent-favorite" />}
-            </button>
+            <ThemeToggle />
 
             {/* Launch App / Dashboard Link */}
             <NextLink
