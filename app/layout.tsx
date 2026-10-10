@@ -13,8 +13,36 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Esporting — Nigeria’s Premier Live Esports Platform',
-  description: 'Track live scores, manage tournaments, and explore real-time match stats with modern interactive analytics.',
+  title: {
+    template: '%s | EsportingHQ',
+    default: 'Esports Results and Live Scores',
+  },
+  description: 'Track live scores, follow tournaments, and explore real-time match stats for FIFA, EA FC, Call of Duty, Valorant, League of Legends, and more.',
+  keywords: ['esports', 'live scores', 'tournaments', 'FIFA', 'EA FC', 'Call of Duty', 'Valorant', 'League of Legends', 'esports results', 'gaming', 'Nigeria esports', 'Africa esports'],
+  authors: [{ name: 'EsportingHQ' }],
+  creator: 'EsportingHQ',
+  openGraph: {
+    type: 'website',
+    locale: 'en_NG',
+    url: 'https://esportinghq.com',
+    siteName: 'EsportingHQ',
+    title: 'Esports Results and Live Scores',
+    description: 'Track live scores, follow tournaments, and explore real-time match stats for top esports titles globally.',
+    images: [
+      {
+        url: 'https://esportinghq.com/esportinghq-logo-stacked.png',
+        width: 1080,
+        height: 1080,
+        alt: 'EsportingHQ Logo',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Esports Results and Live Scores',
+    description: 'Track live scores, follow tournaments, and explore real-time match stats for top esports titles.',
+    images: ['https://esportinghq.com/esportinghq-logo-stacked.png'],
+  },
 };
 
 export const viewport: Viewport = {

@@ -1,8 +1,19 @@
+import { Metadata } from 'next';
 import Link from 'next/link';
 import { PublicNav } from '@/components/layout/public-nav';
 import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { Clock, ArrowRight, Tag, Newspaper } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'Esports News & Updates',
+  description: 'Stay updated with the latest esports news, match reports, roster changes, and tournament coverage across the globe.',
+  openGraph: {
+    title: 'Esports News & Updates | EsportingHQ',
+    description: 'Latest esports news, match reports, and tournament coverage.',
+    url: 'https://esportinghq.com/news',
+  },
+};
 
 type ArticleRow = {
 	id: string;

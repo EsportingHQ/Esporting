@@ -1,3 +1,4 @@
+import { Metadata } from 'next';
 'use client';
 
 import { use } from 'react';
@@ -6,6 +7,31 @@ import { PublicNav } from '@/components/layout/public-nav';
 import { MatchCard } from '@/components/broadcast/match-card';
 import { Shield, Users, Award, Trophy } from 'lucide-react';
 import { useTeamDetail } from '@/hooks/useTeamDetail';
+
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const { createClient } = await import('@/lib/supabase/server');
+  const { cookies } = await import('next/headers');
+  const supabase = await createClient(await cookies());
+  const { data: team } = await supabase
+    .from('teams')
+    .select('name, description')
+    .eq('slug', slug)
+    .single();
+
+  if (!team) return { title: 'Team Not Found' };
+
+  return {
+    title: `${team.name} Esports Team`,
+    description: team.description || `View matches, roster, and live results for ${team.name} on EsportingHQ.`,
+    openGraph: {
+      title: `${team.name} | EsportingHQ`,
+      description: team.description || `View matches, roster, and live results for ${team.name}.`,
+      url: `https://esportinghq.com/teams/${slug}`,
+    }
+  };
+}
 
 export default function TeamDetailPage({
 	params: paramsPromise,

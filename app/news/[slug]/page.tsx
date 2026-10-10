@@ -1,3 +1,4 @@
+import { Metadata } from 'next';
 import Link from 'next/link';
 import { PublicNav } from '@/components/layout/public-nav';
 import { createClient } from '@/lib/supabase/server';
@@ -24,6 +25,32 @@ type ArticleRow = {
 function first<T>(value: T | T[] | null | undefined): T | null {
 	if (Array.isArray(value)) return value[0] ?? null;
 	return value ?? null;
+}
+
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const { createClient } = await import('@/lib/supabase/server');
+  const { cookies } = await import('next/headers');
+  const supabase = await createClient(await cookies());
+  const { data: article } = await supabase
+    .from('news_articles')
+    .select('title, excerpt')
+    .eq('slug', slug)
+    .single();
+
+  if (!article) return { title: 'Article Not Found' };
+
+  return {
+    title: article.title,
+    description: article.excerpt || `Read ${article.title} on EsportingHQ.`,
+    openGraph: {
+      title: `${article.title} | EsportingHQ`,
+      description: article.excerpt || `Read ${article.title} on EsportingHQ.`,
+      url: `https://esportinghq.com/news/${slug}`,
+      type: 'article',
+    }
+  };
 }
 
 export default async function NewsDetailPage({
