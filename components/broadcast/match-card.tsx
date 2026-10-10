@@ -74,10 +74,7 @@ export function MatchCard({
       {/* Vertically Aligned Teams and Scores */}
       <div className="flex flex-col gap-3">
         {/* Home Team */}
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="font-data text-base sm:text-lg font-bold flex items-center justify-start min-w-[1.5rem] sm:min-w-[2rem]">
-            <ScoreFlash value={gameType === 'shooter' && bestOf > 1 ? homeMapsWon : homeScore} isLive={isLive} teamName={homeTeam.name} />
-          </div>
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center font-display font-black text-[11px] sm:text-xs text-white shrink-0 shadow-inner group-hover:border-accent-primary/30 transition-colors">
               {homeTeam.shortCode}
@@ -93,13 +90,13 @@ export function MatchCard({
               </span>
             </div>
           </div>
+          <div className="font-data text-base sm:text-lg font-bold flex items-center justify-end min-w-[1.5rem] sm:min-w-[2rem]">
+            <ScoreFlash value={gameType === 'shooter' && bestOf > 1 ? homeMapsWon : homeScore} isLive={isLive} teamName={homeTeam.name} />
+          </div>
         </div>
 
         {/* Away Team */}
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="font-data text-base sm:text-lg font-bold flex items-center justify-start min-w-[1.5rem] sm:min-w-[2rem]">
-            <ScoreFlash value={gameType === 'shooter' && bestOf > 1 ? awayMapsWon : awayScore} isLive={isLive} teamName={awayTeam.name} />
-          </div>
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center font-display font-black text-[11px] sm:text-xs text-white shrink-0 shadow-inner group-hover:border-accent-primary/30 transition-colors">
               {awayTeam.shortCode}
@@ -114,6 +111,9 @@ export function MatchCard({
                 <span className="hidden sm:inline">{awayTeam.name}</span>
               </span>
             </div>
+          </div>
+          <div className="font-data text-base sm:text-lg font-bold flex items-center justify-end min-w-[1.5rem] sm:min-w-[2rem]">
+            <ScoreFlash value={gameType === 'shooter' && bestOf > 1 ? awayMapsWon : awayScore} isLive={isLive} teamName={awayTeam.name} />
           </div>
         </div>
       </div>
