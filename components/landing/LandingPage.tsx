@@ -32,11 +32,18 @@ export function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex flex-col sm:flex-row items-center gap-3">
             <Image
+              src="/esportinghq-logo-primary.png"
+              alt="EsportingHQ Logo"
+              width={160}
+              height={38}
+              className="logo-light h-8 w-auto object-contain"
+            />
+            <Image
               src="/esportinghq-logo-white.png"
               alt="EsportingHQ Logo"
               width={160}
               height={38}
-              className="h-8 w-auto object-contain"
+              className="logo-dark h-8 w-auto object-contain"
             />
             <span className="text-[11px] text-text-muted sm:border-l sm:border-text-primary/[0.1] sm:pl-3">
               Nigeria&apos;s premier live esports platform

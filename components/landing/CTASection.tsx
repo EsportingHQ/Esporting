@@ -30,7 +30,14 @@ export function CTASection() {
               alt="EsportingHQ Logo"
               width={140}
               height={120}
-              className="h-24 w-auto object-contain drop-shadow-[0_0_25px_rgba(217,70,239,0.35)]"
+              className="logo-light h-24 w-auto object-contain drop-shadow-[0_0_25px_rgba(217,70,239,0.35)]"
+            />
+            <Image
+              src="/esportinghq-logo-stacked-white.png"
+              alt="EsportingHQ Logo"
+              width={140}
+              height={120}
+              className="logo-dark h-24 w-auto object-contain drop-shadow-[0_0_25px_rgba(217,70,239,0.35)]"
             />
           </motion.div>
 

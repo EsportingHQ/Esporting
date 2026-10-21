@@ -39,12 +39,20 @@ export function PublicNav() {
           {/* Logo / Brand */}
           <NextLink href="/" className="flex items-center group focus-ring rounded-xl py-1 px-1">
             <Image
+              src="/esportinghq-logo-primary.png"
+              alt="EsportingHQ Logo"
+              width={180}
+              height={42}
+              priority
+              className="logo-light h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+            />
+            <Image
               src="/esportinghq-logo-white.png"
               alt="EsportingHQ Logo"
               width={180}
               height={42}
               priority
-              className="h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+              className="logo-dark h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
             />
           </NextLink>
 

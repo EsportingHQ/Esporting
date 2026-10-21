@@ -60,12 +60,20 @@ export function DashboardShell({ children, nav, userEmail, title }: DashboardShe
 						className="flex items-center group focus-ring rounded-xl py-1 px-1"
 					>
 						<Image
+							src="/esportinghq-logo-primary.png"
+							alt="EsportingHQ Logo"
+							width={160}
+							height={38}
+							priority
+							className="logo-light h-8 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+						/>
+						<Image
 							src="/esportinghq-logo-white.png"
 							alt="EsportingHQ Logo"
 							width={160}
 							height={38}
 							priority
-							className="h-8 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+							className="logo-dark h-8 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
 						/>
 					</Link>
 					<span className="hidden sm:inline-block bg-accent-primary/15 border border-accent-primary/30 px-3 py-0.5 rounded-full text-[10px] font-display font-bold uppercase tracking-wider text-accent-glow">

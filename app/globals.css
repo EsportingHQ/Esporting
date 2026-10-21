@@ -715,6 +715,36 @@
 }
 
 /* ═══════════════════════════════════════════════
+   THEME LOGO VISIBILITY
+   ═══════════════════════════════════════════════ */
+
+/* Default (dark or dimmed mode): show dark/white logos, hide light logos */
+.logo-light {
+  display: none !important;
+}
+.logo-dark {
+  display: inline-block !important;
+}
+
+/* Explicit light mode */
+[data-theme="light"] .logo-light {
+  display: inline-block !important;
+}
+[data-theme="light"] .logo-dark {
+  display: none !important;
+}
+
+/* Auto system preference (when no explicit data-theme is set) */
+@media (prefers-color-scheme: light) {
+  html:not([data-theme]) .logo-light {
+    display: inline-block !important;
+  }
+  html:not([data-theme]) .logo-dark {
+    display: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════
    REDUCED MOTION
    ═══════════════════════════════════════════════ */
 

@@ -14,12 +14,20 @@ export default async function LoginPage({
         {/* Logo / Branding */}
         <div className="flex flex-col items-center justify-center mb-8">
           <Image
+            src="/esportinghq-logo-primary.png"
+            alt="EsportingHQ Logo"
+            width={240}
+            height={56}
+            priority
+            className="logo-light h-12 w-auto object-contain mb-3"
+          />
+          <Image
             src="/esportinghq-logo-white.png"
             alt="EsportingHQ Logo"
             width={240}
             height={56}
             priority
-            className="h-12 w-auto object-contain mb-3"
+            className="logo-dark h-12 w-auto object-contain mb-3"
           />
           <p className="text-xs font-data text-text-muted tracking-wider uppercase">
             BROADCAST CONTROL ACCESS
