@@ -10,8 +10,8 @@ export function HeroSection() {
       {/* Background ambient lighting */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-gradient-to-b from-accent-primary/20 via-pink-600/10 to-transparent rounded-full blur-[120px]" />
-        <div className="absolute top-1/3 -left-32 w-96 h-96 bg-fuchsia-600/10 rounded-full blur-[100px]" />
-        <div className="absolute top-1/3 -right-32 w-96 h-96 bg-fuchsia-600/10 rounded-full blur-[100px]" />
+        <div className="absolute top-1/3 -left-32 w-96 h-96 bg-accent-primary/10 rounded-full blur-[100px]" />
+        <div className="absolute top-1/3 -right-32 w-96 h-96 bg-accent-primary/10 rounded-full blur-[100px]" />
       </div>
 
       <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 flex flex-col items-center text-center">
@@ -107,7 +107,7 @@ export function HeroSection() {
           </div>
 
           <div className="glass glass-hover p-4 rounded-2xl flex items-center gap-3.5 text-left">
-            <div className="w-10 h-10 rounded-xl bg-fuchsia-600/10 border border-fuchsia-600/20 flex items-center justify-center text-fuchsia-600 shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-accent-primary/10 border border-accent-primary/20 flex items-center justify-center text-accent-glow shrink-0">
               <Users className="w-5 h-5" />
             </div>
             <div>

@@ -10,7 +10,7 @@ export function CTASection() {
     <section className="relative py-28 sm:py-36 overflow-hidden flex items-center justify-center">
       {/* Background ambient lighting */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-gradient-to-r from-accent-primary/20 via-pink-600/15 to-fuchsia-600/20 rounded-full blur-[140px] animate-gradient-shift" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-gradient-to-r from-accent-primary/20 via-pink-600/15 to-accent-primary/20 rounded-full blur-[140px] animate-gradient-shift" />
       </div>
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 w-full">

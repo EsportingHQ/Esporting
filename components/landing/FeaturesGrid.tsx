@@ -15,14 +15,14 @@ const features = [
     icon: Trophy,
     title: 'Tournament Organizer',
     desc: 'Create single-elimination, double-elimination, round-robin, and league tables with automated seeding.',
-    gradient: 'from-fuchsia-600 to-indigo-500',
+    gradient: 'from-accent-primary to-indigo-500',
     badge: 'Automation'
   },
   {
     icon: Globe,
     title: 'Stream & Broadcast Ticker',
     desc: 'A live scrolling marquee piping real-time match events, designed for OBS overlays and spectator screens.',
-    gradient: 'from-fuchsia-500 to-rose-500',
+    gradient: 'from-accent-glow to-rose-500',
     badge: 'Broadcasting'
   },
   {
