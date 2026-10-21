@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import NextLink from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useFavorites } from '@/hooks/useFavorites';
+import { Suspense } from 'react';
 import Image from 'next/image';
 import { Star, Menu, X, Bell } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { GameProfilesBar } from './GameProfilesBar';
 
 export function PublicNav() {
   const pathname = usePathname();
@@ -35,6 +37,11 @@ export function PublicNav() {
   return (
     <>
       <header className="w-full glass-strong border-b border-text-primary/[0.08] text-sm select-none font-body sticky top-0 z-40 transition-colors duration-300">
+        {/* Game Profiles Top Bar */}
+        <Suspense fallback={<div className="w-full h-9 bg-bg-surface/95 border-b border-text-primary/[0.06]" />}>
+          <GameProfilesBar />
+        </Suspense>
+
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           {/* Logo / Brand */}
           <NextLink href="/" className="flex items-center group focus-ring rounded-xl py-1 px-1">

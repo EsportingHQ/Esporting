@@ -12,11 +12,15 @@ import { ScoreToast } from '@/components/ui/ScoreToast';
 import { useLiveFeed } from '@/hooks/useLiveFeed';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useNewsArticles } from '@/hooks/useNewsArticles';
+import { useSearchParams } from 'next/navigation';
 import { Calendar, Newspaper, ArrowRight, Star, Flame, Zap } from 'lucide-react';
 
 type StatusFilter = 'all' | 'live' | 'upcoming' | 'finished';
 
 export default function HomeClient() {
+	const searchParams = useSearchParams();
+	const gameParam = searchParams.get('game') || 'all';
+
 	const {
 		tickerMatches,
 		groups,
@@ -30,6 +34,9 @@ export default function HomeClient() {
 
 	const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 	const [gameFilter, setGameFilter] = useState<string>('all');
+
+	// Active effective game filter (searchParam takes precedence if set, otherwise tab filter)
+	const activeGame = gameParam !== 'all' ? gameParam : gameFilter;
 
 	// Filter groups and matches
 	const filteredGroups = groups
@@ -51,12 +58,25 @@ export default function HomeClient() {
 				)
 					return false;
 
-				if (gameFilter === 'football' && match.gameType !== 'football')
-					return false;
-				if (gameFilter === 'shooter' && match.gameType !== 'shooter')
-					return false;
-				if (gameFilter === 'br' && match.gameType !== 'br')
-					return false;
+				if (activeGame !== 'all') {
+					if (activeGame === 'football' && match.gameType !== 'football') return false;
+					if (activeGame === 'shooter' && match.gameType !== 'shooter') return false;
+					if (activeGame === 'br' && match.gameType !== 'br') return false;
+
+					// Match by game title slug or shortcode/name if specific game chosen
+					const titleLower = (match.gameTitle || '').toLowerCase();
+					if (activeGame === 'cs2' && !titleLower.includes('cs') && !titleLower.includes('counter')) return false;
+					if (activeGame === 'dota-2' && !titleLower.includes('dota')) return false;
+					if (activeGame === 'lol' && !titleLower.includes('league') && !titleLower.includes('lol')) return false;
+					if (activeGame === 'val' && !titleLower.includes('val')) return false;
+					if (activeGame === 'mlbb' && !titleLower.includes('mobile legends') && !titleLower.includes('mlbb')) return false;
+					if (activeGame === 'kog' && !titleLower.includes('kings') && !titleLower.includes('kog')) return false;
+					if (activeGame === 'r6' && !titleLower.includes('rainbow') && !titleLower.includes('r6')) return false;
+					if (activeGame === 'fc-26' && !titleLower.includes('fc') && !titleLower.includes('fifa')) return false;
+					if (activeGame === 'codm-mp' && !titleLower.includes('codm') && !titleLower.includes('call of duty')) return false;
+					if (activeGame === 'pubg-br' && !titleLower.includes('pubg')) return false;
+					if (activeGame === 'freefire-br' && !titleLower.includes('free fire')) return false;
+				}
 
 				return true;
 			});

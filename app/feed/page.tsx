@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import HomeClient from '../HomeClient';
 
@@ -17,5 +18,9 @@ export const metadata: Metadata = {
 };
 
 export default function FeedPage() {
-  return <HomeClient />;
+  return (
+    <Suspense fallback={null}>
+      <HomeClient />
+    </Suspense>
+  );
 }
