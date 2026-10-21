@@ -6,6 +6,7 @@
 CREATE TABLE IF NOT EXISTS public.waitlist (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email TEXT NOT NULL UNIQUE,
+    role TEXT NOT NULL DEFAULT 'fan',
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
     source TEXT NOT NULL DEFAULT 'landing_page'
 );

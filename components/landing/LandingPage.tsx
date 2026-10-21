@@ -3,15 +3,27 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 
+export type WaitlistRole = 'gamer' | 'organizer' | 'team' | 'fan';
+
 export function LandingPage() {
   const [email, setEmail] = useState('');
+  const [selectedRole, setSelectedRole] = useState<WaitlistRole>('gamer');
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Initial form submit opens role selection modal
+  const handleInitialSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !email.includes('@')) return;
+    setStatus('idle');
+    setMessage('');
+    setIsModalOpen(true);
+  };
 
+  // Final submit sending email + role to API
+  const handleFinalSubmit = async (roleToSubmit?: WaitlistRole) => {
+    const role = roleToSubmit || selectedRole;
     setStatus('loading');
     setMessage('');
 
@@ -19,7 +31,7 @@ export function LandingPage() {
       const res = await fetch('/api/waitlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, role }),
       });
 
       const data = await res.json();
@@ -27,15 +39,18 @@ export function LandingPage() {
       if (!res.ok) {
         setStatus('error');
         setMessage(data.error || 'Unable to join waitlist. Please try again.');
+        setIsModalOpen(false);
         return;
       }
 
       setStatus('success');
       setMessage(data.message || "You're on the waitlist!");
       setEmail('');
+      setIsModalOpen(false);
     } catch {
       setStatus('error');
       setMessage('Something went wrong. Please try again.');
+      setIsModalOpen(false);
     }
   };
 
@@ -457,7 +472,187 @@ export function LandingPage() {
           color: var(--ink);
         }
 
+        /* Modal Popup */
+        .landing-modal-backdrop {
+          position: fixed;
+          inset: 0;
+          background: rgba(11, 11, 13, 0.78);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          z-index: 100;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+          animation: landing-fade-in 0.25s ease-out;
+        }
+
+        .landing-modal-card {
+          background: #111114;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 24px;
+          padding: 36px 32px 32px;
+          max-width: 480px;
+          width: 100%;
+          position: relative;
+          box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(255, 31, 109, 0.12);
+          animation: landing-pop-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .landing-modal-close {
+          position: absolute;
+          top: 18px;
+          right: 20px;
+          background: transparent;
+          border: none;
+          color: #77767C;
+          font-size: 24px;
+          cursor: pointer;
+          line-height: 1;
+          padding: 6px;
+          border-radius: 8px;
+          transition: color 0.15s ease;
+        }
+
+        .landing-modal-close:hover {
+          color: var(--white);
+        }
+
+        .landing-modal-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 11px;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: var(--cyan);
+          background: rgba(0, 224, 255, 0.1);
+          padding: 4px 12px;
+          border-radius: 20px;
+          margin-bottom: 14px;
+        }
+
+        .landing-modal-title {
+          font-family: 'Space Grotesk', sans-serif;
+          font-size: 24px;
+          font-weight: 700;
+          color: var(--white);
+          line-height: 1.25;
+          margin-bottom: 8px;
+        }
+
+        .landing-modal-desc {
+          font-size: 14px;
+          color: #B7B7BC;
+          margin: 0 0 24px;
+          line-height: 1.5;
+        }
+
+        .landing-role-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+          margin-bottom: 24px;
+        }
+
+        .landing-role-btn {
+          background: #18181C;
+          border: 1.5px solid rgba(255, 255, 255, 0.08);
+          border-radius: 14px;
+          padding: 16px 14px;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 6px;
+          cursor: pointer;
+          text-align: left;
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+          color: var(--white);
+        }
+
+        .landing-role-btn:hover {
+          background: #202025;
+          border-color: rgba(255, 31, 109, 0.4);
+          transform: translateY(-2px);
+        }
+
+        .landing-role-btn.active {
+          background: rgba(255, 31, 109, 0.12);
+          border-color: var(--pink);
+          box-shadow: 0 0 20px rgba(255, 31, 109, 0.25);
+        }
+
+        .landing-role-icon {
+          width: 34px;
+          height: 34px;
+          border-radius: 9px;
+          background: #0B0B0D;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 4px;
+        }
+
+        .landing-role-name {
+          font-family: 'Space Grotesk', sans-serif;
+          font-size: 15px;
+          font-weight: 700;
+          line-height: 1.2;
+        }
+
+        .landing-role-hint {
+          font-size: 11px;
+          color: #77767C;
+          line-height: 1.35;
+        }
+
+        .landing-role-btn.active .landing-role-hint {
+          color: #D4D4D8;
+        }
+
+        .landing-modal-submit {
+          width: 100%;
+          padding: 15px 24px;
+          border-radius: 12px;
+          border: none;
+          background: var(--pink);
+          color: var(--white);
+          font-family: 'Inter', sans-serif;
+          font-size: 15px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .landing-modal-submit:hover:not(:disabled) {
+          opacity: 0.92;
+          transform: translateY(-1px);
+        }
+
+        .landing-modal-submit:disabled {
+          opacity: 0.65;
+          cursor: not-allowed;
+        }
+
+        @keyframes landing-fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes landing-pop-in {
+          from { opacity: 0; transform: scale(0.95) translateY(8px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
         @media (max-width: 720px) {
+          .landing-role-grid {
+            grid-template-columns: 1fr;
+            gap: 10px;
+          }
+          .landing-modal-card {
+            padding: 28px 22px 24px;
+          }
           .landing-nav {
             padding: 16px 20px;
             flex-direction: column;
@@ -539,7 +734,7 @@ export function LandingPage() {
             Esportinghq is the fastest way to follow competitive esports — every match, every score, tracked the moment it happens. We&apos;re getting ready to go live.
           </p>
 
-          <form className="landing-waitlist-form" id="waitlist" onSubmit={handleSubmit}>
+          <form className="landing-waitlist-form" id="waitlist" onSubmit={handleInitialSubmit}>
             <input
               type="email"
               value={email}
@@ -665,6 +860,124 @@ export function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Role Selection Modal Popup */}
+      {isModalOpen && (
+        <div
+          className="landing-modal-backdrop"
+          onClick={() => !status.startsWith('loading') && setIsModalOpen(false)}
+        >
+          <div
+            className="landing-modal-card"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="role-modal-title"
+          >
+            <button
+              type="button"
+              className="landing-modal-close"
+              onClick={() => setIsModalOpen(false)}
+              aria-label="Close modal"
+              disabled={status === 'loading'}
+            >
+              ×
+            </button>
+
+            <div className="landing-modal-badge">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#00E0FF] animate-pulse" />
+              Quick question
+            </div>
+
+            <h3 id="role-modal-title" className="landing-modal-title">
+              What best describes you?
+            </h3>
+            <p className="landing-modal-desc">
+              We&apos;re tailoring the debut experience for your corner of the esports world.
+            </p>
+
+            <div className="landing-role-grid">
+              {/* Option 1: Gamer / Player */}
+              <button
+                type="button"
+                className={`landing-role-btn ${selectedRole === 'gamer' ? 'active' : ''}`}
+                onClick={() => setSelectedRole('gamer')}
+              >
+                <div className="landing-role-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={selectedRole === 'gamer' ? '#FF1F6D' : '#FAFAFA'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="6" width="20" height="12" rx="3" />
+                    <line x1="6" y1="12" x2="10" y2="12" />
+                    <line x1="8" y1="10" x2="8" y2="14" />
+                    <circle cx="15" cy="12" r="1" fill="#FAFAFA" />
+                    <circle cx="18" cy="12" r="1" fill="#FAFAFA" />
+                  </svg>
+                </div>
+                <span className="landing-role-name">Gamer / Player</span>
+                <span className="landing-role-hint">Compete, grind rankings, and track stats</span>
+              </button>
+
+              {/* Option 2: Fan / Spectator */}
+              <button
+                type="button"
+                className={`landing-role-btn ${selectedRole === 'fan' ? 'active' : ''}`}
+                onClick={() => setSelectedRole('fan')}
+              >
+                <div className="landing-role-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={selectedRole === 'fan' ? '#FF1F6D' : '#FAFAFA'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill={selectedRole === 'fan' ? '#FF1F6D' : 'none'} />
+                  </svg>
+                </div>
+                <span className="landing-role-name">Esports Fan</span>
+                <span className="landing-role-hint">Follow live matches and tournaments</span>
+              </button>
+
+              {/* Option 3: Tournament Organizer */}
+              <button
+                type="button"
+                className={`landing-role-btn ${selectedRole === 'organizer' ? 'active' : ''}`}
+                onClick={() => setSelectedRole('organizer')}
+              >
+                <div className="landing-role-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={selectedRole === 'organizer' ? '#FF1F6D' : '#FAFAFA'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                    <path d="M4 22h16" />
+                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+                  </svg>
+                </div>
+                <span className="landing-role-name">Organizer</span>
+                <span className="landing-role-hint">Run brackets, events, and broadcasts</span>
+              </button>
+
+              {/* Option 4: Esports Team / Org */}
+              <button
+                type="button"
+                className={`landing-role-btn ${selectedRole === 'team' ? 'active' : ''}`}
+                onClick={() => setSelectedRole('team')}
+              >
+                <div className="landing-role-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={selectedRole === 'team' ? '#FF1F6D' : '#FAFAFA'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill={selectedRole === 'team' ? '#FF1F6D' : 'none'} />
+                  </svg>
+                </div>
+                <span className="landing-role-name">Esports Team</span>
+                <span className="landing-role-hint">Rosters, team hub, and live results</span>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              className="landing-modal-submit"
+              onClick={() => handleFinalSubmit(selectedRole)}
+              disabled={status === 'loading'}
+            >
+              {status === 'loading' ? 'Securing your spot...' : 'Confirm & Join Waitlist'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

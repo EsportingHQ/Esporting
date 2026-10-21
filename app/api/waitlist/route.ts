@@ -6,6 +6,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+    const role = typeof body.role === 'string' ? body.role.trim().toLowerCase() : 'fan';
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json(
@@ -19,6 +20,7 @@ export async function POST(request: Request) {
 
     const { error } = await supabase.from('waitlist').insert({
       email,
+      role: ['gamer', 'organizer', 'team', 'fan'].includes(role) ? role : 'fan',
       source: 'landing_page',
     });
 
