@@ -458,6 +458,29 @@ export function LandingPage() {
         }
 
         @media (max-width: 720px) {
+          .landing-nav {
+            padding: 16px 20px;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 14px;
+          }
+          .landing-nav-actions {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          }
+          .landing-nav-preview,
+          .landing-nav-cta {
+            flex: 1;
+            text-align: center;
+            justify-content: center;
+            display: flex;
+            align-items: center;
+            font-size: 11.5px;
+            padding: 8px 12px;
+            white-space: nowrap;
+          }
           .landing-hero h1 {
             font-size: 38px;
           }
@@ -492,7 +515,7 @@ export function LandingPage() {
 
           <div className="landing-nav-actions">
             <Link href="/feed" className="landing-nav-preview">
-              Live Scores & App →
+              Live scores
             </Link>
             <a href="#waitlist" className="landing-nav-cta">
               Join waitlist
