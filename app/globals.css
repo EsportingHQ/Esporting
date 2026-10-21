@@ -110,6 +110,23 @@
    ═══════════════════════════════════════════════ */
 
 @layer base {
+  html {
+    /* Scale root font down on mobile screens for a more compact, cleaner density */
+    font-size: 13.5px;
+  }
+
+  @media (min-width: 640px) {
+    html {
+      font-size: 15px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    html {
+      font-size: 16px;
+    }
+  }
+
   html, body {
     background-color: var(--color-bg-void, #09090B);
     color: var(--color-text-primary, #FAFAFA);

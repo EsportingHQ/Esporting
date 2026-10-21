@@ -251,12 +251,11 @@ export default function CompetitionDetailPage({
 							</h3>
 							<div className="grid grid-cols-1 gap-4">
 								{scheduleMatches.map((match) => (
-									<Link
+									<MatchCard
 										key={match.id}
+										{...match}
 										href={`/competitions/${slug}/matches/${match.id}`}
-									>
-										<MatchCard {...match} />
-									</Link>
+									/>
 								))}
 							</div>
 						</div>
@@ -270,12 +269,11 @@ export default function CompetitionDetailPage({
 							</h3>
 							<div className="grid grid-cols-1 gap-4">
 								{resultsMatches.map((match) => (
-									<Link
+									<MatchCard
 										key={match.id}
+										{...match}
 										href={`/competitions/${slug}/matches/${match.id}`}
-									>
-										<MatchCard {...match} />
-									</Link>
+									/>
 								))}
 							</div>
 						</div>

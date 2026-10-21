@@ -43,10 +43,10 @@ export function ScoreFlash({ value, isLive = false, teamName = '', className = '
 
       <div
         className={`px-1.5 py-0.5 rounded transition-all duration-300 ${
-          isFlashing ? 'score-flash font-bold text-accent-signal' : ''
+          isFlashing ? 'score-flash font-bold text-white' : ''
         } ${className}`}
       >
-        <RollDigit value={value} className={isLive && !isFlashing ? 'text-accent-signal' : ''} />
+        <RollDigit value={value} className={isLive && !isFlashing ? 'text-white' : ''} />
       </div>
     </div>
   );

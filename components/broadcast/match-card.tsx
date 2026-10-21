@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { EventBadge } from './event-badge';
 import { ScoreFlash } from './ScoreFlash';
 import { FavoriteStar } from './FavoriteStar';
@@ -41,6 +41,7 @@ export function MatchCard({
   onClick,
   showFavorites = true,
 }: MatchCardProps) {
+  const router = useRouter();
   const isLive = status === 'live';
   const isCompleted = status === 'completed';
 
@@ -55,18 +56,28 @@ export function MatchCard({
   const isHomeWinner = isCompleted && ((gameType === 'shooter' && bestOf > 1) ? homeMapsWon > awayMapsWon : homeScore > awayScore);
   const isAwayWinner = isCompleted && ((gameType === 'shooter' && bestOf > 1) ? awayMapsWon > homeMapsWon : awayScore > homeScore);
 
-  const content = (
+  const handleCardClick = () => {
+    if (onClick) {
+      onClick();
+    } else if (href) {
+      router.push(href);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleCardClick();
+    }
+  };
+
+  return (
     <div
       tabIndex={0}
-      role="article"
+      role={href ? 'link' : 'article'}
       aria-label={accessibleLabel}
-      onClick={onClick}
-      onKeyDown={(e) => {
-        if ((e.key === 'Enter' || e.key === ' ') && onClick) {
-          e.preventDefault();
-          onClick();
-        }
-      }}
+      onClick={handleCardClick}
+      onKeyDown={handleKeyDown}
       className={`glass glass-hover rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 select-none focus-ring transition-all duration-300 ${borderStatusClass} ${
         onClick || href ? 'cursor-pointer hover:border-accent-primary/40 hover:shadow-[0_8px_25px_rgba(255,31,109,0.1)] hover:-translate-y-0.5' : ''
       }`}
@@ -123,14 +134,14 @@ export function MatchCard({
         {/* Right: Scores & Action/Favorite */}
         <div className="flex items-center gap-3 sm:gap-4 shrink-0">
           <div className="flex flex-col items-end justify-center gap-1 min-w-[1.25rem] sm:min-w-[1.5rem] font-data text-sm sm:text-base font-bold leading-tight">
-            <div className={isHomeWinner ? 'text-state-win font-bold' : 'text-text-primary'}>
+            <div className={isLive ? 'text-white font-bold' : isHomeWinner ? 'text-state-win font-bold' : isCompleted ? 'text-state-win/70' : 'text-text-primary'}>
               <ScoreFlash
                 value={gameType === 'shooter' && bestOf > 1 ? homeMapsWon : homeScore}
                 isLive={isLive}
                 teamName={homeTeam.name}
               />
             </div>
-            <div className={isAwayWinner ? 'text-state-win font-bold' : 'text-text-primary'}>
+            <div className={isLive ? 'text-white font-bold' : isAwayWinner ? 'text-state-win font-bold' : isCompleted ? 'text-state-win/70' : 'text-text-primary'}>
               <ScoreFlash
                 value={gameType === 'shooter' && bestOf > 1 ? awayMapsWon : awayScore}
                 isLive={isLive}
@@ -140,7 +151,10 @@ export function MatchCard({
           </div>
 
           {showFavorites && (homeTeam.id || awayTeam.id) && (
-            <div className="pl-1 sm:pl-2 border-l border-text-primary/[0.08]">
+            <div
+              className="pl-1 sm:pl-2 border-l border-text-primary/[0.08]"
+              onClick={(e) => e.stopPropagation()}
+            >
               <FavoriteStar
                 entityType="team"
                 entityId={homeTeam.id || awayTeam.id || id}
@@ -153,10 +167,4 @@ export function MatchCard({
       </div>
     </div>
   );
-
-  if (href) {
-    return <Link href={href} className="block no-underline">{content}</Link>;
-  }
-
-  return content;
 }
