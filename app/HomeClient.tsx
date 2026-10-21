@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { PublicNav } from '@/components/layout/public-nav';
 import { BroadcastTicker } from '@/components/broadcast/broadcast-ticker';
 import { MatchCard } from '@/components/broadcast/match-card';
@@ -12,12 +13,52 @@ import { ScoreToast } from '@/components/ui/ScoreToast';
 import { useLiveFeed } from '@/hooks/useLiveFeed';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useNewsArticles } from '@/hooks/useNewsArticles';
-import { useSearchParams } from 'next/navigation';
-import { Calendar, Newspaper, ArrowRight, Star, Flame, Zap } from 'lucide-react';
+import { 
+  Calendar, 
+  Newspaper, 
+  ArrowRight, 
+  Star, 
+  Flame, 
+  Zap, 
+  ChevronDown, 
+  Crosshair, 
+  Shield, 
+  Gamepad2, 
+  Target, 
+  Swords, 
+  Sparkles 
+} from 'lucide-react';
+
+export interface GameProfile {
+  id: string;
+  name: string;
+  shortName: string;
+  slug: string;
+  icon?: any;
+  category: 'football' | 'shooter' | 'br' | 'moba' | 'all';
+}
+
+export const GAME_PROFILES: GameProfile[] = [
+  { id: 'all', name: 'All Games', shortName: 'ALL', slug: 'all', category: 'all' },
+  { id: 'cs2', name: 'Counter-Strike 2', shortName: 'CS2', slug: 'cs2', icon: Crosshair, category: 'shooter' },
+  { id: 'dota2', name: 'Dota 2', shortName: 'DOTA 2', slug: 'dota-2', icon: Swords, category: 'moba' },
+  { id: 'lol', name: 'League of Legends', shortName: 'LOL', slug: 'lol', icon: Shield, category: 'moba' },
+  { id: 'val', name: 'Valorant', shortName: 'VAL', slug: 'val', icon: Flame, category: 'shooter' },
+  { id: 'mlbb', name: 'Mobile Legends: Bang Bang', shortName: 'MLBB', slug: 'mlbb', icon: Gamepad2, category: 'moba' },
+  { id: 'kog', name: 'Honor of Kings', shortName: 'KOG', slug: 'kog', icon: Sparkles, category: 'moba' },
+  { id: 'r6', name: 'Rainbow Six Siege', shortName: 'R6', slug: 'r6', icon: Target, category: 'shooter' },
+  // Additional games shown in the "MORE" dropdown:
+  { id: 'fc26', name: 'EA SPORTS FC 26', shortName: 'FC 26', slug: 'fc-26', category: 'football' },
+  { id: 'codm', name: 'Call of Duty: Mobile', shortName: 'CODM', slug: 'codm-mp', category: 'shooter' },
+  { id: 'pubg', name: 'PUBG Mobile', shortName: 'PUBG', slug: 'pubg-br', category: 'br' },
+  { id: 'ff', name: 'Free Fire', shortName: 'FREE FIRE', slug: 'freefire-br', category: 'br' },
+  { id: 'efb', name: 'eFootball Mobile', shortName: 'EFOOTBALL', slug: 'efootball-mobile', category: 'football' },
+];
 
 type StatusFilter = 'all' | 'live' | 'upcoming' | 'finished';
 
 export default function HomeClient() {
+	const router = useRouter();
 	const searchParams = useSearchParams();
 	const gameParam = searchParams.get('game') || 'all';
 
@@ -34,9 +75,25 @@ export default function HomeClient() {
 
 	const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 	const [gameFilter, setGameFilter] = useState<string>('all');
+	const [moreOpen, setMoreOpen] = useState(false);
+	const moreDropdownRef = useRef<HTMLDivElement>(null);
+
+	const primaryGames = GAME_PROFILES.slice(0, 8); // ALL, CS2, DOTA 2, LOL, VAL, MLBB, KOG, R6
+	const moreGames = GAME_PROFILES.slice(8);
 
 	// Active effective game filter (searchParam takes precedence if set, otherwise tab filter)
 	const activeGame = gameParam !== 'all' ? gameParam : gameFilter;
+	const isMoreSelected = moreGames.some((g) => g.id === activeGame || g.slug === activeGame);
+
+	useEffect(() => {
+		const handleOutsideClick = (e: MouseEvent) => {
+			if (moreDropdownRef.current && !moreDropdownRef.current.contains(e.target as Node)) {
+				setMoreOpen(false);
+			}
+		};
+		document.addEventListener('mousedown', handleOutsideClick);
+		return () => document.removeEventListener('mousedown', handleOutsideClick);
+	}, []);
 
 	// Filter groups and matches
 	const filteredGroups = groups
@@ -182,26 +239,87 @@ export default function HomeClient() {
 								))}
 							</div>
 
-							{/* Game Category Pills */}
-							<div className="w-full md:w-auto flex items-center gap-2 overflow-x-auto scrollbar-none text-xs font-display font-semibold">
-								{[
-									{ id: 'all', label: 'All Games' },
-									{ id: 'football', label: 'Football' },
-									{ id: 'shooter', label: 'Shooters' },
-									{ id: 'br', label: 'Battle Royale' },
-								].map((cat) => (
+							{/* Game Category Pills -> Replaced with ALL, CS2, DOTA 2, LOL, VAL, MLBB, KOG, R6, and MORE dropdown */}
+							<div className="w-full md:w-auto flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none text-xs font-display font-semibold">
+								{primaryGames.map((game) => {
+									const isSelected = activeGame === game.id || activeGame === game.slug;
+									const Icon = game.icon;
+
+									return (
+										<button
+											key={game.id}
+											onClick={() => {
+												setGameFilter(game.slug);
+												if (gameParam !== 'all') {
+													const params = new URLSearchParams(searchParams.toString());
+													params.delete('game');
+													router.replace(params.toString() ? `/feed?${params.toString()}` : '/feed', { scroll: false });
+												}
+											}}
+											className={`min-h-[36px] px-3 sm:px-3.5 rounded-xl border transition-all shrink-0 flex items-center justify-center gap-1.5 ${
+												isSelected
+													? 'bg-accent-primary/20 text-accent-primary border-accent-primary/40 shadow-[0_0_12px_rgba(255,31,109,0.15)] font-bold'
+													: 'bg-text-primary/[0.02] border-text-primary/[0.06] text-text-muted hover:text-text-primary hover:bg-text-primary/[0.05]'
+											}`}
+										>
+											{Icon && <Icon className="w-3.5 h-3.5 shrink-0 opacity-80" />}
+											<span>{game.shortName}</span>
+										</button>
+									);
+								})}
+
+								{/* MORE Dropdown */}
+								<div ref={moreDropdownRef} className="relative shrink-0">
 									<button
-										key={cat.id}
-										onClick={() => setGameFilter(cat.id)}
-										className={`min-h-[36px] px-3.5 rounded-xl border transition-all shrink-0 flex items-center justify-center ${
-											gameFilter === cat.id
+										type="button"
+										onClick={() => setMoreOpen(!moreOpen)}
+										className={`min-h-[36px] px-3 sm:px-3.5 rounded-xl border transition-all flex items-center justify-center gap-1 ${
+											isMoreSelected
 												? 'bg-accent-primary/20 text-accent-primary border-accent-primary/40 shadow-[0_0_12px_rgba(255,31,109,0.15)] font-bold'
 												: 'bg-text-primary/[0.02] border-text-primary/[0.06] text-text-muted hover:text-text-primary hover:bg-text-primary/[0.05]'
 										}`}
 									>
-										{cat.label}
+										<span>MORE</span>
+										<ChevronDown
+											className={`w-3.5 h-3.5 transition-transform duration-200 ${
+												moreOpen ? 'rotate-180' : ''
+											}`}
+										/>
 									</button>
-								))}
+
+									{moreOpen && (
+										<div className="absolute right-0 top-full mt-2 w-48 rounded-2xl border border-text-primary/[0.1] bg-bg-surface/95 backdrop-blur-2xl shadow-2xl py-1.5 z-50">
+											{moreGames.map((game) => {
+												const isSelected = activeGame === game.id || activeGame === game.slug;
+												return (
+													<button
+														key={game.id}
+														type="button"
+														onClick={() => {
+															setGameFilter(game.slug);
+															setMoreOpen(false);
+															if (gameParam !== 'all') {
+																const params = new URLSearchParams(searchParams.toString());
+																params.delete('game');
+																router.replace(params.toString() ? `/feed?${params.toString()}` : '/feed', { scroll: false });
+															}
+														}}
+														className={`w-full flex items-center justify-between px-3.5 py-2 text-xs font-semibold transition-colors text-left ${
+															isSelected
+																? 'bg-accent-primary/15 text-accent-primary font-bold'
+																: 'text-text-muted hover:text-text-primary hover:bg-bg-elevated/70'
+														}`}
+													>
+														<span>{game.name}</span>
+														<span className="text-[10px] text-text-muted/70 font-data">
+															{game.shortName}
+														</span>
+													</button>
+												);
+											})}
+										</div>
+									)}
+								</div>
 							</div>
 						</div>
 					</div>
