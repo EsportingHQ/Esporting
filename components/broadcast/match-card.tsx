@@ -67,77 +67,88 @@ export function MatchCard({
           onClick();
         }
       }}
-      className={`glass glass-hover rounded-2xl p-3 sm:p-5 select-none flex flex-col gap-2.5 sm:gap-3.5 focus-ring transition-all duration-300 ${borderStatusClass} ${
-        onClick || href ? 'cursor-pointer hover:border-accent-primary/40 hover:shadow-[0_10px_30px_rgba(255,31,109,0.1)] hover:-translate-y-0.5' : ''
+      className={`glass glass-hover rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 select-none focus-ring transition-all duration-300 ${borderStatusClass} ${
+        onClick || href ? 'cursor-pointer hover:border-accent-primary/40 hover:shadow-[0_8px_25px_rgba(255,31,109,0.1)] hover:-translate-y-0.5' : ''
       }`}
     >
-      {/* Vertically Aligned Teams and Scores */}
-      <div className="flex flex-col gap-3">
-        {/* Home Team */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-text-primary/[0.04] border border-text-primary/[0.08] flex items-center justify-center font-display font-black text-[11px] sm:text-xs text-text-primary shrink-0 shadow-inner group-hover:border-accent-primary/30 transition-colors">
-              {homeTeam.shortCode}
+      <div className="flex items-center justify-between gap-3 sm:gap-4">
+        {/* Left: Status / Time / Meta */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0 min-w-[70px] sm:min-w-[90px]">
+          <div className="flex flex-col gap-1 items-start">
+            <EventBadge status={status} className="text-[9px] sm:text-[10px] px-2 py-0" />
+            <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-text-muted font-data leading-none">
+              {timeLabel && <span>{timeLabel}</span>}
+              {gameType === 'shooter' && bestOf > 1 && (
+                <span className="text-[9px] text-accent-glow font-display font-semibold px-1 py-0.2 rounded bg-accent-primary/10 border border-accent-primary/20">
+                  BO{bestOf}
+                </span>
+              )}
             </div>
-            <div className="flex flex-col min-w-0">
-              <span 
-                title={homeTeam.name}
-                className={`font-body font-semibold text-xs sm:text-sm transition-colors ${
+          </div>
+        </div>
+
+        {/* Center: Teams (stacked compactly) */}
+        <div className="flex flex-col justify-center gap-1 min-w-0 flex-1">
+          {/* Home Team */}
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-text-primary/[0.04] border border-text-primary/[0.08] flex items-center justify-center font-display font-black text-[9px] sm:text-[10px] text-text-primary shrink-0 shadow-inner">
+              {homeTeam.shortCode ? homeTeam.shortCode.slice(0, 3) : homeTeam.name.slice(0, 2).toUpperCase()}
+            </div>
+            <span
+              title={homeTeam.name}
+              className={`font-body font-semibold text-xs sm:text-sm leading-tight transition-colors truncate ${
                 isHomeWinner ? 'text-state-win font-bold' : 'text-text-primary'
-              }`}>
-                {homeTeam.name}
-              </span>
-            </div>
-          </div>
-          <div className={`font-data text-base sm:text-lg font-bold flex items-center justify-end min-w-[1.5rem] sm:min-w-[2rem] ${isHomeWinner ? 'text-state-win' : 'text-text-primary'}`}>
-            <ScoreFlash value={gameType === 'shooter' && bestOf > 1 ? homeMapsWon : homeScore} isLive={isLive} teamName={homeTeam.name} />
-          </div>
-        </div>
-
-        {/* Away Team */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-text-primary/[0.04] border border-text-primary/[0.08] flex items-center justify-center font-display font-black text-[11px] sm:text-xs text-text-primary shrink-0 shadow-inner group-hover:border-accent-primary/30 transition-colors">
-              {awayTeam.shortCode}
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span 
-                title={awayTeam.name}
-                className={`font-body font-semibold text-xs sm:text-sm transition-colors ${
-                isAwayWinner ? 'text-state-win font-bold' : 'text-text-primary'
-              }`}>
-                {awayTeam.name}
-              </span>
-            </div>
-          </div>
-          <div className={`font-data text-base sm:text-lg font-bold flex items-center justify-end min-w-[1.5rem] sm:min-w-[2rem] ${isAwayWinner ? 'text-state-win' : 'text-text-primary'}`}>
-            <ScoreFlash value={gameType === 'shooter' && bestOf > 1 ? awayMapsWon : awayScore} isLive={isLive} teamName={awayTeam.name} />
-          </div>
-        </div>
-      </div>
-
-      {/* Footer (Game info + status + favorite + time label) */}
-      <div className="flex items-center justify-between text-xs tracking-wider text-text-muted gap-2 pt-3 mt-1 border-t border-text-primary/[0.05]">
-        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-          {showFavorites && homeTeam.id && (
-            <FavoriteStar
-              entityType="team"
-              entityId={homeTeam.id}
-              entityName={homeTeam.name}
-              size="sm"
-            />
-          )}
-          <span className="font-display font-bold uppercase text-[10px] sm:text-[11px] text-text-muted truncate tracking-wider">{gameTitle}</span>
-          {gameType === 'shooter' && bestOf > 1 && (
-            <span className="text-[9px] text-accent-glow font-display font-semibold tracking-wider px-1.5 py-0.2 rounded bg-accent-primary/10 border border-accent-primary/20 shrink-0">
-              BO{bestOf}
+              }`}
+            >
+              {homeTeam.name}
             </span>
-          )}
+          </div>
+
+          {/* Away Team */}
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-text-primary/[0.04] border border-text-primary/[0.08] flex items-center justify-center font-display font-black text-[9px] sm:text-[10px] text-text-primary shrink-0 shadow-inner">
+              {awayTeam.shortCode ? awayTeam.shortCode.slice(0, 3) : awayTeam.name.slice(0, 2).toUpperCase()}
+            </div>
+            <span
+              title={awayTeam.name}
+              className={`font-body font-semibold text-xs sm:text-sm leading-tight transition-colors truncate ${
+                isAwayWinner ? 'text-state-win font-bold' : 'text-text-primary'
+              }`}
+            >
+              {awayTeam.name}
+            </span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          {timeLabel && <span className="font-data text-[10px] sm:text-[11px] text-text-muted">{timeLabel}</span>}
-          <EventBadge status={status} />
+        {/* Right: Scores & Action/Favorite */}
+        <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+          <div className="flex flex-col items-end justify-center gap-1 min-w-[1.25rem] sm:min-w-[1.5rem] font-data text-sm sm:text-base font-bold leading-tight">
+            <div className={isHomeWinner ? 'text-state-win font-bold' : 'text-text-primary'}>
+              <ScoreFlash
+                value={gameType === 'shooter' && bestOf > 1 ? homeMapsWon : homeScore}
+                isLive={isLive}
+                teamName={homeTeam.name}
+              />
+            </div>
+            <div className={isAwayWinner ? 'text-state-win font-bold' : 'text-text-primary'}>
+              <ScoreFlash
+                value={gameType === 'shooter' && bestOf > 1 ? awayMapsWon : awayScore}
+                isLive={isLive}
+                teamName={awayTeam.name}
+              />
+            </div>
+          </div>
+
+          {showFavorites && (homeTeam.id || awayTeam.id) && (
+            <div className="pl-1 sm:pl-2 border-l border-text-primary/[0.08]">
+              <FavoriteStar
+                entityType="team"
+                entityId={homeTeam.id || awayTeam.id || id}
+                entityName={homeTeam.name}
+                size="sm"
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

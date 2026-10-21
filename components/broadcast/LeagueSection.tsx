@@ -102,7 +102,7 @@ export function LeagueSection({
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.25, ease: 'easeInOut' }}
           >
-            <div className="p-4 space-y-3">
+            <div className="p-2.5 sm:p-3.5 space-y-2">
               {children}
             </div>
           </motion.div>
