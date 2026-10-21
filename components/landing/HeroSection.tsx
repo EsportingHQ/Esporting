@@ -20,7 +20,7 @@ export function HeroSection() {
           initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full glass border border-text-primary/[0.12] text-xs font-display font-semibold text-text-primary/90 shadow-[0_0_20px_rgba(217,70,239,0.15)] mb-8"
+          className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full glass border border-text-primary/[0.12] text-xs font-display font-semibold text-text-primary/90 shadow-[0_0_20px_rgba(255,31,109,0.15)] mb-8"
         >
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-live opacity-75" />
@@ -38,7 +38,7 @@ export function HeroSection() {
         >
           The Next Generation of{' '}
           <span className="relative inline-block">
-            <span className="text-gradient-fuchsia drop-shadow-[0_0_35px_rgba(217,70,239,0.4)]">
+            <span className="text-gradient-fuchsia drop-shadow-[0_0_35px_rgba(255,31,109,0.4)]">
               Live Esports
             </span>
           </span>
@@ -63,7 +63,7 @@ export function HeroSection() {
         >
           <Link
             href="/feed"
-            className="w-full sm:w-auto btn-primary px-8 py-4 text-sm font-display font-bold tracking-wider rounded-xl flex items-center justify-center gap-2.5 group shadow-[0_0_30px_rgba(217,70,239,0.35)]"
+            className="w-full sm:w-auto btn-primary px-8 py-4 text-sm font-display font-bold tracking-wider rounded-xl flex items-center justify-center gap-2.5 group shadow-[0_0_30px_rgba(255,31,109,0.35)]"
           >
             <Radio className="w-4 h-4 text-text-primary animate-pulse" />
             <span>EXPLORE LIVE MATCHES</span>

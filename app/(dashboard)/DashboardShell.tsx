@@ -135,7 +135,7 @@ export function DashboardShell({ children, nav, userEmail, title }: DashboardShe
 									onClick={() => setMobileSidebarOpen(false)}
 									className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-display font-semibold tracking-wide transition-all ${
 										isActive
-											? 'bg-accent-primary/20 text-accent-primary font-bold border border-accent-primary/40 shadow-[0_0_15px_rgba(217,70,239,0.15)]'
+											? 'bg-accent-primary/20 text-accent-primary font-bold border border-accent-primary/40 shadow-[0_0_15px_rgba(255,31,109,0.15)]'
 											: 'text-text-muted hover:bg-text-primary/[0.04] hover:text-text-primary'
 									}`}
 								>

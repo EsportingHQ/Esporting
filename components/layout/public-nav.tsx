@@ -68,7 +68,7 @@ export function PublicNav() {
                   aria-current={isActive ? 'page' : undefined}
                   className={`flex items-center gap-2 text-xs transition-all duration-200 rounded-full px-4 py-2 min-h-[36px] ${
                     isActive
-                      ? 'bg-accent-primary/20 text-accent-primary font-bold border border-accent-primary/40 shadow-[0_0_15px_rgba(217,70,239,0.2)]'
+                      ? 'bg-accent-primary/20 text-accent-primary font-bold border border-accent-primary/40 shadow-[0_0_15px_rgba(255,31,109,0.2)]'
                       : 'text-text-muted hover:text-text-primary hover:bg-text-primary/[0.06]'
                   }`}
                 >
@@ -149,7 +149,7 @@ export function PublicNav() {
                 onClick={() => setMobileMenuOpen(false)}
                 className={`flex items-center justify-between p-3.5 rounded-xl border transition-all ${
                   isActive
-                    ? 'bg-accent-primary/20 text-accent-primary font-bold border-accent-primary/40 shadow-[0_0_15px_rgba(217,70,239,0.15)]'
+                    ? 'bg-accent-primary/20 text-accent-primary font-bold border-accent-primary/40 shadow-[0_0_15px_rgba(255,31,109,0.15)]'
                     : 'text-text-muted hover:text-text-primary bg-text-primary/[0.02] border-text-primary/[0.04]'
                 }`}
               >

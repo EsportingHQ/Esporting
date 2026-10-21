@@ -102,7 +102,7 @@ export default async function NewsPage() {
 					{articles.map((article) => (
 						<article
 							key={article.id}
-							className="glass glass-hover rounded-3xl border border-text-primary/[0.08] p-7 flex flex-col justify-between transition-all duration-300 group hover:border-accent-primary/40 hover:shadow-[0_15px_40px_rgba(217,70,239,0.12)] hover:-translate-y-1"
+							className="glass glass-hover rounded-3xl border border-text-primary/[0.08] p-7 flex flex-col justify-between transition-all duration-300 group hover:border-accent-primary/40 hover:shadow-[0_15px_40px_rgba(255,31,109,0.12)] hover:-translate-y-1"
 						>
 							<div className="space-y-4">
 								<div className="flex flex-wrap items-center gap-2 text-xs font-data text-text-muted">

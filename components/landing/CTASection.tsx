@@ -30,14 +30,14 @@ export function CTASection() {
               alt="EsportingHQ Logo"
               width={140}
               height={120}
-              className="logo-light h-24 w-auto object-contain drop-shadow-[0_0_25px_rgba(217,70,239,0.35)]"
+              className="logo-light h-24 w-auto object-contain drop-shadow-[0_0_25px_rgba(255,31,109,0.35)]"
             />
             <Image
               src="/esportinghq-logo-stacked-white.png"
               alt="EsportingHQ Logo"
               width={140}
               height={120}
-              className="logo-dark h-24 w-auto object-contain drop-shadow-[0_0_25px_rgba(217,70,239,0.35)]"
+              className="logo-dark h-24 w-auto object-contain drop-shadow-[0_0_25px_rgba(255,31,109,0.35)]"
             />
           </motion.div>
 
@@ -71,7 +71,7 @@ export function CTASection() {
           >
             <Link
               href="/login"
-              className="w-full sm:w-auto btn-primary px-9 py-4 text-sm font-display font-bold tracking-wider rounded-xl flex items-center justify-center gap-2 group shadow-[0_0_35px_rgba(217,70,239,0.4)]"
+              className="w-full sm:w-auto btn-primary px-9 py-4 text-sm font-display font-bold tracking-wider rounded-xl flex items-center justify-center gap-2 group shadow-[0_0_35px_rgba(255,31,109,0.4)]"
             >
               <span>GET STARTED FREE</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

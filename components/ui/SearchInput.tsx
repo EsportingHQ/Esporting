@@ -16,7 +16,7 @@ export function SearchInput({
   className = '',
 }: SearchInputProps) {
   return (
-    <div className={`relative flex items-center w-full glass rounded-xl border border-text-primary/[0.1] focus-within:border-accent-primary/60 focus-within:shadow-[0_0_20px_rgba(217,70,239,0.2)] transition-all ${className}`}>
+    <div className={`relative flex items-center w-full glass rounded-xl border border-text-primary/[0.1] focus-within:border-accent-primary/60 focus-within:shadow-[0_0_20px_rgba(255,31,109,0.2)] transition-all ${className}`}>
       <Search className="w-4 h-4 text-text-muted absolute left-3.5 pointer-events-none" />
       <input
         type="search"

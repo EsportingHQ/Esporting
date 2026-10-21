@@ -178,7 +178,7 @@ export default function CompetitionsPage() {
                   onClick={() => setSelectedGame(g.id)}
                   className={`px-3 py-1 font-display font-semibold rounded-lg transition-all ${
                     selectedGame === g.id
-                      ? 'bg-accent-primary text-white font-bold shadow-[0_0_12px_rgba(217,70,239,0.3)]'
+                      ? 'bg-accent-primary text-white font-bold shadow-[0_0_12px_rgba(255,31,109,0.3)]'
                       : 'text-text-muted hover:text-text-primary hover:bg-text-primary/[0.04]'
                   }`}
                 >
@@ -203,7 +203,7 @@ export default function CompetitionsPage() {
                   onClick={() => setSelectedStatus(status.id)}
                   className={`px-3 py-1 font-display font-semibold rounded-lg transition-all ${
                     selectedStatus === status.id
-                      ? 'bg-accent-primary text-white font-bold shadow-[0_0_12px_rgba(217,70,239,0.3)]'
+                      ? 'bg-accent-primary text-white font-bold shadow-[0_0_12px_rgba(255,31,109,0.3)]'
                       : 'text-text-muted hover:text-text-primary hover:bg-text-primary/[0.04]'
                   }`}
                 >
@@ -223,7 +223,7 @@ export default function CompetitionsPage() {
           {filteredComps.map((comp) => (
             <div
               key={comp.id}
-              className="glass glass-hover rounded-3xl border border-text-primary/[0.08] p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 group hover:border-accent-primary/40 hover:shadow-[0_15px_40px_rgba(217,70,239,0.12)] hover:-translate-y-1"
+              className="glass glass-hover rounded-3xl border border-text-primary/[0.08] p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 group hover:border-accent-primary/40 hover:shadow-[0_15px_40px_rgba(255,31,109,0.12)] hover:-translate-y-1"
             >
               <div className="space-y-4">
                 {/* Header row */}

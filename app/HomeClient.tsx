@@ -146,7 +146,7 @@ export default function HomeClient() {
 										onClick={() => setStatusFilter(tab.id)}
 										className={`min-h-[38px] px-4 rounded-lg transition-all shrink-0 flex items-center justify-center gap-1.5 ${
 											statusFilter === tab.id
-												? 'bg-accent-primary text-white font-bold shadow-[0_0_15px_rgba(217,70,239,0.3)]'
+												? 'bg-accent-primary text-white font-bold shadow-[0_0_15px_rgba(255,31,109,0.3)]'
 												: 'text-text-muted hover:text-text-primary hover:bg-text-primary/[0.04]'
 										}`}
 									>
@@ -175,7 +175,7 @@ export default function HomeClient() {
 										onClick={() => setGameFilter(cat.id)}
 										className={`min-h-[36px] px-3.5 rounded-xl border transition-all shrink-0 flex items-center justify-center ${
 											gameFilter === cat.id
-												? 'bg-accent-primary/20 text-accent-primary border-accent-primary/40 shadow-[0_0_12px_rgba(217,70,239,0.15)] font-bold'
+												? 'bg-accent-primary/20 text-accent-primary border-accent-primary/40 shadow-[0_0_12px_rgba(255,31,109,0.15)] font-bold'
 												: 'bg-text-primary/[0.02] border-text-primary/[0.06] text-text-muted hover:text-text-primary hover:bg-text-primary/[0.05]'
 										}`}
 									>

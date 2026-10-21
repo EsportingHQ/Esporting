@@ -26,7 +26,7 @@ export function EmptyState({
     <div
       className={`py-16 px-6 text-center glass rounded-3xl border border-text-primary/[0.08] flex flex-col items-center justify-center space-y-4 shadow-xl ${className}`}
     >
-      <div className="w-14 h-14 rounded-2xl bg-accent-primary/10 border border-accent-primary/20 flex items-center justify-center text-accent-glow shadow-[0_0_20px_rgba(217,70,239,0.15)]">
+      <div className="w-14 h-14 rounded-2xl bg-accent-primary/10 border border-accent-primary/20 flex items-center justify-center text-accent-glow shadow-[0_0_20px_rgba(255,31,109,0.15)]">
         <Icon className="w-7 h-7" />
       </div>
       <div className="space-y-1.5 max-w-md">

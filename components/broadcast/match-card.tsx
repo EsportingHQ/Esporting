@@ -68,7 +68,7 @@ export function MatchCard({
         }
       }}
       className={`glass glass-hover rounded-2xl p-3 sm:p-5 select-none flex flex-col gap-2.5 sm:gap-3.5 focus-ring transition-all duration-300 ${borderStatusClass} ${
-        onClick || href ? 'cursor-pointer hover:border-accent-primary/40 hover:shadow-[0_10px_30px_rgba(217,70,239,0.1)] hover:-translate-y-0.5' : ''
+        onClick || href ? 'cursor-pointer hover:border-accent-primary/40 hover:shadow-[0_10px_30px_rgba(255,31,109,0.1)] hover:-translate-y-0.5' : ''
       }`}
     >
       {/* Vertically Aligned Teams and Scores */}

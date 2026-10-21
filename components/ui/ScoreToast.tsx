@@ -65,7 +65,7 @@ function ToastItem({
       className="pointer-events-auto glass-strong border border-accent-primary/40 rounded-2xl p-4 shadow-[0_15px_40px_rgba(0,0,0,0.6)] select-none flex items-start justify-between gap-3 text-xs backdrop-blur-2xl"
     >
       <div className="flex items-start gap-3 flex-1 min-w-0">
-        <div className="w-8 h-8 rounded-xl bg-accent-primary/15 border border-accent-primary/30 flex items-center justify-center text-accent-glow shrink-0 mt-0.5 shadow-[0_0_15px_rgba(217,70,239,0.2)]">
+        <div className="w-8 h-8 rounded-xl bg-accent-primary/15 border border-accent-primary/30 flex items-center justify-center text-accent-glow shrink-0 mt-0.5 shadow-[0_0_15px_rgba(255,31,109,0.2)]">
           <Bell className="w-4 h-4" />
         </div>
 

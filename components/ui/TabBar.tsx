@@ -62,7 +62,7 @@ export function TabBar({
             {isActive && (
               <motion.div
                 layoutId={layoutId}
-                className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent-primary shadow-[0_0_12px_rgba(217,70,239,0.8)]"
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent-primary shadow-[0_0_12px_rgba(255,31,109,0.8)]"
                 transition={{ type: 'spring', stiffness: 500, damping: 35 }}
               />
             )}
