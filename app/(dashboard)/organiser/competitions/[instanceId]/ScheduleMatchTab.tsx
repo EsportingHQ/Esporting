@@ -305,7 +305,7 @@ export default function ScheduleMatchTab({
 						<input
 							type="number"
 							min={1}
-							max={15}
+							max={99}
 							value={bestOf}
 							onChange={(e) => setBestOf(Number(e.target.value))}
 							style={inputStyle}

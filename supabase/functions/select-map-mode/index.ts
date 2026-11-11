@@ -204,6 +204,70 @@
         }
         }
 
+        // 13b. Series rules — enforced whenever a game is started:
+        //   1. Every game still to be played must have its mode (and map, when
+        //      the title has a map pool) set up front, so the live audience page
+        //      can show the whole series.
+        //   2. Games start in order: Game N can only start once every earlier
+        //      game has ended.
+        if (start_map === true) {
+        const { data: slots, error: slotsError } = await adminClient
+            .from('match_maps')
+            .select('id, map_number, map_id, mode_id, status')
+            .eq('match_id', match_id)
+            .order('map_number', { ascending: true })
+
+        if (slotsError) throw slotsError
+
+        const { count: mapPoolCount, error: poolError } = await adminClient
+            .from('maps')
+            .select('id', { count: 'exact', head: true })
+            .eq('game_title_id', match.game_title_id)
+            .eq('is_active', true)
+            .eq('is_approved', true)
+
+        if (poolError) throw poolError
+
+        const needsMap = (mapPoolCount ?? 0) > 0
+        const isDone = (s: { status: string }) => ['completed', 'skipped'].includes(s.status)
+
+        // The series as it will look once this request is applied
+        const after = (slots ?? []).map((s: { id: string, map_number: number, map_id: string | null, mode_id: string | null, status: string }) =>
+            s.id === match_map_id
+            ? { ...s, map_id: map_id ?? s.map_id, mode_id: mode_id ?? s.mode_id }
+            : s
+        )
+
+        const unconfigured = after.filter((s: { map_id: string | null, mode_id: string | null, status: string }) =>
+            !isDone(s) && (!s.mode_id || (needsMap && !s.map_id))
+        )
+
+        if (unconfigured.length > 0) {
+            const missing = unconfigured.map((s: { map_number: number }) => s.map_number)
+            return new Response(
+            JSON.stringify({
+                error: `Set the ${needsMap ? 'map and mode' : 'mode'} for every game before starting. Still missing: Game ${missing.slice(0, 10).join(', Game ')}${missing.length > 10 ? ` and ${missing.length - 10} more` : ''}`,
+                missing_games: missing
+            }),
+            { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+        }
+
+        const unfinishedEarlier = after.filter((s: { map_number: number, status: string }) =>
+            s.map_number < matchMap.map_number && !isDone(s)
+        )
+
+        if (unfinishedEarlier.length > 0) {
+            return new Response(
+            JSON.stringify({
+                error: `Finish Game ${unfinishedEarlier[0].map_number} before starting Game ${matchMap.map_number}`,
+                blocking_game: unfinishedEarlier[0].map_number
+            }),
+            { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+        }
+        }
+
         // 14. Build the update payload
         const updatePayload: Record<string, unknown> = {}
         if (map_id)  updatePayload.map_id  = map_id

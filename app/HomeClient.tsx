@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PublicNav } from '@/components/layout/public-nav';
@@ -22,11 +23,9 @@ import {
   Zap, 
   ChevronDown, 
   Crosshair, 
-  Shield, 
   Gamepad2, 
   Target, 
   Swords, 
-  Sparkles 
 } from 'lucide-react';
 
 export interface GameProfile {
@@ -34,25 +33,50 @@ export interface GameProfile {
   name: string;
   shortName: string;
   slug: string;
-  icon?: any;
+  icon?: LucideIcon;
   category: 'football' | 'shooter' | 'br' | 'moba' | 'all';
+  /** Does a match's game title (as stored in game_titles.name) belong to this game? */
+  matches?: (titleLower: string) => boolean;
 }
 
+// Launch titles, in display order. The first 8 entries become chips; anything
+// after that goes into the MORE dropdown (hidden while there is nothing to show).
+// Titles are matched on the game_titles.name values seeded in the database:
+// 'FC 26', 'FC Mobile', 'eFootball Mobile', 'CODM Multiplayer',
+// 'CODM Battle Royale', 'PUBG Battle Royale', 'Free Fire Battle Royale',
+// and 'Mobile Legends: Bang Bang'.
 export const GAME_PROFILES: GameProfile[] = [
   { id: 'all', name: 'All Games', shortName: 'ALL', slug: 'all', category: 'all' },
-  { id: 'cs2', name: 'Counter-Strike 2', shortName: 'CS2', slug: 'cs2', icon: Crosshair, category: 'shooter' },
-  { id: 'dota2', name: 'Dota 2', shortName: 'DOTA 2', slug: 'dota-2', icon: Swords, category: 'moba' },
-  { id: 'lol', name: 'League of Legends', shortName: 'LOL', slug: 'lol', icon: Shield, category: 'moba' },
-  { id: 'val', name: 'Valorant', shortName: 'VAL', slug: 'val', icon: Flame, category: 'shooter' },
-  { id: 'mlbb', name: 'Mobile Legends: Bang Bang', shortName: 'MLBB', slug: 'mlbb', icon: Gamepad2, category: 'moba' },
-  { id: 'kog', name: 'Honor of Kings', shortName: 'KOG', slug: 'kog', icon: Sparkles, category: 'moba' },
-  { id: 'r6', name: 'Rainbow Six Siege', shortName: 'R6', slug: 'r6', icon: Target, category: 'shooter' },
-  // Additional games shown in the "MORE" dropdown:
-  { id: 'fc26', name: 'EA SPORTS FC 26', shortName: 'FC 26', slug: 'fc-26', category: 'football' },
-  { id: 'codm', name: 'Call of Duty: Mobile', shortName: 'CODM', slug: 'codm-mp', category: 'shooter' },
-  { id: 'pubg', name: 'PUBG Mobile', shortName: 'PUBG', slug: 'pubg-br', category: 'br' },
-  { id: 'ff', name: 'Free Fire', shortName: 'FREE FIRE', slug: 'freefire-br', category: 'br' },
-  { id: 'efb', name: 'eFootball Mobile', shortName: 'EFOOTBALL', slug: 'efootball-mobile', category: 'football' },
+  {
+    id: 'fc26', name: 'EA SPORTS FC', shortName: 'EAFC', slug: 'fc-26', icon: Gamepad2, category: 'football',
+    // FC 26, FC 27, ... but not "FC Mobile"
+    matches: (t) => /\bfc\s?\d{2}\b/.test(t),
+  },
+  {
+    id: 'fcm', name: 'FC Mobile', shortName: 'FC MOBILE', slug: 'fc-mobile', icon: Gamepad2, category: 'football',
+    matches: (t) => t.includes('fc mobile'),
+  },
+  {
+    id: 'efb', name: 'eFootball Mobile', shortName: 'EFOOTBALL', slug: 'efootball-mobile', icon: Gamepad2, category: 'football',
+    matches: (t) => t.includes('efootball'),
+  },
+  {
+    id: 'codm', name: 'Call of Duty: Mobile', shortName: 'CODM', slug: 'codm-mp', icon: Crosshair, category: 'shooter',
+    // Covers both Multiplayer and Battle Royale titles
+    matches: (t) => t.includes('codm') || t.includes('call of duty'),
+  },
+  {
+    id: 'pubg', name: 'PUBG Mobile', shortName: 'PUBG', slug: 'pubg-br', icon: Target, category: 'br',
+    matches: (t) => t.includes('pubg'),
+  },
+  {
+    id: 'ff', name: 'Free Fire', shortName: 'FREE FIRE', slug: 'freefire-br', icon: Flame, category: 'br',
+    matches: (t) => t.includes('free fire'),
+  },
+  {
+    id: 'mlbb', name: 'Mobile Legends: Bang Bang', shortName: 'MLBB', slug: 'mlbb', icon: Swords, category: 'moba',
+    matches: (t) => t.includes('mobile legends') || t.includes('mlbb'),
+  },
 ];
 
 type StatusFilter = 'all' | 'live' | 'upcoming' | 'finished';
@@ -78,8 +102,8 @@ export default function HomeClient() {
 	const [moreOpen, setMoreOpen] = useState(false);
 	const moreDropdownRef = useRef<HTMLDivElement>(null);
 
-	const primaryGames = GAME_PROFILES.slice(0, 8); // ALL, CS2, DOTA 2, LOL, VAL, MLBB, KOG, R6
-	const moreGames = GAME_PROFILES.slice(8);
+	const primaryGames = GAME_PROFILES.slice(0, 8); // ALL + the 7 launch titles
+	const moreGames = GAME_PROFILES.slice(8); // empty until more titles are added
 
 	// Active effective game filter (searchParam takes precedence if set, otherwise tab filter)
 	const activeGame = gameParam !== 'all' ? gameParam : gameFilter;
@@ -116,23 +140,19 @@ export default function HomeClient() {
 					return false;
 
 				if (activeGame !== 'all') {
+					// Category links (?game=football | shooter | br) still work
 					if (activeGame === 'football' && match.gameType !== 'football') return false;
 					if (activeGame === 'shooter' && match.gameType !== 'shooter') return false;
 					if (activeGame === 'br' && match.gameType !== 'br') return false;
 
-					// Match by game title slug or shortcode/name if specific game chosen
-					const titleLower = (match.gameTitle || '').toLowerCase();
-					if (activeGame === 'cs2' && !titleLower.includes('cs') && !titleLower.includes('counter')) return false;
-					if (activeGame === 'dota-2' && !titleLower.includes('dota')) return false;
-					if (activeGame === 'lol' && !titleLower.includes('league') && !titleLower.includes('lol')) return false;
-					if (activeGame === 'val' && !titleLower.includes('val')) return false;
-					if (activeGame === 'mlbb' && !titleLower.includes('mobile legends') && !titleLower.includes('mlbb')) return false;
-					if (activeGame === 'kog' && !titleLower.includes('kings') && !titleLower.includes('kog')) return false;
-					if (activeGame === 'r6' && !titleLower.includes('rainbow') && !titleLower.includes('r6')) return false;
-					if (activeGame === 'fc-26' && !titleLower.includes('fc') && !titleLower.includes('fifa')) return false;
-					if (activeGame === 'codm-mp' && !titleLower.includes('codm') && !titleLower.includes('call of duty')) return false;
-					if (activeGame === 'pubg-br' && !titleLower.includes('pubg')) return false;
-					if (activeGame === 'freefire-br' && !titleLower.includes('free fire')) return false;
+					// A specific game chip: match on the game title name
+					const profile = GAME_PROFILES.find(
+						(g) => g.id === activeGame || g.slug === activeGame,
+					);
+					if (profile?.matches) {
+						const titleLower = (match.gameTitle || '').toLowerCase();
+						if (!profile.matches(titleLower)) return false;
+					}
 				}
 
 				return true;
@@ -239,7 +259,7 @@ export default function HomeClient() {
 								))}
 							</div>
 
-							{/* Game Category Pills -> Replaced with ALL, CS2, DOTA 2, LOL, VAL, MLBB, KOG, R6, and MORE dropdown */}
+							{/* Game pills: ALL + launch titles, with a MORE dropdown for any extras */}
 							<div className="w-full md:w-auto flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none text-xs font-display font-semibold">
 								{primaryGames.map((game) => {
 									const isSelected = activeGame === game.id || activeGame === game.slug;
@@ -268,7 +288,8 @@ export default function HomeClient() {
 									);
 								})}
 
-								{/* MORE Dropdown */}
+								{/* MORE Dropdown (only when there are extra titles) */}
+								{moreGames.length > 0 && (
 								<div ref={moreDropdownRef} className="relative shrink-0">
 									<button
 										type="button"
@@ -320,6 +341,7 @@ export default function HomeClient() {
 										</div>
 									)}
 								</div>
+								)}
 							</div>
 						</div>
 					</div>

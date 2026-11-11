@@ -285,6 +285,11 @@
         if (value === null || value === undefined || value < 0) {
         return 'value must be a non-negative number for score_update'
         }
+
+        // the score must belong to one of the two teams in this match
+        if (team_id !== match.team_home_id && team_id !== match.team_away_id) {
+        return 'team_id does not belong to this match'
+        }
     }
 
     // ── Map end ──────────────────────────────────────────────
@@ -300,6 +305,24 @@
 
         if (!matchMap) return 'match_map_id does not belong to this match'
         if (matchMap.status !== 'live') return 'Map is not currently live'
+
+        // A game can only end once a score has been entered for BOTH teams.
+        // match_maps scores default to 0, so "entered" is read from the
+        // score_update events, not from the score columns.
+        const { data: scoreEvents, error: scoreEventsError } = await adminClient
+        .from('match_events')
+        .select('team_id')
+        .eq('match_id', match.id)
+        .eq('match_map_id', match_map_id)
+        .eq('event_type', 'score_update')
+        .or('is_void.is.null,is_void.eq.false')
+
+        if (scoreEventsError) return 'Could not check the scores for this game. Please try again.'
+
+        const scoredTeams = new Set((scoreEvents ?? []).map((e: { team_id: string | null }) => e.team_id))
+        if (!scoredTeams.has(match.team_home_id) || !scoredTeams.has(match.team_away_id)) {
+        return 'Enter the score for both teams before ending this game'
+        }
     }
 
     // ── Map/mode selection ───────────────────────────────────

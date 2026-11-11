@@ -856,6 +856,8 @@ export function LandingPage() {
             <a href="https://x.com/esportinghq" target="_blank" rel="noopener noreferrer">Twitter / X</a>
             <a href="https://instagram.com/esportinghq" target="_blank" rel="noopener noreferrer">Instagram</a>
             <a href="https://discord.gg/esportinghq" target="_blank" rel="noopener noreferrer">Discord</a>
+            <Link href="/terms">Terms</Link>
+            <Link href="/privacy">Privacy</Link>
             <Link href="/feed" style={{ color: 'var(--pink)', fontWeight: 600 }}>Live Feed →</Link>
           </div>
         </div>

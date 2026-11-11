@@ -334,10 +334,10 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
                   <input
                     type="number"
                     min={1}
-                    max={15}
+                    max={99}
                     value={stage.best_of}
                     onChange={(e) => updateStage(i, 'best_of', Number(e.target.value))}
-                    className="w-8 bg-transparent text-text-primary text-sm font-data focus:outline-none text-center"
+                    className="w-10 bg-transparent text-text-primary text-sm font-data focus:outline-none text-center"
                     title="Best of maps"
                   />
                 </div>

@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/client';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import SeriesPanel, { type SetupChange } from './SeriesPanel';
 
 type Status = 'scheduled' | 'delayed' | 'live' | 'completed' | 'cancelled' | 'walkover';
 type MatchFormat = 'head_to_head' | 'battle_royale';
@@ -281,9 +282,6 @@ export default function MatchRoomClient({
 	const [eventTeamId, setEventTeamId] = useState(match.team_home_id ?? '');
 	const [eventPlayerId, setEventPlayerId] = useState('');
 	const [eventMinute, setEventMinute] = useState('');
-	const [mapSlotId, setMapSlotId] = useState(maps[0]?.id ?? '');
-	const [selectedMapId, setSelectedMapId] = useState('');
-	const [selectedModeId, setSelectedModeId] = useState('');
 	const [homeScoreInput, setHomeScoreInput] = useState('0');
 	const [awayScoreInput, setAwayScoreInput] = useState('0');
 	const [durationMinutes, setDurationMinutes] = useState('');
@@ -299,21 +297,15 @@ export default function MatchRoomClient({
 	);
 
 	const isFootball = match.game_titles?.game_types?.slug === 'football';
-	const isShooter = match.game_titles?.game_types?.slug === 'shooter';
 	const isBattleRoyale = match.match_format === 'battle_royale';
+	// Head-to-head, non-football games (shooters, MOBA) are played as a series of games
+	const isSeries = !isFootball && !isBattleRoyale;
 	const visibleEvents = events.filter((event) => !event.is_void);
-	const currentMap = maps.find((map) => map.id === mapSlotId) ?? maps[0] ?? null;
-	const liveMap = maps.find((map) => map.status === 'live') ?? currentMap;
+	// The game being played right now. Never falls back to a game that hasn't started.
+	const liveMap = maps.find((map) => map.status === 'live') ?? null;
 	const selectedEventConfig =
 		FOOTBALL_EVENTS.find((item) => item.type === eventType) ?? FOOTBALL_EVENTS[0];
 	const eventPlayers = lineups.filter((lineup) => lineup.team_id === eventTeamId);
-	const allowedModes = selectedMapId
-		? availableModes.filter((mode) =>
-				mapModeLinks.some(
-					(link) => link.map_id === selectedMapId && link.mode_id === mode.id,
-				),
-			)
-		: availableModes;
 
 	const refreshMaps = useCallback(async () => {
 		const { data } = await supabase
@@ -325,6 +317,17 @@ export default function MatchRoomClient({
 			.order('map_number', { ascending: true });
 
 		if (data) setMaps(data as unknown as MatchMap[]);
+	}, [match.id, supabase]);
+
+	const refreshEvents = useCallback(async () => {
+		const { data } = await supabase
+			.from('match_events')
+			.select('*, teams(name, short_code), players(gamertag, real_name)')
+			.eq('match_id', match.id)
+			.order('sequence_no', { ascending: false })
+			.limit(40);
+
+		if (data) setEvents(data as unknown as MatchEvent[]);
 	}, [match.id, supabase]);
 
 	useEffect(() => {
@@ -498,16 +501,40 @@ export default function MatchRoomClient({
 		});
 	}
 
-	async function selectMapMode() {
-		if (!currentMap) return;
-		await runAction('map-mode', async () => {
+	// Save map/mode choices for several games at once (no game is started).
+	async function saveSeriesSetup(changes: SetupChange[]) {
+		if (changes.length === 0) return;
+		await runAction('series-setup', async () => {
+			try {
+				for (const change of changes) {
+					await edgeCall('select-map-mode', {
+						match_id: match.id,
+						match_map_id: change.slotId,
+						map_id: change.mapId || null,
+						mode_id: change.modeId || null,
+						start_map: false,
+					});
+				}
+			} finally {
+				// Show what was saved even if a later game failed
+				await refreshMaps();
+			}
+		});
+	}
+
+	// Start one game using the map/mode already saved for it.
+	// The server refuses unless every game is set up and the earlier games have ended.
+	async function startGame(slot: MatchMap) {
+		await runAction(`start-${slot.id}`, async () => {
 			await edgeCall('select-map-mode', {
 				match_id: match.id,
-				match_map_id: currentMap.id,
-				map_id: selectedMapId || null,
-				mode_id: selectedModeId || null,
+				match_map_id: slot.id,
+				map_id: slot.map_id,
+				mode_id: slot.mode_id,
 				start_map: true,
 			});
+			setHomeScoreInput('0');
+			setAwayScoreInput('0');
 			await refreshMaps();
 		});
 	}
@@ -531,12 +558,13 @@ export default function MatchRoomClient({
 		});
 	}
 
-	async function updateShooterScore() {
+	async function saveScore() {
 		await runAction('score-update', async () => {
 			if (!match.team_home_id || !match.team_away_id) return;
 			await postScoreUpdate(match.team_home_id, homeScoreInput);
 			await postScoreUpdate(match.team_away_id, awayScoreInput);
 			await refreshMaps();
+			await refreshEvents();
 		});
 	}
 
@@ -555,7 +583,10 @@ export default function MatchRoomClient({
 				},
 			});
 			setDurationMinutes('');
+			setHomeScoreInput('0');
+			setAwayScoreInput('0');
 			await refreshMaps();
+			await refreshEvents();
 		});
 	}
 
@@ -693,27 +724,26 @@ export default function MatchRoomClient({
 						)}
 					</section>
 
-					{isShooter && !isBattleRoyale ? (
-						<section className="rounded-lg border border-border-line bg-bg-surface p-5">
-							<h3 className="mb-4 font-semibold">Map Breakdown</h3>
-							<div className="space-y-3">
-								{maps.map((map) => (
-									<div
-										key={map.id}
-										className="grid gap-3 rounded-lg border border-border-line bg-bg-surface p-4 md:grid-cols-[80px_1fr_120px_120px]"
-									>
-										<p className="font-semibold">Map {map.map_number}</p>
-										<p className="text-sm text-text-muted">
-											{map.maps?.name ?? 'Map TBD'} - {map.modes?.name ?? 'Mode TBD'}
-										</p>
-										<p className="text-sm">
-											{numberValue(map.home_score)} - {numberValue(map.away_score)}
-										</p>
-										<p className="text-xs uppercase text-text-muted">{map.status}</p>
-									</div>
-								))}
-							</div>
-						</section>
+					{isSeries ? (
+						<SeriesPanel
+							match={match}
+							maps={maps}
+							events={events}
+							availableMaps={availableMaps}
+							availableModes={availableModes}
+							mapModeLinks={mapModeLinks}
+							pending={pending}
+							homeScoreInput={homeScoreInput}
+							awayScoreInput={awayScoreInput}
+							durationMinutes={durationMinutes}
+							onHomeScoreChange={setHomeScoreInput}
+							onAwayScoreChange={setAwayScoreInput}
+							onDurationChange={setDurationMinutes}
+							onSaveSetup={saveSeriesSetup}
+							onStartGame={startGame}
+							onSaveScore={saveScore}
+							onEndGame={endMap}
+						/>
 					) : null}
 
 					<section className="rounded-lg border border-border-line bg-bg-surface p-5">
@@ -791,116 +821,10 @@ export default function MatchRoomClient({
 							</div>
 						) : null}
 
-						{isShooter && !isBattleRoyale ? (
-							<div className="space-y-5">
-								<div className="grid gap-4 md:grid-cols-3">
-									<label className="text-sm text-text-muted">
-										Map Slot
-										<select
-											value={mapSlotId}
-											onChange={(event) => setMapSlotId(event.target.value)}
-											className="mt-2 w-full rounded-lg border border-border-line bg-bg-surface px-3 py-2 text-text-primary"
-										>
-											{maps.map((map) => (
-												<option key={map.id} value={map.id}>
-													Map {map.map_number} - {map.status}
-												</option>
-											))}
-										</select>
-									</label>
-									<label className="text-sm text-text-muted">
-										Map
-										<select
-											value={selectedMapId}
-											onChange={(event) => {
-												setSelectedMapId(event.target.value);
-												setSelectedModeId('');
-											}}
-											className="mt-2 w-full rounded-lg border border-border-line bg-bg-surface px-3 py-2 text-text-primary"
-										>
-											<option value="">Select map</option>
-											{availableMaps.map((map) => (
-												<option key={map.id} value={map.id}>
-													{map.name}
-												</option>
-											))}
-										</select>
-									</label>
-									<label className="text-sm text-text-muted">
-										Mode
-										<select
-											value={selectedModeId}
-											onChange={(event) => setSelectedModeId(event.target.value)}
-											className="mt-2 w-full rounded-lg border border-border-line bg-bg-surface px-3 py-2 text-text-primary"
-										>
-											<option value="">Select mode</option>
-											{allowedModes.map((mode) => (
-												<option key={mode.id} value={mode.id}>
-													{mode.name}
-												</option>
-											))}
-										</select>
-									</label>
-									<button
-										type="button"
-										onClick={selectMapMode}
-										disabled={pending === 'map-mode' || (!selectedMapId && !selectedModeId)}
-										className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-text-primary hover:bg-green-500 disabled:opacity-50 md:col-span-3"
-									>
-										Start Map
-									</button>
-								</div>
-								<div className="grid gap-4 md:grid-cols-4">
-									<label className="text-sm text-text-muted">
-										Home Score
-										<input
-											value={homeScoreInput}
-											onChange={(event) => setHomeScoreInput(event.target.value)}
-											type="number"
-											min="0"
-											className="mt-2 w-full rounded-lg border border-border-line bg-bg-surface px-3 py-2 text-text-primary"
-										/>
-									</label>
-									<label className="text-sm text-text-muted">
-										Away Score
-										<input
-											value={awayScoreInput}
-											onChange={(event) => setAwayScoreInput(event.target.value)}
-											type="number"
-											min="0"
-											className="mt-2 w-full rounded-lg border border-border-line bg-bg-surface px-3 py-2 text-text-primary"
-										/>
-									</label>
-									<label className="text-sm text-text-muted">
-										Duration Min
-										<input
-											value={durationMinutes}
-											onChange={(event) => setDurationMinutes(event.target.value)}
-											type="number"
-											min="0"
-											className="mt-2 w-full rounded-lg border border-border-line bg-bg-surface px-3 py-2 text-text-primary"
-										/>
-									</label>
-									<div className="flex items-end gap-2">
-										<button
-											type="button"
-											onClick={updateShooterScore}
-											disabled={pending === 'score-update' || !liveMap}
-											className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-text-primary hover:bg-blue-500 disabled:opacity-50"
-										>
-											Update Score
-										</button>
-										<button
-											type="button"
-											onClick={endMap}
-											disabled={pending === 'map-end' || !liveMap}
-											className="flex-1 rounded-lg bg-bg-elevated px-4 py-2 text-sm font-semibold text-text-primary hover:bg-bg-elevated disabled:opacity-50"
-										>
-											End Map
-										</button>
-									</div>
-								</div>
-							</div>
+						{isSeries ? (
+							<p className="text-sm text-text-muted">
+								Games in this series are set up, started, scored and ended in the Series panel above.
+							</p>
 						) : null}
 
 						{isBattleRoyale ? (
