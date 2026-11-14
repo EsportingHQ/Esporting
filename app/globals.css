@@ -21,6 +21,9 @@
   /* ── Accent: Favorite ── */
   --color-accent-favorite: #FBBF24;
 
+  /* ── Accent: Live Cyan (brand secondary) ── */
+  --color-accent-cyan: #00E0FF;
+
   /* ── State Colors ── */
   --color-state-win: #0EA5E9;
   --color-state-loss: #EF4444;

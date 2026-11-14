@@ -8,6 +8,11 @@ import Image from 'next/image';
 import { Star, Menu, X, Bell } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
+// Live Scores gets the brand cyan as a solid pill with dark text, so it stays
+// readable on both the dark and light themes.
+const LIVE_PILL =
+  'bg-accent-cyan text-[#0B0B0D] font-bold border border-accent-cyan shadow-[0_0_15px_rgba(0,224,255,0.35)] hover:brightness-110';
+
 export function PublicNav() {
   const pathname = usePathname();
   const { favorites } = useFavorites();
@@ -60,6 +65,7 @@ export function PublicNav() {
           <nav className="hidden md:flex items-center gap-1.5 font-display font-semibold tracking-wide bg-text-primary/[0.03] p-1.5 rounded-full border border-text-primary/[0.06] backdrop-blur-md" aria-label="Main Navigation">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
+              const isLive = link.href === '/feed';
 
               return (
                 <NextLink
@@ -67,7 +73,9 @@ export function PublicNav() {
                   href={link.href}
                   aria-current={isActive ? 'page' : undefined}
                   className={`flex items-center gap-2 text-xs transition-all duration-200 rounded-full px-4 py-2 min-h-[36px] ${
-                    isActive
+                    isLive
+                      ? `${LIVE_PILL} ${isActive ? 'ring-2 ring-accent-cyan/60 ring-offset-2 ring-offset-bg-void' : ''}`
+                      : isActive
                       ? 'bg-accent-primary/20 text-accent-primary font-bold border border-accent-primary/40 shadow-[0_0_15px_rgba(255,31,109,0.2)]'
                       : 'text-text-muted hover:text-text-primary hover:bg-text-primary/[0.06]'
                   }`}
@@ -141,6 +149,7 @@ export function PublicNav() {
         <div className="px-5 py-6 space-y-3 font-display text-sm">
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
+            const isLive = link.href === '/feed';
 
             return (
               <NextLink
@@ -148,7 +157,9 @@ export function PublicNav() {
                 href={link.href}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`flex items-center justify-between p-3.5 rounded-xl border transition-all ${
-                  isActive
+                  isLive
+                    ? `${LIVE_PILL} ${isActive ? 'ring-2 ring-accent-cyan/60' : ''}`
+                    : isActive
                     ? 'bg-accent-primary/20 text-accent-primary font-bold border-accent-primary/40 shadow-[0_0_15px_rgba(255,31,109,0.15)]'
                     : 'text-text-muted hover:text-text-primary bg-text-primary/[0.02] border-text-primary/[0.04]'
                 }`}

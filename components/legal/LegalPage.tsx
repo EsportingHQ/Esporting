@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { PublicNav } from '@/components/layout/public-nav';
 
 export type LegalSection = {
@@ -67,18 +66,6 @@ export function LegalPage({
               </div>
             </section>
           ))}
-        </div>
-
-        <div className="mt-14 pt-6 border-t border-text-primary/[0.08] flex flex-wrap gap-x-6 gap-y-2 text-sm font-body text-text-muted">
-          <Link href="/terms" className="hover:text-accent-primary transition-colors">
-            Terms of Service
-          </Link>
-          <Link href="/privacy" className="hover:text-accent-primary transition-colors">
-            Privacy Policy
-          </Link>
-          <Link href="/" className="hover:text-accent-primary transition-colors">
-            Back to EsportingHQ
-          </Link>
         </div>
       </main>
     </div>

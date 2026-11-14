@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
+import { SiteFooter } from '@/components/layout/SiteFooter';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -181,6 +182,7 @@ export default function RootLayout({
       <body className="min-h-screen flex flex-col relative bg-bg-void text-text-primary">
         <div className="noise-overlay" aria-hidden="true" />
         {children}
+        <SiteFooter />
       </body>
     </html>
   );

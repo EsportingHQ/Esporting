@@ -13,6 +13,7 @@ import {
 	Layout,
 	UserPlus,
 	Newspaper,
+	Radio,
 } from 'lucide-react';
 
 type NavItem = {
@@ -27,6 +28,7 @@ const adminNav: NavItem[] = [
 	{ label: 'Invite Organiser', href: '/admin/invites', icon: Users },
 	{ label: 'Invite Contributor', href: '/contributor/new', icon: UserPlus },
 	{ label: 'Match Assignments', href: '/admin/matches', icon: Activity },
+	{ label: 'Contributor View', href: '/contributor', icon: Radio },
 	{ label: 'Manage Users', href: '/admin/users', icon: Settings },
 	{ label: 'Game Catalogue', href: '/admin/catalogue', icon: Shield },
 ];

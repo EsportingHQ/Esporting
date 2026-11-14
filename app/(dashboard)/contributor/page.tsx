@@ -68,7 +68,10 @@ export default async function ContributorPage() {
 		roles.includes('super_admin') || roles.includes('contributor');
 	if (!canAccess) redirect('/dashboard-redirect');
 
-	const { data: rawMatches } = await supabase
+	const isAdmin = roles.includes('super_admin');
+
+	// Admins see every active match; contributors see only the ones assigned to them
+	let matchQuery = supabase
 		.from('matches')
 		.select(
 			`
@@ -79,9 +82,10 @@ export default async function ContributorPage() {
         comp_instances(name)
       `,
 		)
-		.eq('contrib_id', user.id)
 		.not('status', 'in', '("completed","cancelled")')
 		.order('scheduled_at', { ascending: true });
+	if (!isAdmin) matchQuery = matchQuery.eq('contrib_id', user.id);
+	const { data: rawMatches } = await matchQuery;
 
 	const matches = (rawMatches ?? []) as unknown as Match[];
 
@@ -89,7 +93,7 @@ export default async function ContributorPage() {
 		<div className="space-y-6 font-body">
 			<div>
 				<h2 className="font-display font-black text-2xl tracking-wider text-text-primary uppercase">
-					Assigned Matches
+					{isAdmin ? 'All Matches' : 'Assigned Matches'}
 				</h2>
 				<p className="text-xs text-text-muted font-data mt-1 uppercase">
 					CONTRIBUTOR LIVE TRANSMISSION DUTY ROSTER

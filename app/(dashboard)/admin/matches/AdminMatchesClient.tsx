@@ -161,6 +161,13 @@ export default function AdminMatchesClient({
 							</p>
 						</div>
 
+						<div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+							<a
+								href={`/contributor/matches/${match.id}`}
+								style={{ fontSize: 12, color: '#00E0FF', textDecoration: 'underline', whiteSpace: 'nowrap' }}
+							>
+								Open match room
+							</a>
 						<select
 							value={match.contrib_id ?? ''}
 							onChange={(e) =>
@@ -183,6 +190,7 @@ export default function AdminMatchesClient({
 									</option>
 								))}
 						</select>
+						</div>
 					</div>
 				))}
 			</div>

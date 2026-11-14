@@ -855,6 +855,7 @@ export function LandingPage() {
           <div className="landing-footer-links">
             <a href="https://x.com/esportinghq" target="_blank" rel="noopener noreferrer">Twitter / X</a>
             <a href="https://instagram.com/esportinghq" target="_blank" rel="noopener noreferrer">Instagram</a>
+            <a href="https://tiktok.com/@esportinghq" target="_blank" rel="noopener noreferrer">TikTok</a>
             <a href="https://discord.gg/esportinghq" target="_blank" rel="noopener noreferrer">Discord</a>
             <Link href="/terms">Terms</Link>
             <Link href="/privacy">Privacy</Link>
