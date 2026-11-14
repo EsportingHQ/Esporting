@@ -7,6 +7,7 @@ import { useFavorites } from '@/hooks/useFavorites';
 import Image from 'next/image';
 import { Star, Menu, X, Bell } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { createClient } from '@/lib/supabase/client';
 
 // Live Scores gets the brand cyan as a solid pill with dark text, so it stays
 // readable on both the dark and light themes.
@@ -17,6 +18,18 @@ export function PublicNav() {
   const pathname = usePathname();
   const { favorites } = useFavorites();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // When someone is signed in, the header button becomes DASHBOARD and sends them
+  // to the right dashboard for their role (admin, organiser or contributor).
+  const [signedIn, setSignedIn] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data }) => setSignedIn(Boolean(data.session)));
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) =>
+      setSignedIn(Boolean(session)),
+    );
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
@@ -111,10 +124,10 @@ export function PublicNav() {
 
             {/* Launch App / Dashboard Link */}
             <NextLink
-              href="/login"
+              href={signedIn ? '/dashboard-redirect' : '/login'}
               className="hidden sm:inline-flex items-center justify-center btn-primary px-5 py-2.5 text-xs font-display font-bold tracking-wider rounded-xl min-h-[42px]"
             >
-              LAUNCH APP
+              {signedIn ? 'DASHBOARD' : 'LAUNCH APP'}
             </NextLink>
 
             {/* Mobile Menu Toggle Button */}
@@ -178,11 +191,11 @@ export function PublicNav() {
           })}
 
           <NextLink
-            href="/login"
+            href={signedIn ? '/dashboard-redirect' : '/login'}
             onClick={() => setMobileMenuOpen(false)}
             className="flex items-center justify-center py-3.5 mt-4 btn-primary rounded-xl font-bold text-white text-xs tracking-wider uppercase min-h-[44px]"
           >
-            LAUNCH APP
+            {signedIn ? 'DASHBOARD' : 'LAUNCH APP'}
           </NextLink>
         </div>
       </div>
