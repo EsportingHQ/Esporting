@@ -4,13 +4,42 @@ import { ReactNode, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { LogOut, Menu, X } from 'lucide-react';
+import {
+	Activity,
+	Layout,
+	LogOut,
+	Menu,
+	Newspaper,
+	Plus,
+	Radio,
+	Settings,
+	Shield,
+	UserPlus,
+	Users,
+	X,
+} from 'lucide-react';
 import { logout } from '@/lib/actions/auth';
 
-type NavItem = {
+// The layout is a server component, so it can only hand this client component
+// plain data. Icons are passed by name and looked up here.
+const NAV_ICONS = {
+	layout: Layout,
+	newspaper: Newspaper,
+	users: Users,
+	userPlus: UserPlus,
+	activity: Activity,
+	settings: Settings,
+	shield: Shield,
+	plus: Plus,
+	radio: Radio,
+} as const;
+
+export type NavIconName = keyof typeof NAV_ICONS;
+
+export type NavItem = {
 	label: string;
 	href: string;
-	icon: React.ComponentType<{ className?: string }>;
+	icon: NavIconName;
 };
 
 interface DashboardShellProps {
@@ -126,7 +155,7 @@ export function DashboardShell({ children, nav, userEmail, title }: DashboardShe
 
 					<nav className="space-y-1.5">
 						{nav.map((item) => {
-							const Icon = item.icon;
+							const Icon = NAV_ICONS[item.icon];
 							const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
 							return (
 								<Link

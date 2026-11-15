@@ -1,74 +1,37 @@
 import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { logout } from '@/lib/actions/auth';
-import Link from 'next/link';
-import { DashboardShell } from './DashboardShell';
-import {
-	Shield,
-	Activity,
-	Users,
-	Settings,
-	LogOut,
-	Layout,
-	UserPlus,
-	Newspaper,
-	Radio,
-} from 'lucide-react';
-
-type NavItem = {
-	label: string;
-	href: string;
-	icon: React.ComponentType<{ className?: string }>;
-};
+import { DashboardShell, type NavItem } from './DashboardShell';
 
 const adminNav: NavItem[] = [
-	{ label: 'Overview', href: '/admin', icon: Layout },
-	{ label: 'News Desk', href: '/admin/news', icon: Newspaper },
-	{ label: 'Invite Organiser', href: '/admin/invites', icon: Users },
-	{ label: 'Invite Contributor', href: '/contributor/new', icon: UserPlus },
-	{ label: 'Match Assignments', href: '/admin/matches', icon: Activity },
-	{ label: 'Contributor View', href: '/contributor', icon: Radio },
-	{ label: 'Manage Users', href: '/admin/users', icon: Settings },
-	{ label: 'Game Catalogue', href: '/admin/catalogue', icon: Shield },
+	{ label: 'Overview', href: '/admin', icon: 'layout' },
+	{ label: 'News Desk', href: '/admin/news', icon: 'newspaper' },
+	{ label: 'Invite Organiser', href: '/admin/invites', icon: 'users' },
+	{ label: 'Invite Contributor', href: '/contributor/new', icon: 'userPlus' },
+	{ label: 'Match Assignments', href: '/admin/matches', icon: 'activity' },
+	{ label: 'Contributor View', href: '/contributor', icon: 'radio' },
+	{ label: 'Manage Users', href: '/admin/users', icon: 'settings' },
+	{ label: 'Game Catalogue', href: '/admin/catalogue', icon: 'shield' },
 ];
 
 const organiserNav: NavItem[] = [
-	{ label: 'My Competitions', href: '/organiser', icon: Layout },
+	{ label: 'My Competitions', href: '/organiser', icon: 'layout' },
 	{
 		label: 'New Competition',
 		href: '/organiser/competitions/new',
-		icon: PlusIcon,
+		icon: 'plus',
 	},
 	{
 		label: 'News',
 		href: '/organiser/news',
-		icon: Activity,
+		icon: 'activity',
 	},
-	{ label: 'Invite Contributor', href: '/contributor/new', icon: UserPlus },
+	{ label: 'Invite Contributor', href: '/contributor/new', icon: 'userPlus' },
 ];
 
 const contributorNav: NavItem[] = [
-	{ label: 'Assigned Matches', href: '/contributor', icon: Activity },
+	{ label: 'Assigned Matches', href: '/contributor', icon: 'activity' },
 ];
-
-function PlusIcon({ className }: { className?: string }) {
-	return (
-		<svg
-			className={className}
-			fill="none"
-			viewBox="0 0 24 24"
-			stroke="currentColor"
-		>
-			<path
-				strokeLinecap="round"
-				strokeLinejoin="round"
-				strokeWidth={2}
-				d="M12 4v16m8-8H4"
-			/>
-		</svg>
-	);
-}
 
 function getNav(roles: string[]): {
 	nav: NavItem[];

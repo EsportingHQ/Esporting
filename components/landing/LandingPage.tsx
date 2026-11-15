@@ -101,20 +101,20 @@ export function LandingPage() {
         .landing-nav-preview {
           font-family: 'Inter', sans-serif;
           font-size: 13px;
-          font-weight: 600;
-          color: #B7B7BC;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          font-weight: 700;
+          color: #0B0B0D;
+          background: #00E0FF;
+          border: 1px solid #00E0FF;
           padding: 9px 18px;
           border-radius: 20px;
           text-decoration: none;
-          transition: all 0.2s ease;
+          box-shadow: 0 0 14px rgba(0, 224, 255, 0.35);
+          transition: filter 0.2s ease, transform 0.2s ease;
         }
 
         .landing-nav-preview:hover {
-          color: var(--white);
-          background: rgba(255, 255, 255, 0.1);
-          border-color: rgba(255, 255, 255, 0.2);
+          filter: brightness(1.08);
+          transform: translateY(-1px);
         }
 
         .landing-nav-cta {
