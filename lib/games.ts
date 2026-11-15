@@ -1,4 +1,4 @@
-import { Gamepad2, Target, type LucideIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 // One list of launch games, used by every game filter (Live feed, Competitions).
 // Add a game here once and it shows up everywhere.
@@ -30,7 +30,7 @@ export const GAME_PROFILES: GameProfile[] = [
   },
   {
     id: 'fcm', name: 'FC Mobile', shortName: 'FC MOBILE', slug: 'fc-mobile', category: 'football',
-    icon: Gamepad2, // no logo file yet
+    iconSrc: '/games/fcm.svg',
     matches: (t) => t.includes('fc mobile'),
   },
   {
@@ -46,7 +46,7 @@ export const GAME_PROFILES: GameProfile[] = [
   },
   {
     id: 'pubg', name: 'PUBG Mobile', shortName: 'PUBG', slug: 'pubg-br', category: 'br',
-    icon: Target, // no logo file yet
+    iconSrc: '/games/pubg.svg',
     matches: (t) => t.includes('pubg'),
   },
   {
