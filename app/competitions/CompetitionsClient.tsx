@@ -7,6 +7,8 @@ import { SearchInput } from '@/components/ui/SearchInput';
 import { FavoriteStar } from '@/components/broadcast/FavoriteStar';
 import { StatusDot } from '@/components/broadcast/StatusDot';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { GameIcon } from '@/components/ui/GameIcon';
+import { GAME_PROFILES } from '@/lib/games';
 import { Trophy, Calendar, Users, Filter, CheckCircle2, PlayCircle, PlusCircle, Sparkles } from 'lucide-react';
 
 interface Competition {
@@ -87,9 +89,10 @@ export default function CompetitionsPage() {
 
     const matchesGame =
       selectedGame === 'all' ||
-      (selectedGame === 'fc26' && comp.gameTitles.some((t) => t.includes('FC 26'))) ||
-      (selectedGame === 'codm' && comp.gameTitles.some((t) => t.includes('CODM'))) ||
-      (selectedGame === 'pubg' && comp.gameTitles.some((t) => t.includes('PUBG')));
+      (() => {
+        const game = GAME_PROFILES.find((g) => g.id === selectedGame);
+        return Boolean(game?.matches) && comp.gameTitles.some((t) => game!.matches!(t.toLowerCase()));
+      })();
 
     const matchesStatus = selectedStatus === 'all' || comp.status === selectedStatus;
 
@@ -166,23 +169,19 @@ export default function CompetitionsPage() {
           {/* Game title pills */}
           <div className="flex items-center gap-2">
             <span className="text-text-muted">Game:</span>
-            <div className="flex bg-text-primary/[0.03] p-1 rounded-xl border border-text-primary/[0.06] overflow-hidden">
-              {[
-                { id: 'all', label: 'All' },
-                { id: 'fc26', label: 'FC 26' },
-                { id: 'codm', label: 'CODM' },
-                { id: 'pubg', label: 'PUBG' },
-              ].map((g) => (
+            <div className="flex flex-wrap gap-1 bg-text-primary/[0.03] p-1 rounded-xl border border-text-primary/[0.06]">
+              {GAME_PROFILES.map((g) => (
                 <button
                   key={g.id}
                   onClick={() => setSelectedGame(g.id)}
-                  className={`px-3 py-1 font-display font-semibold rounded-lg transition-all ${
+                  className={`px-3 py-1 font-display font-semibold rounded-lg transition-all flex items-center gap-1.5 ${
                     selectedGame === g.id
                       ? 'bg-accent-primary text-white font-bold shadow-[0_0_12px_rgba(255,31,109,0.3)]'
                       : 'text-text-muted hover:text-text-primary hover:bg-text-primary/[0.04]'
                   }`}
                 >
-                  {g.label}
+                  <GameIcon game={g} className="w-3.5 h-3.5" />
+                  {g.shortName}
                 </button>
               ))}
             </div>

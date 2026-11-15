@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PublicNav } from '@/components/layout/public-nav';
@@ -10,6 +9,8 @@ import { MatchCard } from '@/components/broadcast/match-card';
 import { MatchCardSkeleton } from '@/components/broadcast/MatchCardSkeleton';
 import { LeagueSection } from '@/components/broadcast/LeagueSection';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { GameIcon } from '@/components/ui/GameIcon';
+import { GAME_PROFILES } from '@/lib/games';
 import { ScoreToast } from '@/components/ui/ScoreToast';
 import { useLiveFeed } from '@/hooks/useLiveFeed';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -19,65 +20,9 @@ import {
   Newspaper, 
   ArrowRight, 
   Star, 
-  Flame, 
   Zap, 
   ChevronDown, 
-  Crosshair, 
-  Gamepad2, 
-  Target, 
-  Swords, 
 } from 'lucide-react';
-
-export interface GameProfile {
-  id: string;
-  name: string;
-  shortName: string;
-  slug: string;
-  icon?: LucideIcon;
-  category: 'football' | 'shooter' | 'br' | 'moba' | 'all';
-  /** Does a match's game title (as stored in game_titles.name) belong to this game? */
-  matches?: (titleLower: string) => boolean;
-}
-
-// Launch titles, in display order. The first 8 entries become chips; anything
-// after that goes into the MORE dropdown (hidden while there is nothing to show).
-// Titles are matched on the game_titles.name values seeded in the database:
-// 'FC 26', 'FC Mobile', 'eFootball Mobile', 'CODM Multiplayer',
-// 'CODM Battle Royale', 'PUBG Battle Royale', 'Free Fire Battle Royale',
-// and 'Mobile Legends: Bang Bang'.
-export const GAME_PROFILES: GameProfile[] = [
-  { id: 'all', name: 'All Games', shortName: 'ALL', slug: 'all', category: 'all' },
-  {
-    id: 'fc26', name: 'EA SPORTS FC', shortName: 'EAFC', slug: 'fc-26', icon: Gamepad2, category: 'football',
-    // FC 26, FC 27, ... but not "FC Mobile"
-    matches: (t) => /\bfc\s?\d{2}\b/.test(t),
-  },
-  {
-    id: 'fcm', name: 'FC Mobile', shortName: 'FC MOBILE', slug: 'fc-mobile', icon: Gamepad2, category: 'football',
-    matches: (t) => t.includes('fc mobile'),
-  },
-  {
-    id: 'efb', name: 'eFootball Mobile', shortName: 'EFOOTBALL', slug: 'efootball-mobile', icon: Gamepad2, category: 'football',
-    matches: (t) => t.includes('efootball'),
-  },
-  {
-    id: 'codm', name: 'Call of Duty: Mobile', shortName: 'CODM', slug: 'codm-mp', icon: Crosshair, category: 'shooter',
-    // Covers both Multiplayer and Battle Royale titles
-    matches: (t) => t.includes('codm') || t.includes('call of duty'),
-  },
-  {
-    id: 'pubg', name: 'PUBG Mobile', shortName: 'PUBG', slug: 'pubg-br', icon: Target, category: 'br',
-    matches: (t) => t.includes('pubg'),
-  },
-  {
-    id: 'ff', name: 'Free Fire', shortName: 'FREE FIRE', slug: 'freefire-br', icon: Flame, category: 'br',
-    matches: (t) => t.includes('free fire'),
-  },
-  {
-    id: 'mlbb', name: 'Mobile Legends: Bang Bang', shortName: 'MLBB', slug: 'mlbb', icon: Swords, category: 'moba',
-    matches: (t) => t.includes('mobile legends') || t.includes('mlbb'),
-  },
-];
 
 type StatusFilter = 'all' | 'live' | 'upcoming' | 'finished';
 
@@ -263,7 +208,6 @@ export default function HomeClient() {
 							<div className="w-full md:w-auto flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none text-xs font-display font-semibold">
 								{primaryGames.map((game) => {
 									const isSelected = activeGame === game.id || activeGame === game.slug;
-									const Icon = game.icon;
 
 									return (
 										<button
@@ -282,7 +226,7 @@ export default function HomeClient() {
 													: 'bg-text-primary/[0.02] border-text-primary/[0.06] text-text-muted hover:text-text-primary hover:bg-text-primary/[0.05]'
 											}`}
 										>
-											{Icon && <Icon className="w-3.5 h-3.5 shrink-0 opacity-80" />}
+											<GameIcon game={game} className="w-4 h-4 opacity-90" />
 											<span>{game.shortName}</span>
 										</button>
 									);
