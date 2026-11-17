@@ -11,7 +11,7 @@ import { GameIcon } from '@/components/ui/GameIcon';
 import { GAME_PROFILES } from '@/lib/games';
 import { Trophy, Calendar, Users, Filter, CheckCircle2, PlayCircle, PlusCircle, Sparkles } from 'lucide-react';
 
-interface Competition {
+export interface Competition {
   id: string;
   name: string;
   slug: string;
@@ -24,61 +24,16 @@ interface Competition {
   liveMatchesCount?: number;
 }
 
-export default function CompetitionsPage() {
+export default function CompetitionsPage({
+  competitions,
+}: {
+  competitions: Competition[];
+}) {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedGame, setSelectedGame] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
 
-  const [competitions] = useState<Competition[]>([
-    {
-      id: 'c1',
-      name: 'UI eSports League Season 1',
-      slug: 'ui-esports-league',
-      format: 'league',
-      status: 'ongoing',
-      gameTitles: ['FC 26', 'CODM Multiplayer'],
-      prizePool: '₦500,000',
-      startDate: 'July 1, 2026',
-      teamCount: 16,
-      liveMatchesCount: 2,
-    },
-    {
-      id: 'c2',
-      name: 'CODM Battle Royale Arena',
-      slug: 'codm-br-arena',
-      format: 'ranking',
-      status: 'ongoing',
-      gameTitles: ['CODM Battle Royale'],
-      prizePool: '₦200,000 + Trophy',
-      startDate: 'July 5, 2026',
-      teamCount: 20,
-      liveMatchesCount: 1,
-    },
-    {
-      id: 'c3',
-      name: 'PUBG Mobile Showdown',
-      slug: 'pubg-mobile-showdown',
-      format: 'ranking',
-      status: 'registration',
-      gameTitles: ['PUBG Battle Royale'],
-      prizePool: '₦350,000',
-      startDate: 'July 25, 2026',
-      teamCount: 12,
-      liveMatchesCount: 0,
-    },
-    {
-      id: 'c4',
-      name: 'FC Mobile Cup',
-      slug: 'fc-mobile-cup',
-      format: 'knockout',
-      status: 'completed',
-      gameTitles: ['FC Mobile'],
-      prizePool: 'Trophy Only',
-      startDate: 'June 10, 2026',
-      teamCount: 8,
-      liveMatchesCount: 0,
-    },
-  ]);
+
 
   // Search & Filter Logic
   const filteredComps = competitions.filter((comp) => {
@@ -282,7 +237,7 @@ export default function CompetitionsPage() {
                   <span className="block text-[10px] text-text-muted font-display font-bold uppercase tracking-wider">
                     Prize Pool
                   </span>
-                  <span className="text-accent-glow font-bold font-data text-sm">{comp.prizePool}</span>
+                  <span className="text-accent-glow font-bold font-data text-sm">{comp.prizePool || "TBA"}</span>
                 </div>
                 <div>
                   <span className="block text-[10px] text-text-muted font-display font-bold uppercase tracking-wider">
