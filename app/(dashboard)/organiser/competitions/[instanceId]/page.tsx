@@ -101,6 +101,7 @@ export default async function OrganiserCompetitionDetailPage({
 		.select(
 			`
       id, status, scheduled_at, match_format,
+      contrib_id, backup_contrib_id, assignment_mode, needs_cover, contrib_confirmed_at,
       game_titles(name),
       home_team:teams!matches_team_home_id_fkey(name),
       away_team:teams!matches_team_away_id_fkey(name)
@@ -108,6 +109,10 @@ export default async function OrganiserCompetitionDetailPage({
 		)
 		.eq('comp_instance_id', instanceId)
 		.order('scheduled_at', { ascending: true, nullsFirst: false });
+
+	// Organisers cannot read other users' roles directly, so this goes through a
+	// database function that only returns people with the contributor role.
+	const { data: contributors } = await supabase.rpc('list_contributors');
 
 	return (
 		<CompetitionDetailClient
@@ -117,6 +122,7 @@ export default async function OrganiserCompetitionDetailPage({
 			registrations={(registrations ?? []) as unknown as Registration[]}
 			allTeams={allTeams ?? []}
 			matches={matches ?? []}
+			contributors={(contributors ?? []) as { id: string; name: string }[]}
 		/>
 	);
 }

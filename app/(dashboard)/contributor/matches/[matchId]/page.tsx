@@ -143,7 +143,9 @@ export default async function ContributorMatchRoomPage({
 		}) ?? [];
 
 	const canAccess =
-		roles.includes('super_admin') || roles.includes('contributor');
+		roles.includes('super_admin') ||
+		roles.includes('contributor') ||
+		roles.includes('organiser');
 	if (!canAccess) redirect('/dashboard-redirect');
 
 	const { data: rawMatch, error: matchError } = await supabase

@@ -49,6 +49,11 @@ type Match = {
 	game_titles: { name: string }[] | null;
 	home_team: { name: string }[] | null;
 	away_team: { name: string }[] | null;
+	contrib_id?: string | null;
+	backup_contrib_id?: string | null;
+	assignment_mode?: string | null;
+	needs_cover?: boolean | null;
+	contrib_confirmed_at?: string | null;
 };
 type Instance = {
 	id: string;
@@ -69,6 +74,7 @@ type Props = {
 	registrations: Registration[];
 	allTeams: TeamOption[];
 	matches: Match[];
+	contributors: { id: string; name: string }[];
 };
 
 export default function CompetitionDetailClient({
@@ -78,6 +84,7 @@ export default function CompetitionDetailClient({
 	registrations,
 	allTeams,
 	matches,
+	contributors,
 }: Props) {
 	const supabase = createClient();
 
@@ -93,6 +100,56 @@ export default function CompetitionDetailClient({
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [localRegistrations, setLocalRegistrations] = useState(registrations);
+	const [status, setStatus] = useState(instance.status);
+	const [statusBusy, setStatusBusy] = useState(false);
+	const [ack, setAck] = useState(false);
+
+	const STATUS_STEPS: Record<string, { next: string; label: string; help: string } | undefined> = {
+		draft: {
+			next: 'registration',
+			label: 'Open registration',
+			help: 'Draft competitions are hidden from the public. Opening registration shows it on the Competitions page.',
+		},
+		registration: {
+			next: 'ongoing',
+			label: 'Go live',
+			help: 'Marks the competition as running. Contributors can start reporting matches.',
+		},
+		ongoing: {
+			next: 'completed',
+			label: 'Mark completed',
+			help: 'Closes the competition. It stays visible with its results.',
+		},
+	};
+	const step = STATUS_STEPS[status];
+	const approvedTeams = localRegistrations.filter((r) => r.teams).length;
+
+	async function handleAdvanceStatus() {
+		if (!step) return;
+		setError(null);
+		if (step.next === 'ongoing') {
+			if (approvedTeams < 2) {
+				setError('Register at least 2 teams before going live.');
+				return;
+			}
+			if (!ack) {
+				setError('Tick the player notice before going live.');
+				return;
+			}
+		}
+		setStatusBusy(true);
+		const { error: updateError } = await supabase
+			.from('comp_instances')
+			.update({ status: step.next })
+			.eq('id', instance.id);
+		setStatusBusy(false);
+		if (updateError) {
+			setError(updateError.message);
+			return;
+		}
+		setStatus(step.next);
+		setAck(false);
+	}
 
 	async function handleRegisterTeam() {
 		setError(null);
@@ -199,12 +256,12 @@ export default function CompetitionDetailClient({
 					<span>·</span>
 					<span
 						className={`px-2 py-0.5 rounded-full text-[10px] font-display font-bold uppercase tracking-wider ${
-							instance.status === 'ongoing'
+							status === 'ongoing'
 								? 'bg-state-win/10 text-state-win border border-state-win/30'
 								: 'bg-bg-void text-text-muted border border-border-line'
 						}`}
 					>
-						{instance.status}
+						{status}
 					</span>
 					{instance.prize_pool && (
 						<>
@@ -216,6 +273,34 @@ export default function CompetitionDetailClient({
 						</>
 					)}
 				</div>
+
+				{step && (
+					<div className="mt-3 rounded border border-border-line bg-bg-void p-4 space-y-3">
+						<p className="text-xs text-text-muted leading-relaxed">{step.help}</p>
+						{step.next === 'ongoing' && (
+							<label className="flex items-start gap-2 text-xs text-text-muted cursor-pointer">
+								<input
+									type="checkbox"
+									checked={ack}
+									onChange={(e) => setAck(e.target.checked)}
+									className="mt-0.5"
+								/>
+								<span>
+									I have told the teams and players that results and match
+									details will be shown publicly on Esporting.
+								</span>
+							</label>
+						)}
+						<button
+							type="button"
+							disabled={statusBusy}
+							onClick={handleAdvanceStatus}
+							className="bg-accent-primary text-white text-xs font-display font-bold uppercase tracking-wider px-4 py-2 rounded disabled:opacity-50"
+						>
+							{statusBusy ? 'Saving...' : step.label}
+						</button>
+					</div>
+				)}
 
 				<div className="flex flex-wrap gap-1.5 pt-1">
 					{gameTitles.map((g, i) => (
@@ -414,6 +499,7 @@ export default function CompetitionDetailClient({
 						}[]
 					}
 					matches={matches}
+					contributors={contributors}
 				/>
 			)}
 
