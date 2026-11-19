@@ -6,7 +6,6 @@ import { DashboardShell, type NavItem } from './DashboardShell';
 const adminNav: NavItem[] = [
 	{ label: 'Overview', href: '/admin', icon: 'layout' },
 	{ label: 'Competitions', href: '/admin/competitions', icon: 'layout' },
-	{ label: 'Fixtures', href: '/admin/fixtures', icon: 'plus' },
 	{ label: 'News Desk', href: '/admin/news', icon: 'newspaper' },
 	{ label: 'Invite Organiser', href: '/admin/invites', icon: 'users' },
 	{ label: 'Invite Contributor', href: '/contributor/new', icon: 'userPlus' },
