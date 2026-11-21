@@ -52,7 +52,7 @@ export async function signup(formData: FormData) {
     email,
     password,
     options: {
-      data: { display_name: displayName },
+      data: { display_name: displayName, wants_organiser: wantsTO },
       emailRedirectTo: origin ? `${origin}/callback` : undefined,
     },
   });
@@ -63,7 +63,7 @@ export async function signup(formData: FormData) {
 
   // Signed in straight away (email confirmation switched off)
   if (data.session) {
-    redirect(wantsTO ? '/apply-organiser' : '/dashboard-redirect');
+    redirect('/dashboard-redirect');
   }
 
   // Email confirmation on: ask them to check their inbox

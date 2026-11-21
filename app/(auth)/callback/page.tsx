@@ -22,7 +22,7 @@ export default function AuthCallbackPage() {
 			} else if (userRoles.includes('contributor')) {
 				router.push('/contributor');
 			} else {
-				router.push('/');
+				router.push('/dashboard-redirect');
 			}
 		},
 		[router],

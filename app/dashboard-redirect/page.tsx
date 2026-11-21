@@ -37,5 +37,10 @@ export default async function DashboardRedirectPage() {
 		redirect('/contributor');
 	}
 
-	redirect('/');
+	// Signed in with no role yet: send people who said they run tournaments
+	// straight to the organiser application, everyone else to their account page.
+	if (user.user_metadata?.wants_organiser === true) {
+		redirect('/apply-organiser');
+	}
+	redirect('/account');
 }
