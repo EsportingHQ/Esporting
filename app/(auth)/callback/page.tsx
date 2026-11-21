@@ -38,7 +38,11 @@ export default function AuthCallbackPage() {
 				const { error: exchangeError } =
 					await supabase.auth.exchangeCodeForSession(code);
 				if (exchangeError) {
-					setError('This confirmation link is invalid or has expired.');
+					// The email is already confirmed by this point. This usually means
+					// the link was opened in a different browser than the sign-up.
+					setError(
+						'Your email may already be confirmed. Try signing in. If it still fails, sign up again.',
+					);
 					return;
 				}
 				router.push('/dashboard-redirect');
@@ -48,12 +52,28 @@ export default function AuthCallbackPage() {
 			const hash = window.location.hash.substring(1); // remove leading '#'
 			const params = new URLSearchParams(hash);
 
+			// Supabase reports a bad or expired link in the URL
+			const linkError =
+				params.get('error_description') ??
+				new URLSearchParams(window.location.search).get('error_description');
+			if (linkError) {
+				setError(`${linkError.replace(/\+/g, ' ')}. Request a new link by signing up again, or sign in if you already confirmed.`);
+				return;
+			}
+
 			const accessToken = params.get('access_token');
 			const refreshToken = params.get('refresh_token');
 			const isInvite = hash.includes('type=invite');
 
 			if (!accessToken || !refreshToken) {
-				// No token in URL — nothing to do, maybe already logged in
+				// No token in URL: if already signed in go to the dashboard,
+				// otherwise tell the person instead of waiting forever.
+				const { data: existing } = await supabase.auth.getSession();
+				if (existing.session) {
+					router.push('/dashboard-redirect');
+				} else {
+					setError('This link is no longer valid. Please sign in.');
+				}
 				return;
 			}
 
@@ -242,7 +262,16 @@ export default function AuthCallbackPage() {
 				color: '#888',
 			}}
 		>
-			<p>Setting up your account...</p>
+			{error ? (
+				<div style={{ maxWidth: 380, textAlign: 'center', padding: 16 }}>
+					<p style={{ color: '#fca5a5', fontSize: 14, marginBottom: 16 }}>{error}</p>
+					<a href="/login" style={{ color: '#16a34a', fontSize: 14 }}>
+						Go to sign in
+					</a>
+				</div>
+			) : (
+				<p>Setting up your account...</p>
+			)}
 		</div>
 	);
 }
