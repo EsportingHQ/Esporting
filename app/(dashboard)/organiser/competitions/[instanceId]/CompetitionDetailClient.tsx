@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import ScheduleMatchTab from './ScheduleMatchTab';
 import TeamRosterPanel from './TeamRosterPanel';
+import BulkImportPanel from './BulkImportPanel';
 import LogoUpload from '@/components/ui/LogoUpload';
 
 type GameTitleWrap = {
@@ -96,6 +97,7 @@ export default function CompetitionDetailClient({
 		'teams' | 'matches' | 'stages' | 'schedule'
 	>('teams');
 	const [showAddTeam, setShowAddTeam] = useState(false);
+	const [showBulk, setShowBulk] = useState(false);
 	const [teamMode, setTeamMode] = useState<'new' | 'existing'>('new');
 	const [teamId, setTeamId] = useState('');
 	const [teamName, setTeamName] = useState('');
@@ -156,6 +158,17 @@ export default function CompetitionDetailClient({
 		}
 		setStatus(step.next);
 		setAck(false);
+	}
+
+	async function refreshRegistrations() {
+		const { data: fresh } = await supabase
+			.from('comp_registrations')
+			.select(
+				'id, status, registered_at, teams(id, name, short_code, country, logo_url)',
+			)
+			.eq('comp_instance_id', instance.id)
+			.order('registered_at', { ascending: false });
+		setLocalRegistrations((fresh as unknown as Registration[]) ?? []);
 	}
 
 	async function handleRegisterTeam() {
@@ -372,13 +385,31 @@ export default function CompetitionDetailClient({
 						<h3 className="font-display font-black text-sm uppercase tracking-wider text-text-muted">
 							Registered Teams
 						</h3>
+						<div className="flex items-center">
+						<button
+							onClick={() => setShowBulk((s) => !s)}
+							className="bg-bg-void border border-border-line hover:border-accent-readout text-text-primary font-display font-black text-xs uppercase tracking-wider px-3 py-1.5 rounded transition-all cursor-pointer mr-2"
+						>
+							{showBulk ? 'Close import' : 'Bulk import'}
+						</button>
 						<button
 							onClick={() => setShowAddTeam((s) => !s)}
 							className="bg-accent-readout hover:bg-accent-readout/80 text-bg-void font-display font-black text-xs uppercase tracking-wider px-3 py-1.5 rounded transition-all cursor-pointer"
 						>
 							{showAddTeam ? 'Cancel' : '+ Register Team'}
 						</button>
+						</div>
 					</div>
+
+					{showBulk && (
+						<BulkImportPanel
+							compId={instance.id}
+							teams={localRegistrations
+								.filter((r) => r.teams)
+								.map((r) => ({ id: r.teams!.id, name: r.teams!.name }))}
+							onChanged={refreshRegistrations}
+						/>
+					)}
 
 					{showAddTeam && (
 						<div className="bg-bg-surface border border-border-line rounded p-6 space-y-4">
