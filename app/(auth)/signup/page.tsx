@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { signup } from '@/lib/actions/auth';
+import PasswordInput from '@/components/ui/PasswordInput';
 
 const field =
   'w-full bg-bg-void border border-border-line rounded px-4 py-2.5 text-text-primary placeholder-text-muted/40 focus:outline-none focus:border-accent-readout text-sm font-body transition-colors';
@@ -72,7 +73,11 @@ export default async function SignupPage({
             </div>
             <div>
               <label htmlFor="password" className={label}>Password</label>
-              <input id="password" name="password" type="password" required minLength={8} autoComplete="new-password" placeholder="At least 8 characters" className={field} />
+              <PasswordInput id="password" name="password" minLength={8} autoComplete="new-password" placeholder="At least 8 characters" className={field} />
+            </div>
+            <div>
+              <label htmlFor="confirm_password" className={label}>Confirm password</label>
+              <PasswordInput id="confirm_password" name="confirm_password" minLength={8} autoComplete="new-password" placeholder="Type it again" className={field} />
             </div>
 
             <label className="flex items-start gap-3 text-xs text-text-muted font-body leading-relaxed cursor-pointer">

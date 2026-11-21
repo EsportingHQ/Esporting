@@ -1,6 +1,7 @@
 import { login } from '@/lib/actions/auth';
 import Image from 'next/image';
 import Link from 'next/link';
+import PasswordInput from '@/components/ui/PasswordInput';
 
 export default async function LoginPage({
   searchParams,
@@ -71,11 +72,9 @@ export default async function LoginPage({
             >
               Password
             </label>
-            <input
+            <PasswordInput
               id="password"
               name="password"
-              type="password"
-              required
               autoComplete="current-password"
               placeholder="••••••••"
               className="w-full bg-bg-void border border-border-line rounded px-4 py-2.5 text-text-primary placeholder-text-muted/40 focus:outline-none focus:border-accent-readout text-sm font-body transition-colors"

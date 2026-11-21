@@ -28,6 +28,7 @@ export async function login(formData: FormData) {
 export async function signup(formData: FormData) {
   const email       = ((formData.get('email') as string) ?? '').trim();
   const password    = (formData.get('password') as string) ?? '';
+  const confirm     = (formData.get('confirm_password') as string) ?? '';
   const displayName = ((formData.get('display_name') as string) ?? '').trim();
   const wantsTO     = formData.get('is_organiser') === 'on';
 
@@ -36,6 +37,10 @@ export async function signup(formData: FormData) {
   }
   if (password.length < 8) {
     redirect('/signup?error=' + encodeURIComponent('Password must be at least 8 characters'));
+  }
+
+  if (password !== confirm) {
+    redirect('/signup?error=' + encodeURIComponent('Passwords do not match'));
   }
 
   const cookieStore = await cookies();
