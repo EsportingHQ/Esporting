@@ -32,6 +32,19 @@ export default function AuthCallbackPage() {
 		const supabase = createClient();
 
 		async function handleCallback() {
+			// Email confirmation after public sign-up arrives as ?code=...
+			const code = new URLSearchParams(window.location.search).get('code');
+			if (code) {
+				const { error: exchangeError } =
+					await supabase.auth.exchangeCodeForSession(code);
+				if (exchangeError) {
+					setError('This confirmation link is invalid or has expired.');
+					return;
+				}
+				router.push('/dashboard-redirect');
+				return;
+			}
+
 			const hash = window.location.hash.substring(1); // remove leading '#'
 			const params = new URLSearchParams(hash);
 
@@ -77,7 +90,7 @@ export default function AuthCallbackPage() {
 		}
 
 		handleCallback();
-	}, [redirectByRole]);
+	}, [redirectByRole, router]);
 
 	async function handleSetPassword() {
 		setError(null);

@@ -54,6 +54,12 @@ const actions = [
 		icon: Newspaper,
 	},
 	{
+		label: 'Organiser Applications',
+		href: '/admin/organiser-applications',
+		description: 'Approve people who signed up as Tournament Organisers',
+		icon: UserCheck,
+	},
+	{
 		label: 'Invite Organiser',
 		href: '/admin/invites',
 		description:

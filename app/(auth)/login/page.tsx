@@ -1,5 +1,6 @@
 import { login } from '@/lib/actions/auth';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default async function LoginPage({
   searchParams,
@@ -91,7 +92,7 @@ export default async function LoginPage({
         </form>
 
         <p className="text-center text-text-muted/50 text-xs mt-6 font-body">
-          Access is by invitation only. Contact your administrator for access.
+          New here? <Link href="/signup" className="text-accent-readout">Create an account</Link>. Contributors and organisers can also join by invitation.
         </p>
       </div>
     </div>

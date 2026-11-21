@@ -7,6 +7,7 @@ const adminNav: NavItem[] = [
 	{ label: 'Overview', href: '/admin', icon: 'layout' },
 	{ label: 'Competitions', href: '/admin/competitions', icon: 'layout' },
 	{ label: 'News Desk', href: '/admin/news', icon: 'newspaper' },
+	{ label: 'Organiser Applications', href: '/admin/organiser-applications', icon: 'userPlus' },
 	{ label: 'Invite Organiser', href: '/admin/invites', icon: 'users' },
 	{ label: 'Invite Contributor', href: '/contributor/new', icon: 'userPlus' },
 	{ label: 'Match Assignments', href: '/admin/matches', icon: 'activity' },
