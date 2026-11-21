@@ -12,6 +12,8 @@ import {
 	// Shield,
 } from 'lucide-react';
 import ScheduleMatchTab from './ScheduleMatchTab';
+import TeamRosterPanel from './TeamRosterPanel';
+import LogoUpload from '@/components/ui/LogoUpload';
 
 type GameTitleWrap = {
 	game_titles: {
@@ -38,6 +40,7 @@ export type Registration = {
 		name: string;
 		short_code: string | null;
 		country: string | null;
+		logo_url: string | null;
 	} | null;
 };
 type TeamOption = { id: string; name: string };
@@ -64,6 +67,7 @@ type Instance = {
 	status: string;
 	prize_pool: string | null;
 	description: string | null;
+	banner_url: string | null;
 	comp_series: { name: string }[] | null;
 };
 
@@ -103,6 +107,9 @@ export default function CompetitionDetailClient({
 	const [status, setStatus] = useState(instance.status);
 	const [statusBusy, setStatusBusy] = useState(false);
 	const [ack, setAck] = useState(false);
+	const [bannerUrl, setBannerUrl] = useState(instance.banner_url);
+	const [teamLogo, setTeamLogo] = useState('');
+	const [openTeam, setOpenTeam] = useState<string | null>(null);
 
 	const STATUS_STEPS: Record<string, { next: string; label: string; help: string } | undefined> = {
 		draft: {
@@ -176,6 +183,7 @@ export default function CompetitionDetailClient({
 				body.team_name = teamName;
 				body.team_short_code = teamShortCode || null;
 				body.team_country = teamCountry || null;
+				body.team_logo_url = teamLogo || null;
 			} else {
 				body.team_id = teamId;
 			}
@@ -200,7 +208,7 @@ export default function CompetitionDetailClient({
 			const { data: fresh } = await supabase
 				.from('comp_registrations')
 				.select(
-					'id, status, registered_at, teams(id, name, short_code, country)',
+					'id, status, registered_at, teams(id, name, short_code, country, logo_url)',
 				)
 				.eq('comp_instance_id', instance.id)
 				.order('registered_at', { ascending: false });
@@ -210,6 +218,7 @@ export default function CompetitionDetailClient({
 			setTeamName('');
 			setTeamShortCode('');
 			setTeamId('');
+			setTeamLogo('');
 		} catch (err) {
 			setError(
 				err instanceof Error ? err.message : 'Something went wrong',
@@ -239,6 +248,18 @@ export default function CompetitionDetailClient({
 		<div className="max-w-4xl space-y-6 font-body">
 			{/* Header Panel */}
 			<div className="bg-bg-surface border border-border-line rounded p-6 space-y-4">
+				<LogoUpload
+					value={bannerUrl}
+					label="Competition logo"
+					onUploaded={async (url) => {
+						const { error: e } = await supabase
+							.from('comp_instances')
+							.update({ banner_url: url })
+							.eq('id', instance.id);
+						if (e) throw new Error(e.message);
+						setBannerUrl(url);
+					}}
+				/>
 				<div>
 					<span className="text-[10px] font-data text-text-muted uppercase tracking-wider block">
 						{seriesName}
@@ -386,6 +407,9 @@ export default function CompetitionDetailClient({
 								</button>
 							</div>
 
+							{teamMode === 'new' && (
+								<LogoUpload value={teamLogo || null} label="Team logo" onUploaded={(u) => setTeamLogo(u)} />
+							)}
 							{teamMode === 'new' ? (
 								<div className="grid grid-cols-1 md:grid-cols-4 gap-3">
 									<input
@@ -447,20 +471,57 @@ export default function CompetitionDetailClient({
 						{localRegistrations.map((reg) => (
 							<div
 								key={reg.id}
-								className="bg-bg-surface border border-border-line rounded p-4 flex justify-between items-center text-xs"
+								className="bg-bg-surface border border-border-line rounded p-4 text-xs"
 							>
-								<span className="font-display font-bold text-sm text-text-primary uppercase">
-									{reg.teams?.name}
-								</span>
-								<span
-									className={`px-2 py-0.5 rounded text-[10px] font-display font-bold uppercase tracking-wider ${
-										reg.status === 'approved'
-											? 'bg-state-win/10 text-state-win'
-											: 'bg-bg-void text-text-muted'
-									}`}
-								>
-									{reg.status}
-								</span>
+								<div className="flex justify-between items-center gap-3">
+									<div className="flex items-center gap-3 min-w-0">
+										{reg.teams?.logo_url && (
+											// eslint-disable-next-line @next/next/no-img-element
+											<img src={reg.teams.logo_url} alt="" className="w-8 h-8 object-contain rounded" />
+										)}
+										<span className="font-display font-bold text-sm text-text-primary uppercase truncate">
+											{reg.teams?.name}
+										</span>
+									</div>
+									<div className="flex items-center gap-2">
+										<span
+											className={`px-2 py-0.5 rounded text-[10px] font-display font-bold uppercase tracking-wider ${
+												reg.status === 'approved'
+													? 'bg-state-win/10 text-state-win'
+													: 'bg-bg-void text-text-muted'
+											}`}
+										>
+											{reg.status}
+										</span>
+										<button
+											onClick={() => setOpenTeam(openTeam === reg.id ? null : reg.id)}
+											className="px-2 py-1 rounded bg-bg-void border border-border-line text-[10px] font-display font-bold uppercase tracking-wider text-text-primary"
+										>
+											{openTeam === reg.id ? 'Close' : 'Roster & logo'}
+										</button>
+									</div>
+								</div>
+								{openTeam === reg.id && reg.teams && (
+									<TeamRosterPanel
+										compId={instance.id}
+										teamId={reg.teams.id}
+										logoUrl={reg.teams.logo_url}
+										locked={status === 'completed' || status === 'cancelled'}
+										games={gameTitles
+											.map((g) => g.game_titles)
+											.filter((g): g is NonNullable<typeof g> => !!g)
+											.map((g) => ({ slug: g.slug, name: g.name }))}
+										onLogoChanged={(url) =>
+											setLocalRegistrations((rs) =>
+												rs.map((r) =>
+													r.id === reg.id && r.teams
+														? { ...r, teams: { ...r.teams, logo_url: url } }
+														: r,
+												),
+											)
+										}
+									/>
+								)}
 							</div>
 						))}
 					</div>
