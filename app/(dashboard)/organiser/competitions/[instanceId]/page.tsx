@@ -100,7 +100,7 @@ export default async function OrganiserCompetitionDetailPage({
 		.from('matches')
 		.select(
 			`
-      id, status, scheduled_at, match_format,
+      id, status, scheduled_at, match_format, stage_id, notes,
       contrib_id, backup_contrib_id, assignment_mode, needs_cover, contrib_confirmed_at,
       game_titles(name),
       home_team:teams!matches_team_home_id_fkey(name),
@@ -108,6 +108,7 @@ export default async function OrganiserCompetitionDetailPage({
     `,
 		)
 		.eq('comp_instance_id', instanceId)
+		.is('deleted_at', null)
 		.order('scheduled_at', { ascending: true, nullsFirst: false });
 
 	// Organisers cannot read other users' roles directly, so this goes through a

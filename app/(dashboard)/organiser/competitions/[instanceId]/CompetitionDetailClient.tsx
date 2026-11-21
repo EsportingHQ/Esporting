@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import ScheduleMatchTab from './ScheduleMatchTab';
 import TeamRosterPanel from './TeamRosterPanel';
+import StageFixtures from './StageFixtures';
+import MatchTimeEditor from './MatchTimeEditor';
 import BulkImportPanel from './BulkImportPanel';
 import LogoUpload from '@/components/ui/LogoUpload';
 
@@ -58,6 +60,8 @@ type Match = {
 	assignment_mode?: string | null;
 	needs_cover?: boolean | null;
 	contrib_confirmed_at?: string | null;
+	stage_id?: string | null;
+	notes?: string | null;
 };
 type Instance = {
 	id: string;
@@ -618,15 +622,26 @@ export default function CompetitionDetailClient({
 									{getGameTitleName(m.game_titles)}
 								</span>
 							</div>
-							<span
-								className={`px-2 py-0.5 rounded text-[10px] font-display font-bold uppercase tracking-wider inline-block ${
-									m.status === 'live'
-										? 'bg-state-win/10 text-state-win'
-										: 'bg-bg-void text-text-muted border border-border-line'
-								}`}
-							>
-								{m.status}
-							</span>
+							<div className="flex flex-wrap items-center gap-3">
+								<span
+									className={`px-2 py-0.5 rounded text-[10px] font-display font-bold uppercase tracking-wider inline-block ${
+										m.status === 'live'
+											? 'bg-state-win/10 text-state-win'
+											: 'bg-bg-void text-text-muted border border-border-line'
+									}`}
+								>
+									{m.status}
+								</span>
+								{m.notes && <span className="text-text-muted">{m.notes}</span>}
+							</div>
+							<MatchTimeEditor
+								matchId={m.id}
+								scheduledAt={m.scheduled_at}
+								disabled={m.status !== 'scheduled'}
+							/>
+							<p className="text-[10px] text-text-muted">
+								Times must be at least 48 hours before kickoff.
+							</p>
 						</div>
 					))}
 				</div>
@@ -634,19 +649,16 @@ export default function CompetitionDetailClient({
 
 			{/* Stages tab */}
 			{activeTab === 'stages' && (
-				<div className="space-y-2">
-					{stages.map((s) => (
-						<div
-							key={s.id}
-							className="bg-bg-surface border border-border-line rounded p-4 flex justify-between items-center text-xs"
-						>
-							<span className="font-display font-bold text-sm text-text-primary uppercase">
-								{s.stage_order}. {s.name}
-							</span>
-							<span className="font-data text-text-muted uppercase">
-								{s.stage_type} · BO{s.best_of}
-							</span>
-						</div>
+				<div className="space-y-3">
+					{stages.map((st) => (
+						<StageFixtures
+							key={st.id}
+							compId={instance.id}
+							stage={st}
+							fixtureCount={matches.filter((m) => m.stage_id === st.id).length}
+							teamCount={approvedTeams}
+							locked={status === 'completed' || status === 'cancelled'}
+						/>
 					))}
 				</div>
 			)}
