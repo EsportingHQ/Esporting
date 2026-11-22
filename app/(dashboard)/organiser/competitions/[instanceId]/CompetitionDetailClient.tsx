@@ -713,7 +713,7 @@ export default function CompetitionDetailClient({
 								disabled={m.status !== 'scheduled'}
 							/>
 							<p className="text-[10px] text-text-muted">
-								Times must be at least 48 hours before kickoff.
+								Times must be at least 8 hours before kickoff.
 							</p>
 						</div>
 					))}

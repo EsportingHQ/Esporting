@@ -1,0 +1,4 @@
+-- Applied to prod as roster_slug_fix_and_8h_rule.
+-- 1) add_roster_player: variable `slug` clashed with game_titles.slug ("column reference slug is ambiguous").
+-- 2) Fixture time rule is now 8 hours (was 48) in enforce_fixture_time_rule and auto_schedule_stage.
+-- Full function bodies live in the database; re-create from there if needed.

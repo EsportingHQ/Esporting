@@ -10,9 +10,6 @@ interface StatsTabProps {
 
 export function StatsTab({ match, stats }: StatsTabProps) {
   const statRows = [
-    { label: 'POSSESSION %', home: stats.homePossession, away: stats.awayPossession, total: 100 },
-    { label: 'TOTAL SHOTS', home: stats.homeShots, away: stats.awayShots, total: Math.max(1, stats.homeShots + stats.awayShots) },
-    { label: 'SHOTS ON TARGET', home: stats.homeShotsOnTarget, away: stats.awayShotsOnTarget, total: Math.max(1, stats.homeShotsOnTarget + stats.awayShotsOnTarget) },
     { label: 'YELLOW CARDS', home: stats.homeYellowCards, away: stats.awayYellowCards, total: Math.max(1, stats.homeYellowCards + stats.awayYellowCards) },
     { label: 'RED CARDS', home: stats.homeRedCards, away: stats.awayRedCards, total: Math.max(1, stats.homeRedCards + stats.awayRedCards) },
   ];
@@ -22,7 +19,7 @@ export function StatsTab({ match, stats }: StatsTabProps) {
       <div className="flex items-center gap-2 border-b border-border-line pb-2">
         <BarChart2 className="w-4 h-4 text-accent-readout" />
         <h3 className="font-display font-black text-lg uppercase tracking-wider">
-          LIVE MATCH STATISTICS
+          MATCH DISCIPLINE
         </h3>
       </div>
 

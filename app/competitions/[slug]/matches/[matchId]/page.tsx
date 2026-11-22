@@ -8,9 +8,10 @@ import { MatchHeader } from '@/components/broadcast/match-detail/MatchHeader';
 import { TimelineTab } from '@/components/broadcast/match-detail/TimelineTab';
 import { LineupsTab } from '@/components/broadcast/match-detail/LineupsTab';
 import { StatsTab } from '@/components/broadcast/match-detail/StatsTab';
+import { GamesTab } from '@/components/broadcast/match-detail/GamesTab';
 import { HeadToHeadTab } from '@/components/broadcast/match-detail/HeadToHeadTab';
 import { useMatchRealtime } from '@/hooks/useMatchRealtime';
-import { Flame, Users, BarChart2, History } from 'lucide-react';
+import { Flame, Users, BarChart2, History, Swords, ListOrdered } from 'lucide-react';
 
 export default function MatchDetailPage({
 	params: paramsPromise,
@@ -35,9 +36,7 @@ export default function MatchDetailPage({
 		error,
 	} = useMatchRealtime(matchId);
 
-	const [activeTab, setActiveTab] = useState<
-		'timeline' | 'lineups' | 'stats' | 'h2h'
-	>('timeline');
+	const [pickedTab, setPickedTab] = useState<string | null>(null);
 
 	const recapString =
 		match && score
@@ -105,33 +104,31 @@ export default function MatchDetailPage({
 	}
 
 	const isBR = match.match_format === 'battle_royale';
-	const isShooter = match.game_title?.game_types?.slug === 'shooter';
+	const isFootball = match.game_title?.game_types?.slug === 'football';
+	const isSeries = !isBR && !isFootball;
 	const isLive = match.status === 'live';
 
-	const tabItems: TabItem[] = [
-		{
-			id: 'timeline',
-			label: 'TIMELINE',
-			icon: <Flame className="w-3.5 h-3.5" />,
-			badge: events.length,
-		},
-		{
-			id: 'lineups',
-			label: 'LINEUPS',
-			icon: <Users className="w-3.5 h-3.5" />,
-		},
-		{
-			id: 'stats',
-			label: 'STATISTICS',
-			icon: <BarChart2 className="w-3.5 h-3.5" />,
-		},
-		{
-			id: 'h2h',
-			label: 'HEAD-TO-HEAD',
-			icon: <History className="w-3.5 h-3.5" />,
-			badge: headToHead.length,
-		},
-	];
+	// Each game title gets the tabs that make sense for it
+	const tabItems: TabItem[] = isBR
+		? [
+				{ id: 'results', label: 'RESULTS', icon: <ListOrdered className="w-3.5 h-3.5" />, badge: brResults.length },
+				{ id: 'lineups', label: 'SQUADS', icon: <Users className="w-3.5 h-3.5" /> },
+			]
+		: isSeries
+			? [
+					{ id: 'games', label: 'GAMES', icon: <Swords className="w-3.5 h-3.5" />, badge: matchMaps.length },
+					{ id: 'lineups', label: 'SQUADS', icon: <Users className="w-3.5 h-3.5" /> },
+					{ id: 'h2h', label: 'HEAD-TO-HEAD', icon: <History className="w-3.5 h-3.5" />, badge: headToHead.length },
+					{ id: 'timeline', label: 'TIMELINE', icon: <Flame className="w-3.5 h-3.5" />, badge: events.length },
+				]
+			: [
+					{ id: 'timeline', label: 'TIMELINE', icon: <Flame className="w-3.5 h-3.5" />, badge: events.length },
+					{ id: 'lineups', label: 'SQUADS', icon: <Users className="w-3.5 h-3.5" /> },
+					{ id: 'stats', label: 'STATISTICS', icon: <BarChart2 className="w-3.5 h-3.5" /> },
+					{ id: 'h2h', label: 'HEAD-TO-HEAD', icon: <History className="w-3.5 h-3.5" />, badge: headToHead.length },
+				];
+	const activeTab =
+		pickedTab && tabItems.some((t) => t.id === pickedTab) ? pickedTab : tabItems[0].id;
 
 	return (
 		<div className="flex-1 flex flex-col bg-bg-void text-text-primary">
@@ -152,9 +149,7 @@ export default function MatchDetailPage({
 					tabs={tabItems}
 					activeTab={activeTab}
 					onTabChange={(id) =>
-						setActiveTab(
-							id as 'timeline' | 'lineups' | 'stats' | 'h2h',
-						)
+						setPickedTab(id)
 					}
 				/>
 
@@ -164,12 +159,16 @@ export default function MatchDetailPage({
 					role="tabpanel"
 					aria-labelledby={`tab-${activeTab}`}
 				>
-					{activeTab === 'timeline' && (
+					{activeTab === 'games' && (
+						<GamesTab match={match} matchMaps={matchMaps} />
+					)}
+
+					{(activeTab === 'timeline' || activeTab === 'results') && (
 						<TimelineTab
 							events={events}
 							statusLogs={statusLogs}
 							isLive={isLive}
-							isShooter={isShooter}
+							isShooter={false}
 							isBR={isBR}
 							matchMaps={matchMaps}
 							brResults={brResults}

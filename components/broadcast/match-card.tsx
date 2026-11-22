@@ -1,7 +1,6 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { EventBadge } from './event-badge';
 import { ScoreFlash } from './ScoreFlash';
 import { FavoriteStar } from './FavoriteStar';
 
@@ -18,6 +17,7 @@ export interface MatchCardProps {
   bestOf?: number;
   status: 'scheduled' | 'delayed' | 'live' | 'completed' | 'cancelled' | 'walkover';
   timeLabel?: string;
+  scheduledAt?: string | null;
   competitionSlug?: string;
   href?: string;
   onClick?: () => void;
@@ -45,16 +45,17 @@ export function MatchCard({
   const isLive = status === 'live';
   const isCompleted = status === 'completed';
 
+  const isEnded = isCompleted || status === 'walkover';
   const borderStatusClass = isLive
-    ? 'border-l-4 border-l-accent-live shadow-[inset_4px_0_15px_rgba(239,68,68,0.12)]'
-    : isCompleted
-    ? 'border-l-4 border-l-state-win'
+    ? 'border-l-4 border-l-accent-primary shadow-[inset_4px_0_15px_rgba(255,31,109,0.15)]'
+    : isEnded
+    ? 'border-l-4 border-l-accent-cyan'
     : 'border-l-4 border-l-text-primary/[0.1]';
 
   const accessibleLabel = `${homeTeam.name} ${homeScore}, ${awayTeam.name} ${awayScore}. ${gameTitle}. Status: ${status}. ${timeLabel || ''}`;
 
-  const isHomeWinner = isCompleted && ((gameType === 'shooter' && bestOf > 1) ? homeMapsWon > awayMapsWon : homeScore > awayScore);
-  const isAwayWinner = isCompleted && ((gameType === 'shooter' && bestOf > 1) ? awayMapsWon > homeMapsWon : awayScore > homeScore);
+  const isHomeWinner = isEnded && ((gameType === 'shooter' && bestOf > 1) ? homeMapsWon > awayMapsWon : homeScore > awayScore);
+  const isAwayWinner = isEnded && ((gameType === 'shooter' && bestOf > 1) ? awayMapsWon > homeMapsWon : awayScore > homeScore);
 
   const handleCardClick = () => {
     if (onClick) {
@@ -86,9 +87,20 @@ export function MatchCard({
         {/* Left: Status / Time / Meta */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0 min-w-[70px] sm:min-w-[90px]">
           <div className="flex flex-col gap-1 items-start">
-            <EventBadge status={status} className="text-[9px] sm:text-[10px] px-2 py-0" />
+            <span
+              className={`font-data font-bold text-xs sm:text-sm leading-none ${
+                isLive
+                  ? 'text-accent-primary animate-pulse'
+                  : isEnded
+                  ? 'text-accent-cyan'
+                  : status === 'delayed'
+                  ? 'text-state-alert'
+                  : 'text-text-primary'
+              }`}
+            >
+              {status === 'delayed' ? `${timeLabel ?? ''}` : timeLabel}
+            </span>
             <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-text-muted font-data leading-none">
-              {timeLabel && <span>{timeLabel}</span>}
               {gameType === 'shooter' && bestOf > 1 && (
                 <span className="text-[9px] text-accent-glow font-display font-semibold px-1 py-0.2 rounded bg-accent-primary/10 border border-accent-primary/20">
                   BO{bestOf}
@@ -102,8 +114,11 @@ export function MatchCard({
         <div className="flex flex-col justify-center gap-1 min-w-0 flex-1">
           {/* Home Team */}
           <div className="flex items-center gap-2 min-w-0">
-            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-text-primary/[0.04] border border-text-primary/[0.08] flex items-center justify-center font-display font-black text-[9px] sm:text-[10px] text-text-primary shrink-0 shadow-inner">
-              {homeTeam.shortCode ? homeTeam.shortCode.slice(0, 3) : homeTeam.name.slice(0, 2).toUpperCase()}
+            <div className="w-5 h-5 sm:w-6 sm:h-6 overflow-hidden rounded-md bg-text-primary/[0.04] border border-text-primary/[0.08] flex items-center justify-center font-display font-black text-[9px] sm:text-[10px] text-text-primary shrink-0 shadow-inner">
+              {homeTeam.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={homeTeam.logoUrl} alt="" className="w-full h-full object-cover rounded-md" />
+              ) : homeTeam.shortCode ? homeTeam.shortCode.slice(0, 3) : homeTeam.name.slice(0, 2).toUpperCase()}
             </div>
             <span
               title={homeTeam.name}
@@ -117,8 +132,11 @@ export function MatchCard({
 
           {/* Away Team */}
           <div className="flex items-center gap-2 min-w-0">
-            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-text-primary/[0.04] border border-text-primary/[0.08] flex items-center justify-center font-display font-black text-[9px] sm:text-[10px] text-text-primary shrink-0 shadow-inner">
-              {awayTeam.shortCode ? awayTeam.shortCode.slice(0, 3) : awayTeam.name.slice(0, 2).toUpperCase()}
+            <div className="w-5 h-5 sm:w-6 sm:h-6 overflow-hidden rounded-md bg-text-primary/[0.04] border border-text-primary/[0.08] flex items-center justify-center font-display font-black text-[9px] sm:text-[10px] text-text-primary shrink-0 shadow-inner">
+              {awayTeam.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={awayTeam.logoUrl} alt="" className="w-full h-full object-cover rounded-md" />
+              ) : awayTeam.shortCode ? awayTeam.shortCode.slice(0, 3) : awayTeam.name.slice(0, 2).toUpperCase()}
             </div>
             <span
               title={awayTeam.name}

@@ -17,7 +17,8 @@ export interface CompetitionGroup {
   matches: MatchCardProps[];
 }
 
-type RawTeam = { id: string; name: string; short_code: string | null } | { id: string; name: string; short_code: string | null }[] | null;
+type RawTeamObj = { id: string; name: string; short_code: string | null; logo_url?: string | null };
+type RawTeam = RawTeamObj | RawTeamObj[] | null;
 type RawGameTitle = { name: string; slug: string; game_types?: { slug: string } | { slug: string }[] | null } | { name: string; slug: string; game_types?: { slug: string } | { slug: string }[] | null }[] | null;
 type RawCompInstance = { id: string; name: string; slug: string } | { id: string; name: string; slug: string }[] | null;
 
@@ -49,13 +50,13 @@ function mapGameType(gameTypeSlug: string | undefined): 'football' | 'shooter' |
 }
 
 function mapStatusLabel(status: string, scheduledAt: string | null): string {
-  if (status === 'live') return 'LIVE NOW';
-  if (status === 'completed') return 'Finished';
-  if (status === 'delayed') return 'Delayed';
-  if (status === 'scheduled' && scheduledAt) {
-    return new Date(scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (status === 'live') return 'LIVE';
+  if (status === 'completed' || status === 'walkover') return 'FT';
+  if (status === 'cancelled') return 'CANC';
+  if (scheduledAt) {
+    return new Date(scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
   }
-  return status;
+  return 'TBD';
 }
 
 function mapRowToCardProps(row: RawMatchRow): MatchCardProps {
@@ -69,8 +70,9 @@ function mapRowToCardProps(row: RawMatchRow): MatchCardProps {
     id: row.id,
     gameType: mapGameType(gameTypeObj?.slug),
     gameTitle: gameTitle?.name ?? '',
-    homeTeam: { id: home?.id ?? '', name: home?.name ?? 'TBD', shortCode: home?.short_code ?? '' },
-    awayTeam: { id: away?.id ?? '', name: away?.name ?? 'TBD', shortCode: away?.short_code ?? '' },
+    homeTeam: { id: home?.id ?? '', name: home?.name ?? 'TBD', shortCode: home?.short_code ?? '', logoUrl: home?.logo_url ?? null },
+    awayTeam: { id: away?.id ?? '', name: away?.name ?? 'TBD', shortCode: away?.short_code ?? '', logoUrl: away?.logo_url ?? null },
+    scheduledAt: row.scheduled_at,
     homeScore: scoreRow?.home_current_score ?? 0,
     awayScore: scoreRow?.away_current_score ?? 0,
     homeMapsWon: row.home_maps_won ?? undefined,
@@ -131,14 +133,24 @@ function groupMatchesByCompetition(rows: RawMatchRow[]): CompetitionGroup[] {
 
 const MATCH_QUERY = `
   id, status, scheduled_at, match_format, home_maps_won, away_maps_won, best_of, comp_instance_id,
-  home_team:teams!matches_team_home_id_fkey(id, name, short_code),
-  away_team:teams!matches_team_away_id_fkey(id, name, short_code),
+  home_team:teams!matches_team_home_id_fkey(id, name, short_code, logo_url),
+  away_team:teams!matches_team_away_id_fkey(id, name, short_code, logo_url),
   game_titles(name, slug, game_types(slug)),
   comp_instance:comp_instances!matches_comp_instance_id_fkey(id, name, slug),
   match_scores(home_current_score, away_current_score)
 `;
 
-export function useLiveFeed() {
+export function dayKey(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+export function useLiveFeed(day: Date) {
+  const dayStr = dayKey(day);
+  const [matchDays, setMatchDays] = useState<Record<string, number>>({});
+  const [liveTotal, setLiveTotal] = useState(0);
   const [tickerMatches, setTickerMatches] = useState<TickerMatch[]>([]);
   const [groups, setGroups] = useState<CompetitionGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -156,13 +168,19 @@ export function useLiveFeed() {
   }, []);
 
   const refetchGroups = useCallback(async (supabase: ReturnType<typeof createClient>) => {
+    const [yy, mm, dd] = dayStr.split('-').map(Number);
+    const start = new Date(yy, mm - 1, dd, 0, 0, 0, 0);
+    const end = new Date(yy, mm - 1, dd + 1, 0, 0, 0, 0);
+
     const { data, error: fetchErr } = await supabase
       .from('matches')
       .select(MATCH_QUERY)
-      .in('status', ['live', 'scheduled', 'delayed', 'completed'])
+      .in('status', ['live', 'scheduled', 'delayed', 'completed', 'walkover'])
       .is('deleted_at', null)
-      .order('scheduled_at', { ascending: true, nullsFirst: false })
-      .limit(50);
+      .gte('scheduled_at', start.toISOString())
+      .lt('scheduled_at', end.toISOString())
+      .order('scheduled_at', { ascending: true })
+      .limit(300);
 
     if (fetchErr) throw fetchErr;
 
@@ -192,7 +210,31 @@ export function useLiveFeed() {
 
     setGroups(builtGroups);
 
-    const liveRows = rows.filter((r) => r.status === 'live').slice(0, 6);
+    const { data: liveData } = await supabase
+      .from('matches')
+      .select(MATCH_QUERY)
+      .eq('status', 'live')
+      .is('deleted_at', null)
+      .limit(100);
+    const allLive = (liveData ?? []) as unknown as RawMatchRow[];
+    setLiveTotal(allLive.length);
+    const liveRows = allLive.slice(0, 6);
+    const { data: dayData } = await supabase
+      .from('matches')
+      .select('scheduled_at')
+      .in('status', ['live', 'scheduled', 'delayed', 'completed', 'walkover'])
+      .is('deleted_at', null)
+      .gte('scheduled_at', new Date(Date.now() - 45 * 86400000).toISOString())
+      .lt('scheduled_at', new Date(Date.now() + 120 * 86400000).toISOString())
+      .limit(2000);
+    const counts: Record<string, number> = {};
+    for (const r of dayData ?? []) {
+      if (!r.scheduled_at) continue;
+      const k = dayKey(new Date(r.scheduled_at));
+      counts[k] = (counts[k] ?? 0) + 1;
+    }
+    setMatchDays(counts);
+
     const ticker: TickerMatch[] = liveRows.map((row) => {
       const home = one(row.home_team);
       const away = one(row.away_team);
@@ -210,7 +252,7 @@ export function useLiveFeed() {
       };
     });
     setTickerMatches(ticker);
-  }, []);
+  }, [dayStr]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -270,11 +312,12 @@ export function useLiveFeed() {
     };
   }, [refetchGroups, prefs.matchStart, addToast]);
 
-  const liveCount = groups.reduce((acc, g) => acc + g.liveCount, 0);
+  const liveCount = liveTotal;
 
   return {
     tickerMatches,
     groups,
+    matchDays,
     liveCount,
     isLoading,
     error,

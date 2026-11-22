@@ -107,10 +107,11 @@ export interface MatchMap {
     mode_id: string | null;
     home_score: number | null;
     away_score: number | null;
-    winner_team_id: string | null;
+    map_winner: string | null;
+    duration_seconds: number | null;
     status: string;
     maps?: { name: string } | null;
-    modes?: { name: string } | null;
+    modes?: { name: string; unit_label?: string | null } | null;
 }
 
 export interface BRResult {
@@ -260,7 +261,7 @@ export function useMatchRealtime(matchId: string) {
             .select(`
                 *,
                 maps(name),
-                modes(name)
+                modes(name, unit_label)
             `)
             .eq('match_id', matchId)
             .order('map_number', { ascending: true });
@@ -271,12 +272,34 @@ export function useMatchRealtime(matchId: string) {
             .from('br_match_results')
             .select(`
                 *,
-                team:teams(name, short_code)
+                participant:match_participants(team_id, teams(name, short_code))
             `)
             .eq('match_id', matchId)
             .order('placement', { ascending: true });
 
-            if (brData) setBrResults(brData as BRResult[]);
+            if (brData) {
+                setBrResults(
+                    (brData as unknown as {
+                        id: string; match_id: string; placement: number; kills: number;
+                        placement_pts: number; kill_pts: number; total_pts: number;
+                        participant: { team_id: string; teams: { name: string; short_code: string | null } | { name: string; short_code: string | null }[] | null } | { team_id: string; teams: { name: string; short_code: string | null } | { name: string; short_code: string | null }[] | null }[] | null;
+                    }[]).map((r) => {
+                        const part = Array.isArray(r.participant) ? r.participant[0] : r.participant;
+                        const team = Array.isArray(part?.teams) ? part?.teams[0] : part?.teams;
+                        return {
+                            id: r.id,
+                            match_id: r.match_id,
+                            team_id: part?.team_id ?? '',
+                            placement: r.placement,
+                            kills: r.kills,
+                            placement_points: Number(r.placement_pts),
+                            kill_points: Number(r.kill_pts),
+                            total_points: Number(r.total_pts),
+                            team: team ?? null,
+                        };
+                    }),
+                );
+            }
 
             // Head-to-head: past completed matches between the same two teams
             if (matchData?.team_home_id && matchData?.team_away_id) {

@@ -11,7 +11,7 @@ BEGIN
   DELETE FROM standings WHERE stage_id = p_stage AND game_title_id = p_game;
 
   INSERT INTO standings (stage_id, group_id, game_title_id, team_id, played, wins, draws, losses,
-                         points, score_for, score_against, score_diff, rank, meta)
+                         points, score_for, score_against, rank, meta)
   WITH football AS (
     SELECT (gt.slug IS NOT NULL AND ty.slug = 'football') AS is_football
       FROM game_titles gt LEFT JOIN game_types ty ON ty.id = gt.game_type_id WHERE gt.id = p_game
@@ -38,7 +38,7 @@ BEGIN
       FROM sides GROUP BY group_id, team
   )
   SELECT p_stage, a.group_id, p_game, a.team, a.played, a.wins, a.draws, a.losses,
-         a.wins * 3 + a.draws, a.sf, a.sa, a.sf - a.sa,
+         a.wins * 3 + a.draws, a.sf, a.sa,
          row_number() OVER (PARTITION BY a.group_id
                             ORDER BY a.wins * 3 + a.draws DESC, a.sf - a.sa DESC, a.sf DESC, a.wins DESC, t.name),
          jsonb_build_object('metric', CASE WHEN (SELECT is_football FROM football) THEN 'goals' ELSE 'maps' END)

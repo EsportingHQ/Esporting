@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { PublicNav } from '@/components/layout/public-nav';
 import { MatchCard } from '@/components/broadcast/match-card';
@@ -11,7 +12,8 @@ import { Star, Sparkles, X } from 'lucide-react';
 
 export default function FavoritesPage() {
   const { favorites, suggestedFavorites, isFavorite, toggleFavorite } = useFavorites();
-  const { groups } = useLiveFeed();
+  const [today] = useState(() => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); });
+  const { groups } = useLiveFeed(today);
 
   // Extract starred team and competition IDs
   const starredTeamIds = favorites.filter((f) => f.type === 'team').map((f) => f.id);

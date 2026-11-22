@@ -13,6 +13,7 @@ import { GameIcon } from '@/components/ui/GameIcon';
 import { GAME_PROFILES } from '@/lib/games';
 import { ScoreToast } from '@/components/ui/ScoreToast';
 import { useLiveFeed } from '@/hooks/useLiveFeed';
+import { DateBar } from '@/components/feed/DateBar';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useNewsArticles } from '@/hooks/useNewsArticles';
 import { 
@@ -24,25 +25,29 @@ import {
   ChevronDown, 
 } from 'lucide-react';
 
-type StatusFilter = 'all' | 'live' | 'upcoming' | 'finished';
 
 export default function HomeClient() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const gameParam = searchParams.get('game') || 'all';
 
+	const [day, setDay] = useState<Date>(() => {
+		const n = new Date();
+		return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+	});
+	const [liveOnly, setLiveOnly] = useState(false);
 	const {
 		tickerMatches,
 		groups,
+		matchDays,
 		liveCount,
 		isLoading,
 		toasts,
 		dismissToast,
-	} = useLiveFeed();
+	} = useLiveFeed(day);
 	const { favorites } = useFavorites();
 	const { articles: newsItems } = useNewsArticles();
 
-	const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 	const [gameFilter, setGameFilter] = useState<string>('all');
 	const [moreOpen, setMoreOpen] = useState(false);
 	const moreDropdownRef = useRef<HTMLDivElement>(null);
@@ -68,21 +73,7 @@ export default function HomeClient() {
 	const filteredGroups = groups
 		.map((group) => {
 			const matches = group.matches.filter((match) => {
-				if (statusFilter === 'live' && match.status !== 'live')
-					return false;
-				if (
-					statusFilter === 'upcoming' &&
-					match.status !== 'scheduled' &&
-					match.status !== 'delayed'
-				)
-					return false;
-				if (
-					statusFilter === 'finished' &&
-					match.status !== 'completed' &&
-					match.status !== 'cancelled' &&
-					match.status !== 'walkover'
-				)
-					return false;
+				if (liveOnly && match.status !== 'live') return false;
 
 				if (activeGame !== 'all') {
 					// Category links (?game=football | shooter | br) still work
@@ -127,13 +118,6 @@ export default function HomeClient() {
 		return b.liveCount - a.liveCount;
 	});
 
-	const statusTabs: { id: StatusFilter; label: string; count?: number }[] = [
-		{ id: 'all', label: 'All Matches' },
-		{ id: 'live', label: 'Live Now', count: liveCount },
-		{ id: 'upcoming', label: 'Upcoming' },
-		{ id: 'finished', label: 'Finished' },
-	];
-
 	return (
 		<div className="flex-1 flex flex-col bg-bg-void text-text-primary min-h-screen relative overflow-x-hidden">
 			{/* Ambient background glow */}
@@ -150,60 +134,33 @@ export default function HomeClient() {
 			<main className="max-w-7xl w-full mx-auto px-4 py-8 flex-1 grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10">
 				{/* Main Feed Column (2 cols wide on desktop) */}
 				<section className="lg:col-span-2 space-y-6">
-					{/* Header & Status Filter Bar */}
+					{/* Headline + calendar */}
 					<div className="space-y-4">
-						<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-text-primary/[0.08] pb-4">
-							<div className="flex items-center gap-3">
-								<div className="w-9 h-9 rounded-xl bg-accent-primary/15 border border-accent-primary/25 flex items-center justify-center text-accent-glow">
-									<Calendar className="w-5 h-5" />
-								</div>
-								<div>
-									<h1 className="font-display font-black text-2xl text-text-primary tracking-tight">
-										Live Matches & Schedule
-									</h1>
-									<p className="text-xs text-text-muted">Real-time head-to-head esports tracking</p>
-								</div>
-							</div>
+						<h1 className="font-display font-black text-2xl sm:text-3xl text-text-primary tracking-tight leading-tight">
+							Live Esports Scores,{' '}
+							<span className="text-accent-primary">Every Game</span>
+						</h1>
 
-							<div className="flex items-center gap-2">
-								<span className="text-xs font-display font-semibold text-text-primary flex items-center gap-2 glass px-3.5 py-1.5 rounded-full border border-text-primary/[0.1] shadow-sm">
-									<span className="relative flex h-2 w-2">
-										<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-live opacity-75" />
-										<span className="relative inline-flex rounded-full h-2 w-2 bg-accent-live" />
-									</span>
-									<span className="font-bold text-accent-live">
-										{liveCount} LIVE NOW
-									</span>
-								</span>
-							</div>
-						</div>
+						<DateBar
+							selected={day}
+							onSelect={(d) => {
+								setDay(d);
+								setLiveOnly(false);
+							}}
+							matchDays={matchDays}
+							liveCount={liveCount}
+							liveOnly={liveOnly}
+							onToggleLive={() => {
+								if (!liveOnly) {
+									const n = new Date();
+									setDay(new Date(n.getFullYear(), n.getMonth(), n.getDate()));
+								}
+								setLiveOnly(!liveOnly);
+							}}
+						/>
 
-						{/* Filter Controls Row */}
-						<div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-strong border border-text-primary/[0.08] p-3 rounded-2xl shadow-lg backdrop-blur-xl">
-							{/* Status Filter Tabs */}
-							<div className="w-full md:w-auto flex overflow-x-auto scrollbar-none bg-text-primary/[0.03] p-1 rounded-xl border border-text-primary/[0.06] text-xs font-display font-semibold">
-								{statusTabs.map((tab) => (
-									<button
-										key={tab.id}
-										onClick={() => setStatusFilter(tab.id)}
-										className={`min-h-[38px] px-4 rounded-lg transition-all shrink-0 flex items-center justify-center gap-1.5 ${
-											statusFilter === tab.id
-												? 'bg-accent-primary text-white font-bold shadow-[0_0_15px_rgba(255,31,109,0.3)]'
-												: 'text-text-muted hover:text-text-primary hover:bg-text-primary/[0.04]'
-										}`}
-									>
-										<span>{tab.label}</span>
-										{tab.count !== undefined && tab.count > 0 && (
-											<span className={`px-1.5 py-0.5 text-[10px] font-data rounded-full ${
-												statusFilter === tab.id ? 'bg-white/20 text-white' : 'bg-accent-live/20 text-accent-live font-bold'
-											}`}>
-												{tab.count}
-											</span>
-										)}
-									</button>
-								))}
-							</div>
-
+						{/* Game filter row */}
+						<div className="flex items-center justify-between gap-4 glass-strong border border-text-primary/[0.08] p-3 rounded-2xl shadow-lg backdrop-blur-xl">
 							{/* Game pills: ALL + launch titles, with a MORE dropdown for any extras */}
 							<div className="w-full md:w-auto flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none text-xs font-display font-semibold">
 								{primaryGames.map((game) => {
@@ -320,11 +277,11 @@ export default function HomeClient() {
 					) : (
 						<EmptyState
 							icon={Calendar}
-							title="No matches found"
-							description="No live, upcoming, or finished matches match your selected filters."
+							title="No matches on this day"
+							description="Pick another date from the calendar, or reset the filters."
 							actionLabel="Reset filters"
 							onAction={() => {
-								setStatusFilter('all');
+								setLiveOnly(false);
 								setGameFilter('all');
 							}}
 						/>

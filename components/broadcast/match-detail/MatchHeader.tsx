@@ -17,7 +17,7 @@ interface MatchHeaderProps {
 
 export function MatchHeader({ match, score, slug, connectionStatus, recapString }: MatchHeaderProps) {
   const isBR = match.match_format === 'battle_royale';
-  const isShooter = match.game_title?.game_types?.slug === 'shooter';
+  const isShooter = !isBR && match.game_title?.game_types?.slug !== 'football';
   const isLive = match.status === 'live';
 
   const connectionColor =
@@ -42,7 +42,7 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
             </Link>
             <span className="text-text-muted">/</span>
             <span className="font-display font-semibold text-text-primary uppercase">
-              {match.game_title?.name} — STAGE PLAYOFFS
+              {match.game_title?.name}{match.notes ? ` — ${match.notes}` : ''}
             </span>
           </div>
 
@@ -64,8 +64,13 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
             {/* Home Team */}
             <div className="flex items-center justify-start gap-2 sm:gap-4 flex-1 min-w-0">
               <div className="relative shrink-0">
-                <div className="w-9 h-9 sm:w-12 sm:h-14 bg-bg-void border border-border-line rounded-xl flex items-center justify-center font-display font-black text-xs sm:text-lg text-text-muted shadow-inner">
-                  {match.team_home?.logo_url ? 'LOGO' : match.team_home?.name.substring(0, 3).toUpperCase()}
+                <div className="w-9 h-9 sm:w-14 sm:h-14 overflow-hidden bg-bg-void border border-border-line rounded-xl flex items-center justify-center font-display font-black text-xs sm:text-lg text-text-muted shadow-inner">
+                  {match.team_home?.logo_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={match.team_home.logo_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    match.team_home?.name.substring(0, 3).toUpperCase()
+                  )}
                 </div>
                 {match.team_home_id && (
                   <div className="absolute -top-1.5 -left-1.5 bg-bg-surface rounded-full border border-border-line p-0.5">
@@ -83,7 +88,7 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
                   <span className="sm:hidden">{match.team_home?.name.substring(0, 3).toUpperCase()}</span>
                   <span className="hidden sm:inline">{match.team_home?.name}</span>
                 </span>
-                <span className="text-[9px] sm:text-[10px] font-data text-text-muted hidden sm:inline">HOME SQUAD</span>
+                
               </div>
             </div>
 
@@ -108,7 +113,7 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
               {isLive && (
                 <span className="mt-1.5 text-[9px] sm:text-[10px] font-data text-accent-signal flex items-center gap-1 font-semibold">
                   <StatusDot status="live" size="sm" />
-                  <span>LIVE</span>
+                  <span className="text-accent-primary">LIVE</span>
                 </span>
               )}
 
@@ -126,11 +131,16 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
                   <span className="sm:hidden">{match.team_away?.name.substring(0, 3).toUpperCase()}</span>
                   <span className="hidden sm:inline">{match.team_away?.name}</span>
                 </span>
-                <span className="text-[9px] sm:text-[10px] font-data text-text-muted hidden sm:inline">AWAY SQUAD</span>
+                
               </div>
               <div className="relative shrink-0">
-                <div className="w-9 h-9 sm:w-12 sm:h-14 bg-bg-void border border-border-line rounded-xl flex items-center justify-center font-display font-black text-xs sm:text-lg text-text-muted shadow-inner">
-                  {match.team_away?.logo_url ? 'LOGO' : match.team_away?.name.substring(0, 3).toUpperCase()}
+                <div className="w-9 h-9 sm:w-14 sm:h-14 overflow-hidden bg-bg-void border border-border-line rounded-xl flex items-center justify-center font-display font-black text-xs sm:text-lg text-text-muted shadow-inner">
+                  {match.team_away?.logo_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={match.team_away.logo_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    match.team_away?.name.substring(0, 3).toUpperCase()
+                  )}
                 </div>
                 {match.team_away_id && (
                   <div className="absolute -top-1.5 -right-1.5 bg-bg-surface rounded-full border border-border-line p-0.5">
@@ -162,7 +172,7 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
             <span className="text-[9px] font-display font-bold text-text-muted uppercase tracking-widest block mb-1">
               OFFICIAL BROADCAST RECAP
             </span>
-            <p className="text-xs font-data text-text-primary italic">"{recapString}"</p>
+            <p className="text-xs font-data text-text-primary italic">&ldquo;{recapString}&rdquo;</p>
           </div>
         )}
       </div>
