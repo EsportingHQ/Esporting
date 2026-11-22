@@ -63,6 +63,7 @@ export default async function AccountPage() {
 
         <div className="flex items-center justify-between text-xs">
           <Link href="/feed" className="text-accent-readout">Live scores</Link>
+          <Link href="/favorites" className="text-accent-readout">Following</Link>
           <Link href="/competitions" className="text-accent-readout">Competitions</Link>
           <form action={logout}>
             <button type="submit" className="text-text-muted hover:text-text-primary">Sign out</button>

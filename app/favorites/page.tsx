@@ -50,7 +50,7 @@ export default function FavoritesPage() {
               <span>CUSTOM WATCHLIST</span>
             </div>
             <h1 className="font-display font-black text-3xl sm:text-4xl text-text-primary tracking-tight">
-              Starred Favorites
+              Following
             </h1>
             <p className="text-sm text-text-muted font-body">
               Personalized live fixtures and updates for your tracked teams and leagues.
@@ -62,7 +62,7 @@ export default function FavoritesPage() {
         {favorites.length > 0 && (
           <div className="glass-strong border border-text-primary/[0.08] rounded-3xl p-6 space-y-4 shadow-xl backdrop-blur-xl">
             <h2 className="font-display font-bold text-xs uppercase tracking-wider text-text-muted">
-              Starred Entities ({favorites.length})
+              Teams and competitions you follow ({favorites.length})
             </h2>
 
             <div className="flex flex-wrap gap-2.5 text-xs font-body">
@@ -94,7 +94,7 @@ export default function FavoritesPage() {
         <section className="space-y-5">
           <div className="flex items-center justify-between border-b border-text-primary/[0.08] pb-3">
             <h2 className="font-display font-bold text-base text-text-primary">
-              Matches Featuring Your Favorites
+              Matches Featuring Who You Follow
             </h2>
             <span className="text-xs font-data text-text-muted">
               {personalizedMatches.length} {personalizedMatches.length === 1 ? 'match' : 'matches'}
@@ -114,7 +114,7 @@ export default function FavoritesPage() {
           ) : (
             <EmptyState
               icon={Star}
-              title="No matches for starred favorites today"
+              title="No matches today for teams you follow"
               description="Star teams or leagues across match cards and competition pages to build your live personalized schedule."
               actionLabel="Explore Competitions Registry"
               actionHref="/competitions"
@@ -122,7 +122,7 @@ export default function FavoritesPage() {
           )}
         </section>
 
-        {/* Smart Suggestions Section */}
+        {suggestedFavorites.length > 0 && (
         <section className="glass rounded-3xl border border-text-primary/[0.08] p-6 sm:p-8 space-y-6 shadow-xl">
           <div className="flex items-center gap-2.5 border-b border-text-primary/[0.08] pb-3">
             <div className="p-1.5 rounded-lg bg-accent-primary/10 text-accent-glow">
@@ -177,6 +177,7 @@ export default function FavoritesPage() {
             })}
           </div>
         </section>
+        )}
       </main>
     </div>
   );
