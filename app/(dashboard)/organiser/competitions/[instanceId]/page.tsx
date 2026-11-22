@@ -83,7 +83,7 @@ export default async function OrganiserCompetitionDetailPage({
 	const { data: registrations } = await supabase
 		.from('comp_registrations')
 		.select(
-			'id, status, registered_at, teams(id, name, short_code, country, logo_url)',
+			'id, status, registered_at, manual_group, teams(id, name, short_code, country, logo_url)',
 		)
 		.eq('comp_instance_id', instanceId)
 		.order('registered_at', { ascending: false });

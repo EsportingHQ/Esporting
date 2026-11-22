@@ -101,7 +101,7 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
                     }`}
                   >
                     {isLive && <StatusDot status="live" size="sm" />}
-                    {isLive ? 'LIVE' : isFootball ? 'FULL TIME' : 'ENDED'}
+                    {isLive ? 'LIVE' : isFootball ? 'FT' : 'ENDED'}
                   </span>
                 </>
               )}

@@ -24,7 +24,7 @@ export function EventBadge({ status, className = '', football = false }: EventBa
     live: 'LIVE',
     scheduled: 'UPCOMING',
     delayed: 'DELAYED',
-    completed: football ? 'FULL TIME' : 'ENDED',
+    completed: football ? 'FT' : 'ENDED',
     cancelled: 'CANCELLED',
     walkover: 'WALKOVER',
   };

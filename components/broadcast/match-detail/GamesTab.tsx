@@ -71,7 +71,7 @@ export function GamesTab({ match, matchMaps }: GamesTabProps) {
 										live ? 'text-accent-primary animate-pulse' : done ? 'text-accent-cyan' : 'text-text-muted/60'
 									}`}
 								>
-									{live ? 'LIVE' : done ? 'FULL TIME' : 'UPCOMING'}
+									{live ? 'LIVE' : done ? 'FT' : 'UPCOMING'}
 								</span>
 							</div>
 						);

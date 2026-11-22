@@ -22,7 +22,7 @@ function splitText(teams: number, groups: number): string {
 
 const TYPE_HELP: Record<string, string> = {
   league: 'Everyone plays everyone.',
-  group: 'Teams are split randomly and evenly into groups, then play each other inside their group.',
+  group: 'Teams play each other inside their group. Let us draw the groups evenly, or pick them yourself.',
   knockout: 'Teams are paired at random. Later rounds are created once a round finishes.',
 };
 
@@ -31,17 +31,26 @@ export default function StageFixtures({
   stage,
   fixtureCount,
   teamCount,
+  teams,
   locked,
 }: {
   compId: string;
   stage: Stage;
   fixtureCount: number;
   teamCount: number;
+  teams: { id: string; name: string; manual_group: number | null }[];
   locked: boolean;
 }) {
   const router = useRouter();
   const [supabase] = useState(() => createClient());
   const [groups, setGroups] = useState(2);
+  const [mode, setMode] = useState<'auto' | 'manual'>(
+    teams.length > 0 && teams.every((t) => t.manual_group) ? 'manual' : 'auto',
+  );
+  const [assign, setAssign] = useState<Record<string, number>>(() =>
+    Object.fromEntries(teams.filter((t) => t.manual_group).map((t) => [t.id, t.manual_group as number])),
+  );
+  const [savedAssign, setSavedAssign] = useState<Record<string, number>>(assign);
   const [double, setDouble] = useState(false);
   const [perDay, setPerDay] = useState(2);
   const [seed, setSeed] = useState(() => Math.random() * 1.8 - 0.9);
@@ -57,6 +66,35 @@ export default function StageFixtures({
     const { error } = await supabase.from('comp_stages').update(patch).eq('id', stage.id);
     if (error) return setMsg({ text: error.message, ok: false });
     router.refresh();
+  }
+
+  const assignedAll = teams.length > 0 && teams.every((t) => assign[t.id]);
+  const dirty = JSON.stringify(assign) !== JSON.stringify(savedAssign);
+  const manualReady = mode === 'manual' ? assignedAll && !dirty : true;
+  const sizes = Array.from({ length: groups }, (_, i) => teams.filter((t) => assign[t.id] === i + 1).length);
+
+  async function saveGroups(list: Record<string, number>) {
+    setBusy('groups');
+    setMsg(null);
+    const payload = Object.entries(list).map(([team_id, group]) => ({ team_id, group }));
+    const { error } = await supabase.rpc('set_manual_groups', { p_comp: compId, p_assignments: payload });
+    setBusy(null);
+    if (error) {
+      setMsg({ text: error.message, ok: false });
+      return false;
+    }
+    setSavedAssign(list);
+    setPreview(null);
+    return true;
+  }
+
+  async function switchMode(next: 'auto' | 'manual') {
+    setMode(next);
+    setPreview(null);
+    if (next === 'auto' && Object.keys(savedAssign).length > 0) {
+      setAssign({});
+      await saveGroups({});
+    }
   }
 
   async function doPreview(newSeed?: number) {
@@ -170,6 +208,23 @@ export default function StageFixtures({
               />
             </label>
             {type === 'group' && (
+              <div className="flex items-center gap-1 bg-bg-void border border-border-line rounded p-0.5">
+                {(['auto', 'manual'] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    disabled={locked || busy !== null}
+                    onClick={() => switchMode(m)}
+                    className={`px-3 py-1 rounded text-[11px] font-display font-bold uppercase tracking-wider ${
+                      mode === m ? 'bg-accent-readout text-bg-void' : 'text-text-muted'
+                    }`}
+                  >
+                    {m === 'auto' ? 'Auto draw' : 'I pick groups'}
+                  </button>
+                ))}
+              </div>
+            )}
+            {type === 'group' && (
               <label className="flex items-center gap-2 text-text-muted">
                 Groups
                 <input
@@ -192,7 +247,50 @@ export default function StageFixtures({
           <p className="text-text-muted">
             {teamCount} teams registered. {TYPE_HELP[type]}
           </p>
-          {type === 'group' && teamCount >= 2 && (
+          {type === 'group' && mode === 'manual' && (
+            <div className="space-y-2 border border-border-line rounded p-3 bg-bg-void">
+              <p className="text-text-muted">Choose a group for every team. Each group needs at least 2 teams.</p>
+              <div className="grid sm:grid-cols-2 gap-2">
+                {teams.map((t) => (
+                  <label key={t.id} className="flex items-center justify-between gap-2">
+                    <span className="truncate text-text-primary">{t.name}</span>
+                    <select
+                      value={assign[t.id] ?? 0}
+                      disabled={locked}
+                      onChange={(e) => {
+                        const v = Number(e.target.value);
+                        setAssign((prev) => {
+                          const n = { ...prev };
+                          if (v === 0) delete n[t.id];
+                          else n[t.id] = v;
+                          return n;
+                        });
+                        setPreview(null);
+                      }}
+                      className={input}
+                    >
+                      <option value={0}>Pick group</option>
+                      {Array.from({ length: groups }, (_, i) => (
+                        <option key={i} value={i + 1}>Group {String.fromCharCode(65 + i)}</option>
+                      ))}
+                    </select>
+                  </label>
+                ))}
+              </div>
+              <p className="text-text-muted">
+                {sizes.map((n, i) => `Group ${String.fromCharCode(65 + i)}: ${n}`).join(' · ')}
+                {assignedAll ? '' : ` · ${teams.filter((t) => !assign[t.id]).length} not placed yet`}
+              </p>
+              <button
+                disabled={busy !== null || locked || !assignedAll || !dirty || sizes.some((n) => n < 2)}
+                onClick={() => saveGroups(assign)}
+                className={`${btn} bg-accent-readout text-bg-void`}
+              >
+                {busy === 'groups' ? 'Saving...' : dirty ? 'Save groups' : 'Groups saved'}
+              </button>
+            </div>
+          )}
+          {type === 'group' && mode === 'auto' && teamCount >= 2 && (
             <p className="text-text-muted">
               {groups > teamCount / 2
                 ? `Too many groups: each group needs at least 2 teams, so ${Math.floor(teamCount / 2)} is the most.`
@@ -205,7 +303,7 @@ export default function StageFixtures({
 
           {!preview ? (
             <button
-              disabled={busy !== null || locked || teamCount < 2}
+              disabled={busy !== null || locked || teamCount < 2 || !manualReady}
               onClick={() => doPreview()}
               className={`${btn} bg-accent-readout text-bg-void`}
             >

@@ -37,6 +37,7 @@ type Stage = {
 	game_title_id: string | null;
 };
 export type Registration = {
+	manual_group?: number | null;
 	id: string;
 	status: string;
 	registered_at: string;
@@ -743,6 +744,13 @@ export default function CompetitionDetailClient({
 							stage={st}
 							fixtureCount={matches.filter((m) => m.stage_id === st.id).length}
 							teamCount={approvedTeams}
+							teams={localRegistrations
+								.filter((r) => r.teams && r.status === 'approved')
+								.map((r) => ({
+									id: r.teams!.id,
+									name: r.teams!.name,
+									manual_group: r.manual_group ?? null,
+								}))}
 							locked={status === 'completed' || status === 'cancelled'}
 						/>
 					))}
