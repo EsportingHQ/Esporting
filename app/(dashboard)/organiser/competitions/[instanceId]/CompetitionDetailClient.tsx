@@ -14,6 +14,7 @@ import {
 import ScheduleMatchTab from './ScheduleMatchTab';
 import TeamRosterPanel from './TeamRosterPanel';
 import StageFixtures from './StageFixtures';
+import AddStage from './AddStage';
 import MatchTimeEditor from './MatchTimeEditor';
 import BulkImportPanel from './BulkImportPanel';
 import LogoUpload from '@/components/ui/LogoUpload';
@@ -644,6 +645,15 @@ export default function CompetitionDetailClient({
 							</p>
 						</div>
 					))}
+					<AddStage
+						compId={instance.id}
+						nextOrder={Math.max(0, ...stages.map((x) => x.stage_order)) + 1}
+						games={gameTitles
+							.map((g) => g.game_titles)
+							.filter((g): g is NonNullable<typeof g> => !!g)
+							.map((g) => ({ id: g.id, name: g.name }))}
+						locked={status === 'completed' || status === 'cancelled'}
+					/>
 				</div>
 			)}
 

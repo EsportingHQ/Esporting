@@ -188,7 +188,7 @@ export default function ScheduleMatchTab({
 					team_away_id:
 						matchFormat === 'head_to_head' ? awayTeamId : null,
 					best_of: bestOf,
-					scheduled_at: scheduledAt || null,
+					scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null,
 					status: 'scheduled',
 				})
 				.select(
@@ -226,9 +226,12 @@ export default function ScheduleMatchTab({
 			setAwayTeamId('');
 			setScheduledAt('');
 		} catch (err) {
-			setError(
-				err instanceof Error ? err.message : 'Failed to schedule match',
-			);
+			// Supabase errors are plain objects with a message, not Error instances
+			const text =
+				err && typeof err === 'object' && 'message' in err
+					? String((err as { message: unknown }).message)
+					: 'Failed to schedule match';
+			setError(text);
 		} finally {
 			setLoading(false);
 		}
