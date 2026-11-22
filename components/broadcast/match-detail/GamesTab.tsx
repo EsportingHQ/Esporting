@@ -43,6 +43,47 @@ export function GamesTab({ match, matchMaps }: GamesTabProps) {
 	const winnerLabel = (m: MatchMap) =>
 		m.map_winner === 'home' ? home : m.map_winner === 'away' ? away : m.map_winner === 'draw' ? 'Draw' : null;
 
+	// Football series (best of 3 etc.): every match has its own full-time score
+	if (match.game_title?.game_types?.slug === 'football') {
+		return (
+			<div className="max-w-3xl space-y-4">
+				<div className="bg-bg-surface border border-border-line rounded-2xl overflow-hidden">
+					<div className="px-4 py-3 font-display font-bold text-[11px] tracking-wider text-text-muted">
+						MATCH RESULTS
+					</div>
+					{matchMaps.map((m) => {
+						const done = m.status === 'completed';
+						const live = m.status === 'live';
+						return (
+							<div key={m.id} className="flex items-center gap-3 px-4 py-3 border-t border-border-line">
+								<span className="w-20 text-sm font-semibold text-text-primary shrink-0">Match {m.map_number}</span>
+								<span className="flex-1 min-w-0 truncate text-right text-sm font-semibold">{home}</span>
+								<span
+									className={`min-w-16 text-center font-data font-black text-base tabular-nums ${
+										live ? 'text-accent-primary' : done ? 'text-text-primary' : 'text-text-muted/50'
+									}`}
+								>
+									{done || live ? `${m.home_score ?? 0} – ${m.away_score ?? 0}` : 'vs'}
+								</span>
+								<span className="flex-1 min-w-0 truncate text-left text-sm font-semibold">{away}</span>
+								<span
+									className={`w-20 text-right text-[10px] font-display font-bold tracking-wider shrink-0 ${
+										live ? 'text-accent-primary animate-pulse' : done ? 'text-accent-cyan' : 'text-text-muted/60'
+									}`}
+								>
+									{live ? 'LIVE' : done ? 'FULL TIME' : 'UPCOMING'}
+								</span>
+							</div>
+						);
+					})}
+				</div>
+				<p className="text-[11px] text-text-muted">
+					Each match won counts as 1 in the series score. Goals from every match count in the standings.
+				</p>
+			</div>
+		);
+	}
+
 	// MLBB-style: no modes or maps, every game is a straight win/loss with a game clock
 	if (!hasModes) {
 		return (

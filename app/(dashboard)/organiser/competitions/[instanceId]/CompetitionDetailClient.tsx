@@ -15,6 +15,7 @@ import ScheduleMatchTab from './ScheduleMatchTab';
 import TeamRosterPanel from './TeamRosterPanel';
 import StageFixtures from './StageFixtures';
 import AddStage from './AddStage';
+import MatchReporterRow from './MatchReporterRow';
 import MatchTimeEditor from './MatchTimeEditor';
 import BulkImportPanel from './BulkImportPanel';
 import LogoUpload from '@/components/ui/LogoUpload';
@@ -712,6 +713,9 @@ export default function CompetitionDetailClient({
 								scheduledAt={m.scheduled_at}
 								disabled={m.status !== 'scheduled'}
 							/>
+							<div className="border-t border-border-line pt-2">
+								<MatchReporterRow match={m} contributors={contributors} />
+							</div>
 							<p className="text-[10px] text-text-muted">
 								Times must be at least 8 hours before kickoff.
 							</p>

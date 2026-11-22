@@ -12,6 +12,7 @@ interface LeagueSectionProps {
   competitionName: string;
   competitionSlug: string;
   gameTitle?: string;
+  logoUrl?: string | null;
   liveCount?: number;
   totalCount?: number;
   defaultExpanded?: boolean;
@@ -24,6 +25,7 @@ export function LeagueSection({
   competitionName,
   competitionSlug,
   gameTitle,
+  logoUrl,
   liveCount = 0,
   totalCount = 0,
   defaultExpanded = true,
@@ -45,9 +47,20 @@ export function LeagueSection({
           />
 
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-7 h-7 rounded-lg bg-accent-primary/15 border border-accent-primary/25 flex items-center justify-center text-accent-glow shrink-0">
-              <Trophy className="w-3.5 h-3.5" />
-            </div>
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={logoUrl}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                className="w-8 h-8 rounded-lg object-cover bg-text-primary/[0.04] border border-text-primary/[0.08] shrink-0"
+              />
+            ) : (
+              <div className="w-7 h-7 rounded-lg bg-accent-primary/15 border border-accent-primary/25 flex items-center justify-center text-accent-glow shrink-0">
+                <Trophy className="w-3.5 h-3.5" />
+              </div>
+            )}
             <Link
               href={`/competitions/${competitionSlug}`}
               className="font-display font-bold text-sm tracking-wide text-text-primary hover:text-accent-glow transition-colors truncate"

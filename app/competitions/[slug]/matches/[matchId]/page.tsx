@@ -106,6 +106,7 @@ export default function MatchDetailPage({
 	const isBR = match.match_format === 'battle_royale';
 	const isFootball = match.game_title?.game_types?.slug === 'football';
 	const isSeries = !isBR && !isFootball;
+	const isFootballSeries = isFootball && match.best_of > 1;
 	const isLive = match.status === 'live';
 
 	// Each game title gets the tabs that make sense for it
@@ -122,6 +123,9 @@ export default function MatchDetailPage({
 					{ id: 'timeline', label: 'TIMELINE', icon: <Flame className="w-3.5 h-3.5" />, badge: events.length },
 				]
 			: [
+					...(isFootballSeries
+						? [{ id: 'games', label: 'MATCHES', icon: <Swords className="w-3.5 h-3.5" />, badge: matchMaps.length }]
+						: []),
 					{ id: 'timeline', label: 'TIMELINE', icon: <Flame className="w-3.5 h-3.5" />, badge: events.length },
 					{ id: 'lineups', label: 'SQUADS', icon: <Users className="w-3.5 h-3.5" /> },
 					{ id: 'stats', label: 'STATISTICS', icon: <BarChart2 className="w-3.5 h-3.5" /> },

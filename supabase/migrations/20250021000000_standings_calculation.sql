@@ -18,8 +18,14 @@ BEGIN
   ), res AS (
     SELECT m.id, m.group_id, m.team_home_id, m.team_away_id, m.winner_team_id, m.status,
            (m.status IN ('completed', 'walkover')) AS done,
-           CASE WHEN (SELECT is_football FROM football) THEN coalesce(ms.home_current_score, 0) ELSE coalesce(m.home_maps_won, 0) END AS hs,
-           CASE WHEN (SELECT is_football FROM football) THEN coalesce(ms.away_current_score, 0) ELSE coalesce(m.away_maps_won, 0) END AS aws
+           CASE WHEN (SELECT is_football FROM football) THEN
+             CASE WHEN m.best_of > 1 THEN (SELECT coalesce(sum(mm.home_score), 0) FROM match_maps mm WHERE mm.match_id = m.id AND mm.status = 'completed')
+                  ELSE coalesce(ms.home_current_score, 0) END
+           ELSE coalesce(m.home_maps_won, 0) END AS hs,
+           CASE WHEN (SELECT is_football FROM football) THEN
+             CASE WHEN m.best_of > 1 THEN (SELECT coalesce(sum(mm.away_score), 0) FROM match_maps mm WHERE mm.match_id = m.id AND mm.status = 'completed')
+                  ELSE coalesce(ms.away_current_score, 0) END
+           ELSE coalesce(m.away_maps_won, 0) END AS aws
       FROM matches m LEFT JOIN match_scores ms ON ms.match_id = m.id
      WHERE m.stage_id = p_stage AND m.game_title_id = p_game AND m.deleted_at IS NULL
        AND m.status <> 'cancelled' AND m.match_format = 'head_to_head'

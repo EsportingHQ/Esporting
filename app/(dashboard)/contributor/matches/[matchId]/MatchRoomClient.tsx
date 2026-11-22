@@ -299,7 +299,8 @@ export default function MatchRoomClient({
 	const isFootball = match.game_titles?.game_types?.slug === 'football';
 	const isBattleRoyale = match.match_format === 'battle_royale';
 	// Head-to-head, non-football games (shooters, MOBA) are played as a series of games
-	const isSeries = !isFootball && !isBattleRoyale;
+	// Football becomes a series too when the organiser sets best of 3 or more
+	const isSeries = !isBattleRoyale && (!isFootball || (match.best_of ?? 1) > 1);
 	const visibleEvents = events.filter((event) => !event.is_void);
 	// The game being played right now. Never falls back to a game that hasn't started.
 	const liveMap = maps.find((map) => map.status === 'live') ?? null;

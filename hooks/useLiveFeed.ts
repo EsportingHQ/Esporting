@@ -13,6 +13,7 @@ export interface CompetitionGroup {
   slug: string;
   gameTitle: string;
   gameType: 'football' | 'shooter' | 'br';
+  logoUrl: string | null;
   liveCount: number;
   matches: MatchCardProps[];
 }
@@ -20,7 +21,8 @@ export interface CompetitionGroup {
 type RawTeamObj = { id: string; name: string; short_code: string | null; logo_url?: string | null };
 type RawTeam = RawTeamObj | RawTeamObj[] | null;
 type RawGameTitle = { name: string; slug: string; game_types?: { slug: string } | { slug: string }[] | null } | { name: string; slug: string; game_types?: { slug: string } | { slug: string }[] | null }[] | null;
-type RawCompInstance = { id: string; name: string; slug: string } | { id: string; name: string; slug: string }[] | null;
+type RawCompObj = { id: string; name: string; slug: string; banner_url?: string | null };
+type RawCompInstance = RawCompObj | RawCompObj[] | null;
 
 interface RawMatchRow {
   id: string;
@@ -49,9 +51,9 @@ function mapGameType(gameTypeSlug: string | undefined): 'football' | 'shooter' |
   return 'shooter';
 }
 
-function mapStatusLabel(status: string, scheduledAt: string | null): string {
+function mapStatusLabel(status: string, scheduledAt: string | null, football: boolean): string {
   if (status === 'live') return 'LIVE';
-  if (status === 'completed' || status === 'walkover') return 'FT';
+  if (status === 'completed' || status === 'walkover') return football ? 'FT' : 'ENDED';
   if (status === 'cancelled') return 'CANC';
   if (scheduledAt) {
     return new Date(scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -79,7 +81,7 @@ function mapRowToCardProps(row: RawMatchRow): MatchCardProps {
     awayMapsWon: row.away_maps_won ?? undefined,
     bestOf: row.best_of > 1 ? row.best_of : undefined,
     status: row.status as MatchCardProps['status'],
-    timeLabel: mapStatusLabel(row.status, row.scheduled_at),
+    timeLabel: mapStatusLabel(row.status, row.scheduled_at, mapGameType(gameTypeObj?.slug) === 'football'),
     competitionSlug:
       one(row.comp_instance)?.slug ??
         (row.comp_instance_id === 'e88e0b35-1782-4143-b857-af6d3d7ae807'
@@ -116,6 +118,7 @@ function groupMatchesByCompetition(rows: RawMatchRow[]): CompetitionGroup[] {
         slug: compSlug,
         gameTitle: gameTitle?.name ?? '',
         gameType,
+        logoUrl: comp?.banner_url ?? null,
         liveCount: 0,
         matches: [],
       });
@@ -136,7 +139,7 @@ const MATCH_QUERY = `
   home_team:teams!matches_team_home_id_fkey(id, name, short_code, logo_url),
   away_team:teams!matches_team_away_id_fkey(id, name, short_code, logo_url),
   game_titles(name, slug, game_types(slug)),
-  comp_instance:comp_instances!matches_comp_instance_id_fkey(id, name, slug),
+  comp_instance:comp_instances!matches_comp_instance_id_fkey(id, name, slug, banner_url),
   match_scores(home_current_score, away_current_score)
 `;
 
@@ -191,7 +194,7 @@ export function useLiveFeed(day: Date) {
 
     const { data: compData, error: compErr } = await supabase
       .from('comp_instances')
-      .select('id, name, slug')
+      .select('id, name, slug, banner_url')
       .in('id', compIds);
 
     if (compErr) throw compErr;

@@ -5,16 +5,17 @@ export type EventStatus = 'scheduled' | 'delayed' | 'live' | 'completed' | 'canc
 interface EventBadgeProps {
   status: EventStatus | string;
   className?: string;
+  football?: boolean;
 }
 
-export function EventBadge({ status, className = '' }: EventBadgeProps) {
+export function EventBadge({ status, className = '', football = false }: EventBadgeProps) {
   const normalizedStatus = status.toLowerCase() as EventStatus;
 
   const styles: Record<EventStatus, string> = {
     live: 'border-accent-live/30 text-accent-live bg-accent-live/15 font-bold shadow-[0_0_12px_rgba(239,68,68,0.2)]',
     scheduled: 'border-text-primary/[0.08] text-text-muted bg-text-primary/[0.03]',
     delayed: 'border-amber-500/30 text-amber-400 bg-amber-500/10',
-    completed: 'border-state-win/30 text-state-win bg-state-win/10 font-semibold',
+    completed: 'border-accent-cyan/30 text-accent-cyan bg-accent-cyan/10 font-semibold',
     cancelled: 'border-state-alert/30 text-state-alert bg-state-alert/10',
     walkover: 'border-state-alert/20 text-state-alert bg-state-alert/10',
   };
@@ -23,7 +24,7 @@ export function EventBadge({ status, className = '' }: EventBadgeProps) {
     live: 'LIVE',
     scheduled: 'UPCOMING',
     delayed: 'DELAYED',
-    completed: 'FINISHED',
+    completed: football ? 'FULL TIME' : 'ENDED',
     cancelled: 'CANCELLED',
     walkover: 'WALKOVER',
   };

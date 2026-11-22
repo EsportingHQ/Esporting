@@ -261,6 +261,7 @@ export default function HomeClient() {
 									competitionName={group.name}
 									competitionSlug={group.slug}
 									gameTitle={group.gameTitle}
+									logoUrl={group.logoUrl}
 									liveCount={group.liveCount}
 									totalCount={group.matches.length}
 								>

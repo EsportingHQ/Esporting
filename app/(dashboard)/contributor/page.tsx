@@ -122,8 +122,8 @@ export default async function ContributorPage({
 	const now = currentTimeMs();
 	const empty: Record<Tab, [string, string]> = {
 		mine: [
-			'Nothing assigned yet',
-			'Claim a match from the Open tab, or wait for your organiser to assign you.',
+			'No match assigned to you',
+			'No match assigned to you. Claim one from the Open tab, or wait for an organiser to assign you.',
 		],
 		open: ['No open matches', 'Every match has a contributor. Check back later.'],
 		done: ['No finished matches yet', 'Matches you report will appear here once they end.'],

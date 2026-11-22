@@ -29,7 +29,7 @@ const organiserNav: NavItem[] = [
 		icon: 'activity',
 	},
 	{ label: 'Invite Contributor', href: '/contributor/new', icon: 'userPlus' },
-	{ label: 'Matches I Report', href: '/contributor', icon: 'radio' },
+	{ label: 'Contributor View', href: '/contributor', icon: 'radio' },
 ];
 
 const contributorNav: NavItem[] = [

@@ -17,7 +17,8 @@ interface MatchHeaderProps {
 
 export function MatchHeader({ match, score, slug, connectionStatus, recapString }: MatchHeaderProps) {
   const isBR = match.match_format === 'battle_royale';
-  const isShooter = !isBR && match.game_title?.game_types?.slug !== 'football';
+  const isFootball = match.game_title?.game_types?.slug === 'football';
+  const showSeries = !isBR && (!isFootball || match.best_of > 1);
   const isLive = match.status === 'live';
 
   const connectionColor =
@@ -51,8 +52,7 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
               <span className={`w-1.5 h-1.5 rounded-full ${connectionColor}`} />
               <span className="uppercase">{connectionStatus}</span>
             </span>
-            <span>MATCH ID: {match.id.substring(0, 8)}</span>
-            <EventBadge status={match.status} />
+            <EventBadge status={match.status} football={isFootball} />
           </div>
         </div>
       </div>
@@ -60,100 +60,60 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
       {/* Flagship Scoreboard Area */}
       <div className="py-5 sm:py-8 px-3 sm:px-4 max-w-4xl mx-auto">
         {!isBR ? (
-          <div className="flex items-center justify-between gap-2 sm:gap-4">
-            {/* Home Team */}
-            <div className="flex items-center justify-start gap-2 sm:gap-4 flex-1 min-w-0">
-              <div className="relative shrink-0">
-                <div className="w-9 h-9 sm:w-14 sm:h-14 overflow-hidden bg-bg-void border border-border-line rounded-xl flex items-center justify-center font-display font-black text-xs sm:text-lg text-text-muted shadow-inner">
-                  {match.team_home?.logo_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={match.team_home.logo_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    match.team_home?.name.substring(0, 3).toUpperCase()
+          <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2 sm:gap-6">
+            {/* Home */}
+            <TeamBlock team={match.team_home} teamId={match.team_home_id} fallback="Home Team" />
+
+            {/* Centre: kickoff time or score */}
+            <div className="flex flex-col items-center justify-center self-center shrink-0 min-w-[5.5rem]">
+              {match.status === 'scheduled' || match.status === 'delayed' ? (
+                <>
+                  <span className="font-data font-bold text-3xl sm:text-5xl text-text-primary tabular-nums">
+                    {new Date(match.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                  </span>
+                  <span className="text-xs sm:text-sm text-text-muted mt-1">
+                    {new Date(match.scheduled_at).toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' })}
+                  </span>
+                  {match.status === 'delayed' && (
+                    <span className="mt-1 text-[10px] font-display font-bold text-state-alert tracking-wider">DELAYED</span>
                   )}
-                </div>
-                {match.team_home_id && (
-                  <div className="absolute -top-1.5 -left-1.5 bg-bg-surface rounded-full border border-border-line p-0.5">
-                    <FavoriteStar
-                      entityType="team"
-                      entityId={match.team_home_id}
-                      entityName={match.team_home?.name || 'Home Team'}
-                      size="sm"
-                    />
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 sm:gap-3 font-data font-bold text-4xl sm:text-6xl tracking-wider text-text-primary tabular-nums">
+                    {showSeries ? (
+                      <>
+                        <ScoreFlash value={score?.home_maps_won || 0} isLive={isLive} teamName={match.team_home?.name} />
+                        <span className="text-text-muted text-2xl sm:text-4xl">:</span>
+                        <ScoreFlash value={score?.away_maps_won || 0} isLive={isLive} teamName={match.team_away?.name} />
+                      </>
+                    ) : (
+                      <>
+                        <ScoreFlash value={score?.home_current_score || 0} isLive={isLive} teamName={match.team_home?.name} />
+                        <span className="text-text-muted text-2xl sm:text-4xl">:</span>
+                        <ScoreFlash value={score?.away_current_score || 0} isLive={isLive} teamName={match.team_away?.name} />
+                      </>
+                    )}
                   </div>
-                )}
-              </div>
-              <div className="flex flex-col min-w-0 text-left">
-                <span title={match.team_home?.name} className="font-display font-black text-xs sm:text-xl md:text-2xl text-text-primary leading-tight uppercase">
-                  <span className="sm:hidden">{match.team_home?.name.substring(0, 3).toUpperCase()}</span>
-                  <span className="hidden sm:inline">{match.team_home?.name}</span>
-                </span>
-                
-              </div>
-            </div>
-
-            {/* Score Display */}
-            <div className="flex flex-col items-center justify-center shrink-0">
-              <div className="flex items-center gap-1.5 sm:gap-2 bg-bg-void border border-border-line px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl text-lg sm:text-3xl md:text-4xl font-data font-bold tracking-wider text-text-primary shadow-inner">
-                {isShooter ? (
-                  <>
-                    <ScoreFlash value={score?.home_maps_won || 0} isLive={isLive} teamName={match.team_home?.name} />
-                    <span className="text-text-muted text-sm sm:text-xl">:</span>
-                    <ScoreFlash value={score?.away_maps_won || 0} isLive={isLive} teamName={match.team_away?.name} />
-                  </>
-                ) : (
-                  <>
-                    <ScoreFlash value={score?.home_current_score || 0} isLive={isLive} teamName={match.team_home?.name} />
-                    <span className="text-text-muted text-sm sm:text-xl">:</span>
-                    <ScoreFlash value={score?.away_current_score || 0} isLive={isLive} teamName={match.team_away?.name} />
-                  </>
-                )}
-              </div>
-
-              {isLive && (
-                <span className="mt-1.5 text-[9px] sm:text-[10px] font-data text-accent-signal flex items-center gap-1 font-semibold">
-                  <StatusDot status="live" size="sm" />
-                  <span className="text-accent-primary">LIVE</span>
-                </span>
+                  <span
+                    className={`mt-2 text-[11px] sm:text-xs font-display font-bold tracking-widest flex items-center gap-1.5 ${
+                      isLive ? 'text-accent-primary' : 'text-accent-cyan'
+                    }`}
+                  >
+                    {isLive && <StatusDot status="live" size="sm" />}
+                    {isLive ? 'LIVE' : isFootball ? 'FULL TIME' : 'ENDED'}
+                  </span>
+                </>
               )}
-
-              {isShooter && (
-                <span className="text-[8px] sm:text-[9px] text-text-muted font-display tracking-widest mt-0.5 uppercase">
-                  BO{match.best_of} SERIES
+              {showSeries && (
+                <span className="text-[9px] sm:text-[10px] text-text-muted font-display tracking-widest mt-1 uppercase">
+                  Best of {match.best_of}
                 </span>
               )}
             </div>
 
-            {/* Away Team */}
-            <div className="flex items-center justify-end gap-2 sm:gap-4 flex-1 min-w-0 text-right">
-              <div className="flex flex-col min-w-0 text-right">
-                <span title={match.team_away?.name} className="font-display font-black text-xs sm:text-xl md:text-2xl text-text-primary leading-tight uppercase">
-                  <span className="sm:hidden">{match.team_away?.name.substring(0, 3).toUpperCase()}</span>
-                  <span className="hidden sm:inline">{match.team_away?.name}</span>
-                </span>
-                
-              </div>
-              <div className="relative shrink-0">
-                <div className="w-9 h-9 sm:w-14 sm:h-14 overflow-hidden bg-bg-void border border-border-line rounded-xl flex items-center justify-center font-display font-black text-xs sm:text-lg text-text-muted shadow-inner">
-                  {match.team_away?.logo_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={match.team_away.logo_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    match.team_away?.name.substring(0, 3).toUpperCase()
-                  )}
-                </div>
-                {match.team_away_id && (
-                  <div className="absolute -top-1.5 -right-1.5 bg-bg-surface rounded-full border border-border-line p-0.5">
-                    <FavoriteStar
-                      entityType="team"
-                      entityId={match.team_away_id}
-                      entityName={match.team_away?.name || 'Away Team'}
-                      size="sm"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
+            {/* Away */}
+            <TeamBlock team={match.team_away} teamId={match.team_away_id} fallback="Away Team" />
           </div>
         ) : (
           <div className="text-center space-y-3">
@@ -177,5 +137,35 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
         )}
       </div>
     </section>
+  );
+}
+
+function TeamBlock({
+  team,
+  teamId,
+  fallback,
+}: {
+  team?: Match['team_home'];
+  teamId: string | null;
+  fallback: string;
+}) {
+  const name = team?.name ?? fallback;
+  return (
+    <div className="flex flex-col items-center text-center gap-2 min-w-0">
+      <div className="w-16 h-16 sm:w-24 sm:h-24 overflow-hidden rounded-2xl bg-bg-void border border-border-line flex items-center justify-center font-display font-black text-lg sm:text-2xl text-text-muted shadow-inner">
+        {team?.logo_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={team.logo_url} alt="" className="w-full h-full object-cover" />
+        ) : (
+          name.substring(0, 3).toUpperCase()
+        )}
+      </div>
+      <span className="font-display font-bold text-sm sm:text-xl text-text-primary leading-tight break-words max-w-full">
+        {name}
+      </span>
+      {teamId && (
+        <FavoriteStar entityType="team" entityId={teamId} entityName={name} size="sm" />
+      )}
+    </div>
   );
 }
