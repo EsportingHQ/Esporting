@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import LogoUpload from '@/components/ui/LogoUpload';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { AlertCircle, Plus, Trash2, Award, Calendar, Layers, Shield } from 'lucide-react';
@@ -34,6 +35,9 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
   const [format, setFormat] = useState('league');
   const [prizePool, setPrizePool] = useState('');
   const [description, setDescription] = useState('');
+  const [bannerUrl, setBannerUrl] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const [selectedGames, setSelectedGames] = useState<string[]>([]);
 
@@ -74,6 +78,14 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
       setError('Competition name and at least one game are required');
       return;
     }
+    if (!startDate || !endDate) {
+      setError('Choose the start and end dates of the competition');
+      return;
+    }
+    if (endDate < startDate) {
+      setError('The end date cannot be before the start date');
+      return;
+    }
     if (seriesMode === 'new' && !seriesName) {
       setError('Series name is required');
       return;
@@ -93,6 +105,9 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
         edition_label: editionLabel || null,
         format,
         prize_pool: prizePool || null,
+        banner_url: bannerUrl || null,
+        starts_at: `${startDate}T00:00:00+01:00`,
+        ends_at: `${endDate}T23:59:59+01:00`,
         description: description || null,
         game_title_slugs: selectedGames,
         stages: stages.filter((s) => s.name),
@@ -235,6 +250,34 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
               onChange={(e) => setEditionLabel(e.target.value)}
               className="w-full bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary placeholder-text-muted/30 focus:outline-none focus:border-accent-readout transition-colors"
             />
+          </div>
+
+          <LogoUpload value={bannerUrl || null} label="Competition logo" onUploaded={(u) => setBannerUrl(u)} />
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="block text-[10px] font-display font-bold text-text-muted uppercase tracking-wider">
+                Starts on
+              </label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent-readout"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-[10px] font-display font-bold text-text-muted uppercase tracking-wider">
+                Ends on
+              </label>
+              <input
+                type="date"
+                value={endDate}
+                min={startDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent-readout"
+              />
+            </div>
           </div>
 
           <div className="space-y-1">

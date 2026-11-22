@@ -41,7 +41,7 @@ export default async function OrganiserCompetitionDetailPage({
 		.from('comp_instances')
 		.select(
 			`
-			id, name, slug, edition_label, format, status, prize_pool, description, banner_url,
+			id, name, slug, edition_label, format, status, prize_pool, description, banner_url, starts_at, ends_at,
 			organiser_id, comp_series(name)
 		`,
 		)

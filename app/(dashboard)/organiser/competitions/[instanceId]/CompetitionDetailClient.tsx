@@ -74,6 +74,8 @@ type Instance = {
 	prize_pool: string | null;
 	description: string | null;
 	banner_url: string | null;
+	starts_at: string | null;
+	ends_at: string | null;
 	comp_series: { name: string }[] | null;
 };
 
@@ -86,6 +88,13 @@ type Props = {
 	matches: Match[];
 	contributors: { id: string; name: string }[];
 };
+
+const TAB_LABELS = {
+	teams: 'Teams',
+	stages: 'Groups & Fixtures',
+	matches: 'Matches',
+	schedule: 'Add a match',
+} as const;
 
 export default function CompetitionDetailClient({
 	instance,
@@ -117,6 +126,9 @@ export default function CompetitionDetailClient({
 	const [bannerUrl, setBannerUrl] = useState(instance.banner_url);
 	const [teamLogo, setTeamLogo] = useState('');
 	const [openTeam, setOpenTeam] = useState<string | null>(null);
+	const [startsAt, setStartsAt] = useState(instance.starts_at);
+	const [endsAt, setEndsAt] = useState(instance.ends_at);
+	const [removing, setRemoving] = useState<string | null>(null);
 
 	const STATUS_STEPS: Record<string, { next: string; label: string; help: string } | undefined> = {
 		draft: {
@@ -174,6 +186,37 @@ export default function CompetitionDetailClient({
 			.eq('comp_instance_id', instance.id)
 			.order('registered_at', { ascending: false });
 		setLocalRegistrations((fresh as unknown as Registration[]) ?? []);
+	}
+
+	function toLagosDate(iso: string | null): string {
+		if (!iso) return '';
+		return new Date(iso).toLocaleDateString('en-CA', { timeZone: 'Africa/Lagos' });
+	}
+
+	async function saveDates(start: string, end: string) {
+		setError(null);
+		if (start && end && end < start) {
+			setError('The end date cannot be before the start date');
+			return;
+		}
+		const patch = {
+			starts_at: start ? `${start}T00:00:00+01:00` : null,
+			ends_at: end ? `${end}T23:59:59+01:00` : null,
+		};
+		const { error: e } = await supabase.from('comp_instances').update(patch).eq('id', instance.id);
+		if (e) return setError(e.message);
+		setStartsAt(patch.starts_at);
+		setEndsAt(patch.ends_at);
+	}
+
+	async function removeTeam(teamId: string, name: string) {
+		if (!window.confirm(`Remove ${name} from this competition? Its roster for this competition is removed too.`)) return;
+		setError(null);
+		setRemoving(teamId);
+		const { error: e } = await supabase.rpc('remove_team_from_comp', { p_comp: instance.id, p_team: teamId });
+		setRemoving(null);
+		if (e) return setError(e.message);
+		setLocalRegistrations((rs) => rs.filter((r) => r.teams?.id !== teamId));
 	}
 
 	async function handleRegisterTeam() {
@@ -278,6 +321,26 @@ export default function CompetitionDetailClient({
 						setBannerUrl(url);
 					}}
 				/>
+				<div className="flex flex-wrap items-center gap-3 text-xs text-text-muted">
+					<label className="flex items-center gap-2">
+						Starts
+						<input
+							type="date"
+							value={toLagosDate(startsAt)}
+							onChange={(e) => saveDates(e.target.value, toLagosDate(endsAt))}
+							className="bg-bg-void border border-border-line rounded px-2 py-1 text-text-primary"
+						/>
+					</label>
+					<label className="flex items-center gap-2">
+						Ends
+						<input
+							type="date"
+							value={toLagosDate(endsAt)}
+							onChange={(e) => saveDates(toLagosDate(startsAt), e.target.value)}
+							className="bg-bg-void border border-border-line rounded px-2 py-1 text-text-primary"
+						/>
+					</label>
+				</div>
 				<div>
 					<span className="text-[10px] font-data text-text-muted uppercase tracking-wider block">
 						{seriesName}
@@ -362,7 +425,7 @@ export default function CompetitionDetailClient({
 
 			{/* Tabs */}
 			<div className="flex border-b border-border-line gap-2">
-				{(['teams', 'schedule', 'matches', 'stages'] as const).map(
+				{(['teams', 'stages', 'matches', 'schedule'] as const).map(
 					(tab) => (
 						<button
 							key={tab}
@@ -373,7 +436,7 @@ export default function CompetitionDetailClient({
 									: 'border-transparent text-text-muted hover:text-text-primary'
 							}`}
 						>
-							{tab}
+							{TAB_LABELS[tab]}
 							{tab === 'teams' &&
 								` (${localRegistrations.length})`}
 							{tab === 'matches' && ` (${matches.length})`}
@@ -529,6 +592,15 @@ export default function CompetitionDetailClient({
 										>
 											{reg.status}
 										</span>
+										{!(status === 'completed' || status === 'cancelled') && reg.teams && (
+											<button
+												disabled={removing === reg.teams.id}
+												onClick={() => removeTeam(reg.teams!.id, reg.teams!.name)}
+												className="px-2 py-1 rounded bg-bg-void border border-state-loss/40 text-[10px] font-display font-bold uppercase tracking-wider text-state-loss disabled:opacity-50"
+											>
+												{removing === reg.teams.id ? '...' : 'Remove'}
+											</button>
+										)}
 										<button
 											onClick={() => setOpenTeam(openTeam === reg.id ? null : reg.id)}
 											className="px-2 py-1 rounded bg-bg-void border border-border-line text-[10px] font-display font-bold uppercase tracking-wider text-text-primary"

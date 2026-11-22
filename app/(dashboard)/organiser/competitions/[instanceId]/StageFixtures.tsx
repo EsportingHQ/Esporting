@@ -12,6 +12,14 @@ const btn =
 const input =
   'bg-bg-void border border-border-line rounded px-2 py-1 text-text-primary text-xs';
 
+function splitText(teams: number, groups: number): string {
+  const base = Math.floor(teams / groups);
+  const extra = teams % groups;
+  if (extra === 0) return `${base} per group`;
+  const sizes = [...Array(extra).fill(base + 1), ...Array(groups - extra).fill(base)];
+  return sizes.join(', ');
+}
+
 const TYPE_HELP: Record<string, string> = {
   league: 'Everyone plays everyone.',
   group: 'Teams are split randomly and evenly into groups, then play each other inside their group.',
@@ -35,6 +43,7 @@ export default function StageFixtures({
   const [supabase] = useState(() => createClient());
   const [groups, setGroups] = useState(2);
   const [double, setDouble] = useState(false);
+  const [perDay, setPerDay] = useState(2);
   const [seed, setSeed] = useState(() => Math.random() * 1.8 - 0.9);
   const [preview, setPreview] = useState<PreviewRow[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -83,6 +92,18 @@ export default function StageFixtures({
     setBusy(null);
     if (error) return setMsg({ text: error.message, ok: false });
     setMsg({ text: `${data} fixtures created for the next round.`, ok: true });
+    router.refresh();
+  }
+
+  async function autoSchedule() {
+    setBusy('sched');
+    setMsg(null);
+    const { data, error } = await supabase.rpc('auto_schedule_stage', {
+      p_comp: compId, p_stage: stage.id, p_per_day: perDay,
+    });
+    setBusy(null);
+    if (error) return setMsg({ text: error.message, ok: false });
+    setMsg({ text: `${data} fixtures given dates inside the competition window. You can still change any time in the Matches tab.`, ok: true });
     router.refresh();
   }
 
@@ -169,12 +190,22 @@ export default function StageFixtures({
             )}
           </div>
           <p className="text-text-muted">
-            {teamCount} approved teams. {TYPE_HELP[type]}
+            {teamCount} teams registered. {TYPE_HELP[type]}
           </p>
+          {type === 'group' && teamCount >= 2 && (
+            <p className="text-text-muted">
+              {groups > teamCount / 2
+                ? `Too many groups: each group needs at least 2 teams, so ${Math.floor(teamCount / 2)} is the most.`
+                : `${teamCount} teams in ${groups} group${groups > 1 ? 's' : ''}: ${splitText(teamCount, groups)}.`}
+            </p>
+          )}
+          {teamCount < 2 && (
+            <p className="text-state-alert">Register at least 2 teams in the Teams tab first.</p>
+          )}
 
           {!preview ? (
             <button
-              disabled={busy !== null || locked}
+              disabled={busy !== null || locked || teamCount < 2}
               onClick={() => doPreview()}
               className={`${btn} bg-accent-readout text-bg-void`}
             >
@@ -222,6 +253,26 @@ export default function StageFixtures({
           )}
         </div>
       ) : (
+        <div className="space-y-3">
+          <p className="text-text-muted">
+            This stage has {fixtureCount} fixtures. To redo the draw or change the format, clear them first.
+          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="flex items-center gap-2 text-text-muted">
+              Matches per day
+              <input
+                type="number"
+                min={1}
+                max={12}
+                value={perDay}
+                onChange={(e) => setPerDay(Math.min(12, Math.max(1, Number(e.target.value) || 1)))}
+                className={`${input} w-16`}
+              />
+            </label>
+            <button disabled={busy !== null || locked} onClick={autoSchedule} className={`${btn} bg-accent-readout text-bg-void`}>
+              {busy === 'sched' ? 'Scheduling...' : 'Auto-set dates'}
+            </button>
+          </div>
         <div className="flex flex-wrap gap-2">
           {type === 'knockout' && (
             <button disabled={busy !== null || locked} onClick={next} className={`${btn} bg-accent-readout text-bg-void`}>
@@ -235,6 +286,7 @@ export default function StageFixtures({
           >
             {busy === 'clear' ? 'Removing...' : 'Clear fixtures'}
           </button>
+        </div>
         </div>
       )}
       {msg && <p className={msg.ok ? 'text-state-win' : 'text-state-loss'}>{msg.text}</p>}

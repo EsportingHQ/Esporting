@@ -1,161 +1,96 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Users, User } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { Match } from '@/hooks/useMatchRealtime';
+import { createClient } from '@/lib/supabase/client';
 
 interface LineupsTabProps {
   match: Match;
 }
 
-export function LineupsTab({ match }: LineupsTabProps) {
-  const homeLineup = [
-    { id: 'p1', name: 'Kuti_Junior', role: 'starter', number: 10, position: 'FWD' },
-    { id: 'p2', name: 'Striker_X', role: 'starter', number: 7, position: 'MID' },
-    { id: 'p3', name: 'Defender_One', role: 'starter', number: 4, position: 'DEF' },
-    { id: 'p4', name: 'Benched_Guy', role: 'substitute', number: 12, position: 'SUB' },
-  ];
+type Player = { id: string; gamertag: string };
 
-  const awayLineup = [
-    { id: 'p5', name: 'Bello_Master', role: 'starter', number: 9, position: 'FWD' },
-    { id: 'p6', name: 'Venom_Sniper', role: 'starter', number: 11, position: 'MID' },
-    { id: 'p7', name: 'Shield_Wall', role: 'starter', number: 5, position: 'DEF' },
-    { id: 'p8', name: 'Coach_Sub', role: 'substitute', number: 14, position: 'SUB' },
-  ];
+// The squad shown here is the roster the tournament organiser registered for this
+// competition and game, read live, so organiser edits show up straight away.
+async function loadSquad(
+  supabase: ReturnType<typeof createClient>,
+  compId: string,
+  gameId: string,
+  teamId: string,
+): Promise<Player[]> {
+  const { data } = await supabase
+    .from('player_game_assignments')
+    .select('players(id, gamertag)')
+    .eq('comp_instance_id', compId)
+    .eq('game_title_id', gameId)
+    .eq('team_id', teamId)
+    .eq('is_active', true);
+  const rows = (data ?? []) as unknown as { players: Player | Player[] | null }[];
+  return rows
+    .map((r) => (Array.isArray(r.players) ? r.players[0] : r.players))
+    .filter((p): p is Player => !!p)
+    .sort((a, b) => a.gamertag.localeCompare(b.gamertag));
+}
+
+function Squad({ title, side, players }: { title?: string; side: string; players: Player[] | null }) {
+  return (
+    <div className="bg-bg-surface border border-border-line rounded p-4 space-y-4">
+      <div className="flex items-center justify-between border-b border-border-line pb-2">
+        <span className="font-display font-bold uppercase text-sm text-accent-readout">{title}</span>
+        <span className="text-[10px] font-data text-text-muted">{side}</span>
+      </div>
+      <div className="space-y-2 text-xs font-body">
+        {players === null && <p className="text-text-muted italic">Loading roster...</p>}
+        {players?.length === 0 && <p className="text-text-muted italic">Roster not published yet.</p>}
+        {players?.map((p) => (
+          <Link
+            key={p.id}
+            href={`/players/${p.id}`}
+            className="bg-bg-void border border-border-line hover:border-accent-readout/40 px-3 py-2 rounded flex items-center justify-between transition-all group"
+          >
+            <span className="font-medium text-text-primary group-hover:text-accent-readout transition-colors truncate">
+              {p.gamertag}
+            </span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function LineupsTab({ match }: LineupsTabProps) {
+  const [home, setHome] = useState<Player[] | null>(null);
+  const [away, setAway] = useState<Player[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const supabase = createClient();
+    (async () => {
+      const [h, a] = await Promise.all([
+        match.team_home_id ? loadSquad(supabase, match.comp_instance_id, match.game_title_id, match.team_home_id) : [],
+        match.team_away_id ? loadSquad(supabase, match.comp_instance_id, match.game_title_id, match.team_away_id) : [],
+      ]);
+      if (!cancelled) {
+        setHome(h);
+        setAway(a);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [match.comp_instance_id, match.game_title_id, match.team_home_id, match.team_away_id]);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 border-b border-border-line pb-2">
         <Users className="w-4 h-4 text-accent-readout" />
-        <h3 className="font-display font-black text-lg uppercase tracking-wider">
-          OFFICIAL SQUAD LINEUPS
-        </h3>
+        <h3 className="font-display font-black text-lg uppercase tracking-wider">SQUADS</h3>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Home Squad */}
-        <div className="bg-bg-surface border border-border-line rounded p-4 space-y-4">
-          <div className="flex items-center justify-between border-b border-border-line pb-2">
-            <span className="font-display font-bold uppercase text-sm text-accent-readout">
-              {match.team_home?.name}
-            </span>
-            <span className="text-[10px] font-data text-text-muted">HOME SQUAD</span>
-          </div>
-
-          <div className="space-y-2 text-xs font-body">
-            <div className="text-[10px] font-display font-bold text-text-muted uppercase tracking-wider">
-              STARTING LINEUP
-            </div>
-            {homeLineup
-              .filter((p) => p.role === 'starter')
-              .map((p) => (
-                <Link
-                  key={p.id}
-                  href={`/players/${p.id}`}
-                  className="bg-bg-void border border-border-line hover:border-accent-readout/40 px-3 py-2 rounded flex items-center justify-between transition-all group"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="w-5 h-5 rounded bg-border-line flex items-center justify-center font-data font-bold text-[10px] text-text-muted shrink-0">
-                      {p.number}
-                    </span>
-                    <span className="font-medium text-text-primary group-hover:text-accent-readout transition-colors truncate">
-                      {p.name}
-                    </span>
-                  </div>
-                  <span className="text-[9px] font-data text-text-muted bg-bg-surface px-1.5 py-0.5 rounded border border-border-line">
-                    {p.position}
-                  </span>
-                </Link>
-              ))}
-
-            <div className="text-[10px] font-display font-bold text-text-muted uppercase tracking-wider pt-2">
-              SUBSTITUTES
-            </div>
-            {homeLineup
-              .filter((p) => p.role === 'substitute')
-              .map((p) => (
-                <Link
-                  key={p.id}
-                  href={`/players/${p.id}`}
-                  className="bg-bg-void/50 border border-border-line hover:border-accent-readout/40 px-3 py-2 rounded flex items-center justify-between transition-all text-text-muted hover:text-text-primary group"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="w-5 h-5 rounded bg-border-line/50 flex items-center justify-center font-data font-bold text-[10px]">
-                      {p.number}
-                    </span>
-                    <span className="font-medium truncate group-hover:text-accent-readout transition-colors">
-                      {p.name}
-                    </span>
-                  </div>
-                  <span className="text-[9px] font-data text-text-muted bg-bg-surface px-1.5 py-0.5 rounded border border-border-line">
-                    SUB
-                  </span>
-                </Link>
-              ))}
-          </div>
-        </div>
-
-        {/* Away Squad */}
-        <div className="bg-bg-surface border border-border-line rounded p-4 space-y-4">
-          <div className="flex items-center justify-between border-b border-border-line pb-2">
-            <span className="font-display font-bold uppercase text-sm text-accent-readout">
-              {match.team_away?.name}
-            </span>
-            <span className="text-[10px] font-data text-text-muted">AWAY SQUAD</span>
-          </div>
-
-          <div className="space-y-2 text-xs font-body">
-            <div className="text-[10px] font-display font-bold text-text-muted uppercase tracking-wider">
-              STARTING LINEUP
-            </div>
-            {awayLineup
-              .filter((p) => p.role === 'starter')
-              .map((p) => (
-                <Link
-                  key={p.id}
-                  href={`/players/${p.id}`}
-                  className="bg-bg-void border border-border-line hover:border-accent-readout/40 px-3 py-2 rounded flex items-center justify-between transition-all group"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="w-5 h-5 rounded bg-border-line flex items-center justify-center font-data font-bold text-[10px] text-text-muted shrink-0">
-                      {p.number}
-                    </span>
-                    <span className="font-medium text-text-primary group-hover:text-accent-readout transition-colors truncate">
-                      {p.name}
-                    </span>
-                  </div>
-                  <span className="text-[9px] font-data text-text-muted bg-bg-surface px-1.5 py-0.5 rounded border border-border-line">
-                    {p.position}
-                  </span>
-                </Link>
-              ))}
-
-            <div className="text-[10px] font-display font-bold text-text-muted uppercase tracking-wider pt-2">
-              SUBSTITUTES
-            </div>
-            {awayLineup
-              .filter((p) => p.role === 'substitute')
-              .map((p) => (
-                <Link
-                  key={p.id}
-                  href={`/players/${p.id}`}
-                  className="bg-bg-void/50 border border-border-line hover:border-accent-readout/40 px-3 py-2 rounded flex items-center justify-between transition-all text-text-muted hover:text-text-primary group"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="w-5 h-5 rounded bg-border-line/50 flex items-center justify-center font-data font-bold text-[10px]">
-                      {p.number}
-                    </span>
-                    <span className="font-medium truncate group-hover:text-accent-readout transition-colors">
-                      {p.name}
-                    </span>
-                  </div>
-                  <span className="text-[9px] font-data text-text-muted bg-bg-surface px-1.5 py-0.5 rounded border border-border-line">
-                    SUB
-                  </span>
-                </Link>
-              ))}
-          </div>
-        </div>
+        <Squad title={match.team_home?.name} side="HOME" players={home} />
+        <Squad title={match.team_away?.name} side="AWAY" players={away} />
       </div>
     </div>
   );
