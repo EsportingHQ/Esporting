@@ -29,6 +29,11 @@ export interface StandingRow {
     lost: number;
     gd: number;
     pts: number;
+    scoreFor: number;
+    scoreAgainst: number;
+    metric: 'goals' | 'maps';
+    gameName: string;
+    groupName: string | null;
 }
 
 export interface BRStandingRow {
@@ -269,8 +274,9 @@ export function useCompetitionDetail(slug: string) {
             const { data: realStandings } = stageIds.length
                 ? await supabase
                     .from('standings')
-                    .select('rank, played, wins, draws, losses, score_diff, points, teams(id, name, short_code)')
+                    .select('rank, played, wins, draws, losses, score_diff, score_for, score_against, points, meta, teams(id, name, short_code), game_titles(name), comp_groups(name)')
                     .in('stage_id', stageIds)
+                    .order('game_title_id', { ascending: true })
                     .order('rank', { ascending: true })
                 : { data: [] };
 
@@ -281,7 +287,12 @@ export function useCompetitionDetail(slug: string) {
                 draws: number;
                 losses: number;
                 score_diff: number;
+                score_for: number;
+                score_against: number;
                 points: number;
+                meta: { metric?: string } | null;
+                game_titles: { name: string } | { name: string }[] | null;
+                comp_groups: { name: string } | { name: string }[] | null;
                 teams: { id: string; name: string; short_code: string | null } | { id: string; name: string; short_code: string | null }[] | null;
             }[]).map((row, i) => {
                 const team = one(row.teams);
@@ -294,8 +305,13 @@ export function useCompetitionDetail(slug: string) {
                     won: row.wins,
                     drawn: row.draws,
                     lost: row.losses,
-                    gd: row.score_diff,
-                    pts: row.points,
+                    gd: Number(row.score_diff ?? 0),
+                    pts: Number(row.points),
+                    scoreFor: Number(row.score_for ?? 0),
+                    scoreAgainst: Number(row.score_against ?? 0),
+                    metric: row.meta?.metric === 'goals' ? 'goals' : 'maps',
+                    gameName: one(row.game_titles)?.name ?? '',
+                    groupName: one(row.comp_groups)?.name ?? null,
                 };
             });
 

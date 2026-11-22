@@ -1,5 +1,6 @@
 'use client';
 
+import LeagueStandings from '@/components/competitions/LeagueStandings';
 import { useState, use } from 'react';
 import Link from 'next/link';
 import { PublicNav } from '@/components/layout/public-nav';
@@ -342,76 +343,7 @@ export default function CompetitionDetailPage({
 									</tbody>
 								</table>
 							) : (
-								/* H2H Football/League Standings Table */
-								<table className="w-full text-left border-collapse text-xs">
-									<thead>
-										<tr className="bg-bg-void border-b border-border-line font-display font-bold text-text-muted uppercase tracking-wider text-[11px]">
-											<th className="py-3 px-4 w-12 text-center">
-												Rank
-											</th>
-											<th className="py-3 px-4">
-												Squad Name
-											</th>
-											<th className="py-3 px-4 w-20 text-center">
-												Tag
-											</th>
-											<th className="py-3 px-4 w-16 text-center">
-												PL
-											</th>
-											<th className="py-3 px-4 w-16 text-center">
-												W
-											</th>
-											<th className="py-3 px-4 w-16 text-center">
-												D
-											</th>
-											<th className="py-3 px-4 w-16 text-center">
-												L
-											</th>
-											<th className="py-3 px-4 w-16 text-center">
-												GD
-											</th>
-											<th className="py-3 px-4 w-20 text-center text-accent-signal">
-												PTS
-											</th>
-										</tr>
-									</thead>
-									<tbody className="divide-y divide-border-line font-data">
-										{leagueStandings.map((row) => (
-											<tr
-												key={row.shortCode}
-												className="hover:bg-bg-void/40 transition-colors"
-											>
-												<td className="py-3 px-4 text-center font-bold">
-													{row.rank}
-												</td>
-												<td className="py-3 px-4 font-body font-medium text-text-primary">
-													{row.name}
-												</td>
-												<td className="py-3 px-4 text-center text-text-muted">
-													{row.shortCode}
-												</td>
-												<td className="py-3 px-4 text-center">
-													{row.played}
-												</td>
-												<td className="py-3 px-4 text-center">
-													{row.won}
-												</td>
-												<td className="py-3 px-4 text-center">
-													{row.drawn ?? 0}
-												</td>
-												<td className="py-3 px-4 text-center">
-													{row.lost}
-												</td>
-												<td className="py-3 px-4 text-center">
-													{row.gd ?? 0}
-												</td>
-												<td className="py-3 px-4 text-center font-bold text-accent-signal">
-													{row.pts}
-												</td>
-											</tr>
-										))}
-									</tbody>
-								</table>
+								<LeagueStandings rows={leagueStandings} />
 							)}
 						</div>
 					)}
