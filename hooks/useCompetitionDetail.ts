@@ -16,6 +16,7 @@ export interface CompetitionDetail {
     ends_at: string | null;
     seriesName: string;
     organiserName: string;
+    organiserTier: string | null;
 }
 
 export interface StandingRow {
@@ -165,6 +166,14 @@ export function useCompetitionDetail(slug: string) {
 
         const seriesName = one(instanceRaw.comp_series as { name: string } | { name: string }[] | null)?.name ?? '';
 
+        const { data: orgProfile } = instanceRaw.organiser_id
+            ? await supabase
+                .from('organiser_profiles')
+                .select('tier, org_name')
+                .eq('user_id', instanceRaw.organiser_id)
+                .maybeSingle()
+            : { data: null };
+
         const instance: CompetitionDetail = {
         id: instanceRaw.id,
         name: instanceRaw.name,
@@ -176,7 +185,8 @@ export function useCompetitionDetail(slug: string) {
         starts_at: instanceRaw.starts_at,
         ends_at: instanceRaw.ends_at,
         seriesName,
-        organiserName: '',
+        organiserName: orgProfile?.org_name ?? '',
+        organiserTier: orgProfile?.tier ?? null,
         };
         setCompetition(instance);
 

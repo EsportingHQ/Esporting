@@ -60,6 +60,12 @@ const actions = [
 		icon: UserCheck,
 	},
 	{
+		label: 'Organiser Tiers',
+		href: '/admin/tier-requests',
+		description: 'Review upgrade requests and set each organiser\'s level',
+		icon: Shield,
+	},
+	{
 		label: 'Invite Organiser',
 		href: '/admin/invites',
 		description:

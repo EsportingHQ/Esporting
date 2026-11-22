@@ -5,6 +5,7 @@ import { useState, use } from 'react';
 import Link from 'next/link';
 import { PublicNav } from '@/components/layout/public-nav';
 import { MatchCard, MatchCardProps } from '@/components/broadcast/match-card';
+import { TierBadge } from '@/components/organiser/TierBadge';
 import { EventBadge } from '@/components/broadcast/event-badge';
 import { Trophy, Calendar, Award, ListOrdered, FileText } from 'lucide-react';
 import {
@@ -106,6 +107,14 @@ export default function CompetitionDetailPage({
 						<h1 className="font-display font-black text-3xl tracking-wide uppercase">
 							{competition.name}
 						</h1>
+						{competition.organiserTier && (
+							<div className="flex items-center gap-2 flex-wrap">
+								<TierBadge tier={competition.organiserTier} />
+								{competition.organiserName && (
+									<span className="text-xs text-text-muted">by {competition.organiserName}</span>
+								)}
+							</div>
+						)}
 						<p className="text-xs text-text-muted max-w-xl font-body leading-relaxed">
 							{competition.description ??
 								'Live competition data from EsportingHQ.'}

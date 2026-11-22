@@ -8,6 +8,7 @@ const adminNav: NavItem[] = [
 	{ label: 'Competitions', href: '/admin/competitions', icon: 'layout' },
 	{ label: 'News Desk', href: '/admin/news', icon: 'newspaper' },
 	{ label: 'Organiser Applications', href: '/admin/organiser-applications', icon: 'userPlus' },
+	{ label: 'Organiser Tiers', href: '/admin/tier-requests', icon: 'shield' },
 	{ label: 'Invite Organiser', href: '/admin/invites', icon: 'users' },
 	{ label: 'Invite Contributor', href: '/contributor/new', icon: 'userPlus' },
 	{ label: 'Match Assignments', href: '/admin/matches', icon: 'activity' },
@@ -30,6 +31,7 @@ const organiserNav: NavItem[] = [
 	},
 	{ label: 'Invite Contributor', href: '/contributor/new', icon: 'userPlus' },
 	{ label: 'Contributor View', href: '/contributor', icon: 'radio' },
+	{ label: 'My Profile', href: '/organiser/profile', icon: 'settings' },
 ];
 
 const contributorNav: NavItem[] = [
