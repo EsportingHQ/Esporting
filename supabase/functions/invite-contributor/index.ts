@@ -17,18 +17,15 @@ serve(async (req: Request) => {
       return json({ error: 'Missing Authorization header' }, 401)
     }
 
-    const { email, display_name, comp_instance_id } = await req.json()
+    const body = await req.json()
+    let { email, display_name, comp_instance_id } = body
+    const requestId: string | null = body.request_id ? String(body.request_id) : null
 
-    if (!email) {
+    if (!email && !requestId) {
       return json({ error: 'email is required' }, 400)
     }
 
-    const normalizedEmail = String(email).trim().toLowerCase()
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(normalizedEmail)) {
-      return json({ error: 'Invalid email format' }, 400)
-    }
-
     const adminClient = createAdminClient()
     const token = authHeader.replace('Bearer ', '')
     const { data: { user }, error: userError } = await adminClient.auth.getUser(token)
@@ -38,6 +35,23 @@ serve(async (req: Request) => {
     }
 
     const isAdmin = await hasGlobalAdminRole(adminClient, user.id)
+
+    // Admin approving an organiser's request: invite exactly what was requested.
+    if (requestId) {
+      if (!isAdmin) return json({ error: 'Only Esporting can approve contributor requests' }, 403)
+      const { data: reqRow } = await adminClient
+        .from('contributor_invite_requests')
+        .select('email, display_name, comp_instance_id, status')
+        .eq('id', requestId)
+        .single()
+      if (!reqRow || reqRow.status !== 'pending') {
+        return json({ error: 'Request not found or already reviewed' }, 404)
+      }
+      email = reqRow.email
+      display_name = reqRow.display_name
+      comp_instance_id = reqRow.comp_instance_id
+    }
+    const normalizedEmail = String(email).trim().toLowerCase()
     const competitionId = comp_instance_id ? String(comp_instance_id) : null
 
     if (!isAdmin && !competitionId) {
@@ -67,12 +81,44 @@ serve(async (req: Request) => {
       return json({ error: 'You are not allowed to invite contributors here' }, 403)
     }
 
+    if (!emailRegex.test(normalizedEmail)) {
+      return json({ error: 'Invalid email format' }, 400)
+    }
+
+    // Organisers only ask. Esporting approves, then the invite email is sent.
+    if (!isAdmin) {
+      const { error: insertError } = await adminClient.from('contributor_invite_requests').insert({
+        comp_instance_id: competitionId,
+        email: normalizedEmail,
+        display_name: display_name ?? null,
+        requested_by: user.id,
+      })
+      if (insertError) {
+        if (insertError.code === '23505') {
+          return json({ error: `${normalizedEmail} is already waiting for approval for this tournament` }, 409)
+        }
+        throw insertError
+      }
+      return json({
+        success: true,
+        mode: 'pending_approval',
+        message: `Request sent. Esporting will approve ${normalizedEmail} as a contributor for ${instance?.name ?? 'your tournament'}, then they get the invite email.`,
+      })
+    }
+
     const { data: existingUsers } = await adminClient.auth.admin.listUsers()
     const existingUser = existingUsers?.users?.find(
       (authUser: { email?: string }) => authUser.email?.toLowerCase() === normalizedEmail,
     )
 
     const redirectTo = `${Deno.env.get('SITE_URL') ?? req.headers.get('origin') ?? 'http://localhost:3000'}/callback`
+    const markApproved = async () => {
+      if (!requestId) return
+      await adminClient
+        .from('contributor_invite_requests')
+        .update({ status: 'approved', reviewed_by: user.id, reviewed_at: new Date().toISOString() })
+        .eq('id', requestId)
+    }
     const scopeLabel = instance ? instance.name : 'all competitions'
 
     if (existingUser?.email_confirmed_at) {
@@ -82,6 +128,7 @@ serve(async (req: Request) => {
         grantedBy: user.id,
       })
 
+      await markApproved()
       return json({
         success: true,
         mode: 'existing_user_assigned',
@@ -112,6 +159,7 @@ serve(async (req: Request) => {
         grantedBy: user.id,
       })
 
+      await markApproved()
       return json({
         success: true,
         mode: 'invite_resent',
@@ -146,6 +194,7 @@ serve(async (req: Request) => {
       })
     }
 
+    await markApproved()
     return json({
       success: true,
       mode: 'invited',

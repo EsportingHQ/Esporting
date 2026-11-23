@@ -96,7 +96,7 @@ serve(async (req: Request) => {
             invited_as: 'organiser',
             invited_by: user.id
           },
-          redirectTo: 'http://localhost:3000/callback'
+          redirectTo: `${Deno.env.get('SITE_URL') ?? req.headers.get('origin') ?? 'http://localhost:3000'}/callback`
         })
 
       if (resendError) {
@@ -123,7 +123,7 @@ serve(async (req: Request) => {
         invited_as:   'organiser',
         invited_by:   user.id
         },
-        redirectTo: 'http://localhost:3000/callback'
+        redirectTo: `${Deno.env.get('SITE_URL') ?? req.headers.get('origin') ?? 'http://localhost:3000'}/callback`
     })
 
     if (inviteError) {

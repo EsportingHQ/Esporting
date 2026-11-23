@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import InviteContributorClient from './InviteContributorClient';
+import InviteRequests, { type InviteRequest } from './InviteRequests';
 
 type RoleRow = {
 	roles: { name: string } | { name: string }[] | null;
@@ -102,11 +103,32 @@ export default async function InviteContributorPage() {
 			: 'Global contributor',
 	}));
 
+	const { data: reqRaw } = await supabase
+		.from('contributor_invite_requests')
+		.select('id, email, display_name, status, review_note, created_at, comp_instances(name), profiles!contributor_invite_requests_requested_by_fkey(display_name, username)')
+		.order('created_at', { ascending: false })
+		.limit(50);
+	const one = <T,>(v: T | T[] | null | undefined): T | null => (Array.isArray(v) ? (v[0] ?? null) : (v ?? null));
+	const requests: InviteRequest[] = ((reqRaw ?? []) as unknown as {
+		id: string; email: string; display_name: string | null; status: InviteRequest['status'];
+		review_note: string | null; created_at: string;
+		comp_instances: { name: string } | { name: string }[] | null;
+		profiles: { display_name: string | null; username: string } | { display_name: string | null; username: string }[] | null;
+	}[]).map((r) => ({
+		id: r.id, email: r.email, display_name: r.display_name, status: r.status,
+		review_note: r.review_note, created_at: r.created_at,
+		competition: one(r.comp_instances)?.name ?? 'Tournament',
+		requested_by_name: one(r.profiles)?.display_name ?? one(r.profiles)?.username ?? 'Organiser',
+	}));
+
 	return (
-		<InviteContributorClient
-			isAdmin={isAdmin}
-			competitions={competitions}
-			existingContributors={existingContributors}
-		/>
+		<>
+			<InviteContributorClient
+				isAdmin={isAdmin}
+				competitions={competitions}
+				existingContributors={existingContributors}
+			/>
+			<InviteRequests requests={requests} isAdmin={isAdmin} />
+		</>
 	);
 }
