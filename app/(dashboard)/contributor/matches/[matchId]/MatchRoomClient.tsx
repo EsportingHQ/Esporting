@@ -569,7 +569,7 @@ export default function MatchRoomClient({
 		});
 	}
 
-	async function endMap() {
+	async function endMap(winner?: 'home' | 'away') {
 		if (!liveMap) return;
 		await runAction('map-end', async () => {
 			await edgeCall('post-match-event', {
@@ -578,6 +578,7 @@ export default function MatchRoomClient({
 				event_type: 'map_end',
 				meta: {
 					map_number: liveMap.map_number,
+					...(winner ? { winner } : {}),
 					duration_seconds: durationMinutes
 						? Math.round(Number(durationMinutes) * 60)
 						: null,

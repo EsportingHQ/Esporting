@@ -34,7 +34,7 @@
         )
         }
 
-        if (!map_id && !mode_id) {
+        if (!map_id && !mode_id && start_map !== true) {
         return new Response(
             JSON.stringify({ error: 'At least one of map_id or mode_id must be provided' }),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -228,6 +228,16 @@
 
         if (poolError) throw poolError
 
+        // MOBA titles (MLBB) have no map or mode choice: a game is just started
+        const { data: titleRow } = await adminClient
+            .from('game_titles')
+            .select('game_types(slug)')
+            .eq('id', match.game_title_id)
+            .single()
+        const typeRel = (titleRow as { game_types?: { slug?: string } | { slug?: string }[] | null } | null)?.game_types
+        const typeSlug = Array.isArray(typeRel) ? typeRel[0]?.slug : typeRel?.slug
+        const winnerBased = typeSlug === 'moba'
+
         const needsMap = (mapPoolCount ?? 0) > 0
         const isDone = (s: { status: string }) => ['completed', 'skipped'].includes(s.status)
 
@@ -238,7 +248,7 @@
             : s
         )
 
-        const unconfigured = after.filter((s: { map_id: string | null, mode_id: string | null, status: string }) =>
+        const unconfigured = winnerBased ? [] : after.filter((s: { map_id: string | null, mode_id: string | null, status: string }) =>
             !isDone(s) && (!s.mode_id || (needsMap && !s.map_id))
         )
 

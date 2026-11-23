@@ -100,12 +100,15 @@ export function getSeriesState(input: {
   bestOf: number;
   /** True when the game title has a map pool, so every game needs a map too. */
   needsMap: boolean;
+  /** MOBA (MLBB): no map/mode choice, the winner is picked at game end and scores are optional. */
+  winnerBased?: boolean;
 }): SeriesState {
   const { events, homeTeamId, awayTeamId, bestOf, needsMap } = input;
+  const winnerBased = input.winnerBased === true;
   const slots = [...input.slots].sort((a, b) => a.map_number - b.map_number);
 
   const remaining = slots.filter((s) => !isDone(s));
-  const unconfigured = remaining.filter((s) => !isConfigured(s, needsMap));
+  const unconfigured = winnerBased ? [] : remaining.filter((s) => !isConfigured(s, needsMap));
   const setupComplete = unconfigured.length === 0;
   const liveSlot = slots.find((s) => s.status === 'live') ?? null;
 
@@ -117,7 +120,7 @@ export function getSeriesState(input: {
   const controls: Record<string, SlotControls> = {};
 
   for (const slot of slots) {
-    const configured = isConfigured(slot, needsMap);
+    const configured = winnerBased || isConfigured(slot, needsMap);
     const scoresEntered = hasBothScores(slot.id, events, homeTeamId, awayTeamId);
     const firstUnfinishedEarlier = slots.find(
       (s) => s.map_number < slot.map_number && !isDone(s),
@@ -145,7 +148,7 @@ export function getSeriesState(input: {
     let canEnd = false;
     let endLockedReason: string | null = null;
     if (slot.status === 'live') {
-      if (!scoresEntered) {
+      if (!winnerBased && !scoresEntered) {
         endLockedReason = 'Enter and save the score for both teams to end this game';
       } else {
         canEnd = true;

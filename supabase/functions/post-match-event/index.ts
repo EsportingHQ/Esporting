@@ -126,6 +126,7 @@
         player_id,
         value,
         match_map_id,
+        meta,
         adminClient
         })
 
@@ -200,6 +201,7 @@
     player_id,
     value,
     match_map_id,
+    meta,
     adminClient
     }: {
     match: Record<string, string>,
@@ -208,6 +210,7 @@
     player_id: string | null,
     value: number | null,
     match_map_id: string | null,
+    meta: Record<string, unknown> | null | undefined,
     adminClient: ReturnType<typeof createAdminClient>
     }): Promise<string | null> {
 
@@ -306,6 +309,21 @@
         if (!matchMap) return 'match_map_id does not belong to this match'
         if (matchMap.status !== 'live') return 'Map is not currently live'
 
+        // MOBA (MLBB): the winner is whoever destroys the base, picked by the
+        // contributor. Scores (kills) are optional.
+        const { data: titleRow } = await adminClient
+        .from('game_titles')
+        .select('game_types(slug)')
+        .eq('id', match.game_title_id)
+        .single()
+        const typeRel = (titleRow as { game_types?: { slug?: string } | { slug?: string }[] | null } | null)?.game_types
+        const typeSlug = Array.isArray(typeRel) ? typeRel[0]?.slug : typeRel?.slug
+        if (typeSlug === 'moba') {
+        const w = (meta as Record<string, unknown> | null | undefined)?.winner
+        if (w !== 'home' && w !== 'away') return 'Pick which team won this game before ending it'
+        return null
+        }
+
         // A game can only end once a score has been entered for BOTH teams.
         // match_maps scores default to 0, so "entered" is read from the
         // score_update events, not from the score columns.
@@ -383,7 +401,9 @@
         .single()
 
         if (mapData) {
+        const pickedWinner = (meta as Record<string, unknown> | null | undefined)?.winner
         const mapWinner =
+            pickedWinner === 'home' || pickedWinner === 'away' ? pickedWinner :
             mapData.home_score > mapData.away_score ? 'home' :
             mapData.away_score > mapData.home_score ? 'away' : 'draw'
 

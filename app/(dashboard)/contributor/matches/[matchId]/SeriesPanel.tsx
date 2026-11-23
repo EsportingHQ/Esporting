@@ -32,7 +32,7 @@ type Props = {
 	onSaveSetup: (changes: SetupChange[]) => void | Promise<void>;
 	onStartGame: (slot: MatchMap) => void | Promise<void>;
 	onSaveScore: () => void | Promise<void>;
-	onEndGame: () => void | Promise<void>;
+	onEndGame: (winner?: 'home' | 'away') => void | Promise<void>;
 };
 
 const selectClass =
@@ -68,8 +68,11 @@ export default function SeriesPanel({
 }: Props) {
 	// Unsaved choices, keyed by game. Saved values come from the database.
 	const [drafts, setDrafts] = useState<Record<string, Draft>>({});
+	// MLBB: who destroyed the base, chosen per game before it can end
+	const [winners, setWinners] = useState<Record<string, 'home' | 'away'>>({});
+	const winnerBased = match.game_titles?.game_types?.slug === 'moba';
 
-	const needsMap = availableMaps.length > 0;
+	const needsMap = !winnerBased && availableMaps.length > 0;
 	const homeLabel = match.home_team?.short_code ?? match.home_team?.name ?? 'Home';
 	const awayLabel = match.away_team?.short_code ?? match.away_team?.name ?? 'Away';
 
@@ -80,6 +83,7 @@ export default function SeriesPanel({
 		awayTeamId: match.team_away_id,
 		bestOf: match.best_of,
 		needsMap,
+		winnerBased,
 	});
 
 	const saved = (slot: MatchMap): Draft => ({
@@ -96,7 +100,7 @@ export default function SeriesPanel({
 			: availableModes;
 
 	// Only games that haven't started can have their map/mode edited.
-	const editable = maps.filter((slot) => slot.status === 'pending');
+	const editable = winnerBased ? [] : maps.filter((slot) => slot.status === 'pending');
 
 	const changes: SetupChange[] = editable
 		.map((slot) => ({ slot, draft: effective(slot) }))
@@ -169,7 +173,7 @@ export default function SeriesPanel({
 				</div>
 			) : null}
 
-			{series.remaining.length > 0 ? (
+			{series.remaining.length > 0 && !winnerBased ? (
 				<div
 					className={`mb-4 rounded-lg border p-3 text-sm ${
 						series.setupComplete
@@ -244,7 +248,18 @@ export default function SeriesPanel({
 								</span>
 							</div>
 
-							{isEditable ? (
+							{isEditable && winnerBased ? (
+								<div className="mt-3">
+									<button
+										type="button"
+										onClick={() => onStartGame(slot)}
+										disabled={!control.canStart || pending === `start-${slot.id}`}
+										className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-text-primary hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-40"
+									>
+										Start Game {slot.map_number}
+									</button>
+								</div>
+							) : isEditable ? (
 								<div className="mt-3 grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
 									{needsMap ? (
 										<label className="text-xs text-text-muted">
@@ -295,7 +310,7 @@ export default function SeriesPanel({
 								</div>
 							) : (
 								<p className="mt-2 text-sm text-text-muted">
-									{slot.maps?.name ?? 'Map TBD'} - {slot.modes?.name ?? 'Mode TBD'}
+									{winnerBased ? null : <>{slot.maps?.name ?? 'Map TBD'} - {slot.modes?.name ?? 'Mode TBD'}</>}
 									{isCompleted ? (
 										<>
 											{' '}
@@ -318,7 +333,87 @@ export default function SeriesPanel({
 								</p>
 							) : null}
 
-							{isLive ? (
+							{isLive && winnerBased ? (
+								<div className="mt-4 space-y-4">
+									<div className="grid gap-3 md:grid-cols-3">
+										<label className="text-xs text-text-muted">
+											{homeLabel} kills / score (optional)
+											<input
+												value={homeScoreInput}
+												onChange={(event) => onHomeScoreChange(event.target.value)}
+												type="number"
+												min="0"
+												className={inputClass}
+											/>
+										</label>
+										<label className="text-xs text-text-muted">
+											{awayLabel} kills / score (optional)
+											<input
+												value={awayScoreInput}
+												onChange={(event) => onAwayScoreChange(event.target.value)}
+												type="number"
+												min="0"
+												className={inputClass}
+											/>
+										</label>
+										<label className="text-xs text-text-muted">
+											Duration (minutes)
+											<input
+												value={durationMinutes}
+												onChange={(event) => onDurationChange(event.target.value)}
+												type="number"
+												min="0"
+												className={inputClass}
+											/>
+										</label>
+									</div>
+									<div>
+										<p className="mb-2 text-xs text-text-muted">Who destroyed the base? Pick the winner</p>
+										<div className="grid grid-cols-2 gap-3">
+											{(['home', 'away'] as const).map((side) => {
+												const picked = winners[slot.id] === side;
+												return (
+													<button
+														key={side}
+														type="button"
+														onClick={() => setWinners((w) => ({ ...w, [slot.id]: side }))}
+														aria-pressed={picked}
+														className={`min-h-12 rounded-lg border px-4 py-2 text-sm font-bold transition-colors ${
+															picked
+																? 'border-accent-primary bg-accent-primary text-white'
+																: 'border-border-line bg-bg-elevated text-text-primary hover:border-accent-primary/50'
+														}`}
+													>
+														{side === 'home' ? homeLabel : awayLabel} won
+													</button>
+												);
+											})}
+										</div>
+									</div>
+									<div className="flex flex-wrap items-center gap-3">
+										<button
+											type="button"
+											onClick={async () => {
+												const w = winners[slot.id];
+												if (!w) return;
+												if (homeScoreInput !== '0' || awayScoreInput !== '0') await onSaveScore();
+												await onEndGame(w);
+											}}
+											disabled={!winners[slot.id] || !matchIsLive || pending === 'map-end'}
+											className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-text-primary hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-40"
+										>
+											End Game {slot.map_number}
+										</button>
+									</div>
+									{!matchIsLive ? (
+										<p className="text-xs text-amber-300">
+											Set the match to Live in Match Status before ending a game.
+										</p>
+									) : !winners[slot.id] ? (
+										<p className="text-xs text-amber-300">Pick the winning team to end this game.</p>
+									) : null}
+								</div>
+							) : isLive ? (
 								<div className="mt-4 space-y-3">
 									<div className="grid gap-3 md:grid-cols-3">
 										<label className="text-xs text-text-muted">
@@ -363,7 +458,7 @@ export default function SeriesPanel({
 										</button>
 										<button
 											type="button"
-											onClick={onEndGame}
+											onClick={() => onEndGame()}
 											disabled={!control.canEnd || pending === 'map-end'}
 											className="rounded-lg bg-bg-elevated px-4 py-2 text-sm font-semibold text-text-primary hover:bg-bg-elevated disabled:cursor-not-allowed disabled:opacity-40"
 										>

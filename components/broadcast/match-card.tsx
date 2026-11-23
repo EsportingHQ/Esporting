@@ -152,14 +152,14 @@ export function MatchCard({
         {/* Right: Scores & Action/Favorite */}
         <div className="flex items-center gap-3 sm:gap-4 shrink-0">
           <div className="flex flex-col items-end justify-center gap-1 min-w-[1.25rem] sm:min-w-[1.5rem] font-data text-sm sm:text-base font-bold leading-tight">
-            <div className={isLive ? 'text-white font-bold' : isHomeWinner ? 'text-state-win font-bold' : isCompleted ? 'text-state-win/70' : 'text-text-primary'}>
+            <div className={isLive ? 'text-text-primary font-bold' : isHomeWinner ? 'text-state-win font-bold' : isCompleted ? 'text-state-win/70' : 'text-text-primary'}>
               <ScoreFlash
                 value={gameType === 'shooter' && bestOf > 1 ? homeMapsWon : homeScore}
                 isLive={isLive}
                 teamName={homeTeam.name}
               />
             </div>
-            <div className={isLive ? 'text-white font-bold' : isAwayWinner ? 'text-state-win font-bold' : isCompleted ? 'text-state-win/70' : 'text-text-primary'}>
+            <div className={isLive ? 'text-text-primary font-bold' : isAwayWinner ? 'text-state-win font-bold' : isCompleted ? 'text-state-win/70' : 'text-text-primary'}>
               <ScoreFlash
                 value={gameType === 'shooter' && bestOf > 1 ? awayMapsWon : awayScore}
                 isLive={isLive}

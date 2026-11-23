@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState } from 'react';
+import { use, useMemo, useState } from 'react';
 import { PublicNav } from '@/components/layout/public-nav';
 import { TabBar, TabItem } from '@/components/ui/TabBar';
 import { ErrorState } from '@/components/ui/ErrorState';
@@ -24,7 +24,7 @@ export default function MatchDetailPage({
 
 	const {
 		match,
-		score,
+		score: rawScore,
 		events,
 		statusLogs,
 		headToHead,
@@ -35,6 +35,18 @@ export default function MatchDetailPage({
 		isLoading,
 		error,
 	} = useMatchRealtime(matchId);
+
+	// Series score comes from the games themselves, so it always agrees with the live feed
+	const score = useMemo(() => {
+		if (!rawScore) return rawScore;
+		const done = matchMaps.filter((m) => m.status === 'completed' && m.map_winner);
+		if (matchMaps.length === 0) return rawScore;
+		return {
+			...rawScore,
+			home_maps_won: done.filter((m) => m.map_winner === 'home').length,
+			away_maps_won: done.filter((m) => m.map_winner === 'away').length,
+		};
+	}, [rawScore, matchMaps]);
 
 	const [pickedTab, setPickedTab] = useState<string | null>(null);
 
