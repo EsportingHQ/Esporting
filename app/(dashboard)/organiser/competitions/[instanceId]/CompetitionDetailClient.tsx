@@ -35,6 +35,9 @@ type Stage = {
 	stage_order: number;
 	best_of: number;
 	game_title_id: string | null;
+	qualify_mode?: string | null;
+	qualifiers_per_group?: number | null;
+	bracket_teams?: number | null;
 };
 export type Registration = {
 	manual_group?: number | null;
@@ -742,6 +745,9 @@ export default function CompetitionDetailClient({
 							key={st.id}
 							compId={instance.id}
 							stage={st}
+							followsGroups={stages.some(
+								(o) => o.stage_order < st.stage_order && ['group', 'league'].includes(o.stage_type),
+							)}
 							fixtureCount={matches.filter((m) => m.stage_id === st.id).length}
 							teamCount={approvedTeams}
 							teams={localRegistrations

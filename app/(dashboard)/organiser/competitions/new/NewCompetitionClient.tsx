@@ -19,6 +19,8 @@ type StageInput = {
   stage_type: string;
   stage_order: number;
   best_of: number;
+  qualify_mode?: 'auto' | 'manual';
+  qualifiers_per_group?: number;
 };
 
 export default function NewCompetitionClient({ existingSeries, gameTitles }: Props) {
@@ -355,7 +357,8 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
           </label>
           <div className="space-y-2">
             {stages.map((stage, i) => (
-              <div key={i} className="flex gap-2 items-center">
+              <div key={i} className="space-y-2">
+              <div className="flex gap-2 items-center">
                 <input
                   placeholder="Stage name (e.g. Group Stage)"
                   value={stage.name}
@@ -392,6 +395,32 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
+              </div>
+              {stage.stage_type === 'knockout' && (
+                <div className="flex flex-wrap items-center gap-2 pl-1 text-xs text-text-muted">
+                  <select
+                    value={stage.qualify_mode ?? 'auto'}
+                    onChange={(e) => updateStage(i, 'qualify_mode', e.target.value)}
+                    className="bg-bg-void border border-border-line rounded px-2 py-1.5 text-text-primary text-xs"
+                  >
+                    <option value="auto">Top teams from the earlier stage move on automatically</option>
+                    <option value="manual">I will pick the teams myself</option>
+                  </select>
+                  {(stage.qualify_mode ?? 'auto') === 'auto' && (
+                    <label className="flex items-center gap-2">
+                      Teams through per group
+                      <input
+                        type="number"
+                        min={1}
+                        max={32}
+                        value={stage.qualifiers_per_group ?? 2}
+                        onChange={(e) => updateStage(i, 'qualifiers_per_group', Math.min(32, Math.max(1, Number(e.target.value) || 2)))}
+                        className="w-14 bg-bg-void border border-border-line rounded px-2 py-1.5 text-text-primary text-xs"
+                      />
+                    </label>
+                  )}
+                </div>
+              )}
               </div>
             ))}
           </div>

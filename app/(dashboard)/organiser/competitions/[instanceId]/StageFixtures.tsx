@@ -4,7 +4,16 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
-type Stage = { id: string; name: string; stage_type: string; stage_order: number; best_of: number };
+type Stage = {
+  id: string;
+  name: string;
+  stage_type: string;
+  stage_order: number;
+  best_of: number;
+  qualify_mode?: string | null;
+  qualifiers_per_group?: number | null;
+  bracket_teams?: number | null;
+};
 type PreviewRow = { group: string | null; round: string; home: string; away: string; game: string };
 
 const btn =
@@ -23,7 +32,7 @@ function splitText(teams: number, groups: number): string {
 const TYPE_HELP: Record<string, string> = {
   league: 'Everyone plays everyone.',
   group: 'Teams play each other inside their group. Let us draw the groups evenly, or pick them yourself.',
-  knockout: 'Teams are drawn at random into a full bracket. If the number of teams is not 2, 4, 8, 16..., some teams skip round 1. Winners move into the next round on their own.',
+  knockout: 'The whole bracket is created at once. If the number of teams is not 2, 4, 8, 16..., some teams skip round 1. Winners move into the next round on their own.',
 };
 
 export default function StageFixtures({
@@ -33,6 +42,7 @@ export default function StageFixtures({
   teamCount,
   teams,
   locked,
+  followsGroups = false,
 }: {
   compId: string;
   stage: Stage;
@@ -40,6 +50,7 @@ export default function StageFixtures({
   teamCount: number;
   teams: { id: string; name: string; manual_group: number | null }[];
   locked: boolean;
+  followsGroups?: boolean;
 }) {
   const router = useRouter();
   const [supabase] = useState(() => createClient());
@@ -60,7 +71,13 @@ export default function StageFixtures({
 
   const type = stage.stage_type;
 
-  async function changeStage(patch: { stage_type?: string; best_of?: number }) {
+  async function changeStage(patch: {
+    stage_type?: string;
+    best_of?: number;
+    qualify_mode?: string;
+    qualifiers_per_group?: number;
+    bracket_teams?: number | null;
+  }) {
     setMsg(null);
     setPreview(null);
     const { error } = await supabase.from('comp_stages').update(patch).eq('id', stage.id);
@@ -237,6 +254,75 @@ export default function StageFixtures({
           <p className="text-text-muted">
             {teamCount} teams registered. {TYPE_HELP[type]}
           </p>
+          {type === 'knockout' && (
+            <div className="space-y-2 border border-border-line rounded p-3 bg-bg-void">
+              <p className="font-bold text-text-primary">Who plays in the bracket?</p>
+              <div className="flex flex-wrap items-center gap-1 bg-bg-surface border border-border-line rounded p-0.5 w-fit">
+                {(['auto', 'manual'] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    disabled={locked || busy !== null}
+                    onClick={() => changeStage({ qualify_mode: m })}
+                    className={`px-3 py-1 rounded text-[11px] font-display font-bold uppercase tracking-wider ${
+                      (stage.qualify_mode ?? 'auto') === m ? 'bg-accent-readout text-bg-void' : 'text-text-muted'
+                    }`}
+                  >
+                    {m === 'auto'
+                      ? followsGroups
+                        ? 'Top teams move on automatically'
+                        : 'Random draw of all teams'
+                      : 'I pick the teams'}
+                  </button>
+                ))}
+              </div>
+              {(stage.qualify_mode ?? 'auto') === 'auto' && followsGroups && (
+                <label className="flex items-center gap-2 text-text-muted">
+                  Teams that go through from each group
+                  <input
+                    type="number"
+                    min={1}
+                    max={32}
+                    defaultValue={stage.qualifiers_per_group ?? 2}
+                    disabled={locked}
+                    onBlur={(e) => {
+                      const v = Math.min(32, Math.max(1, Number(e.target.value) || 2));
+                      if (v !== (stage.qualifiers_per_group ?? 2)) changeStage({ qualifiers_per_group: v });
+                    }}
+                    className={`${input} w-16`}
+                  />
+                </label>
+              )}
+              {(stage.qualify_mode ?? 'auto') === 'auto' && followsGroups && (
+                <p className="text-text-muted">
+                  Once every group match is finished, press Generate. The top teams of each group are put into the bracket,
+                  group winners against runners-up of another group.
+                </p>
+              )}
+              {(stage.qualify_mode ?? 'auto') === 'manual' && (
+                <>
+                  <label className="flex items-center gap-2 text-text-muted">
+                    Teams in the bracket
+                    <input
+                      type="number"
+                      min={2}
+                      max={64}
+                      defaultValue={stage.bracket_teams ?? Math.max(teamCount, 2)}
+                      disabled={locked}
+                      onBlur={(e) => {
+                        const v = Math.min(64, Math.max(2, Number(e.target.value) || 2));
+                        if (v !== stage.bracket_teams) changeStage({ bracket_teams: v });
+                      }}
+                      className={`${input} w-16`}
+                    />
+                  </label>
+                  <p className="text-text-muted">
+                    Press Generate to create an empty bracket, then choose the teams for each match yourself.
+                  </p>
+                </>
+              )}
+            </div>
+          )}
           {type === 'group' && mode === 'manual' && (
             <div className="space-y-2 border border-border-line rounded p-3 bg-bg-void">
               <p className="text-text-muted">Choose a group for every team. Each group needs at least 2 teams.</p>
@@ -372,6 +458,9 @@ export default function StageFixtures({
         </div>
         </div>
       )}
+      {type === 'knockout' && fixtureCount > 0 && (stage.qualify_mode ?? 'auto') === 'manual' && (
+        <ManualBracket stageId={stage.id} teams={teams} locked={locked} />
+      )}
       {type === 'knockout' && fixtureCount > 0 && <LevelMatches stageId={stage.id} locked={locked} />}
       {msg && <p className={msg.ok ? 'text-state-win' : 'text-state-loss'}>{msg.text}</p>}
     </div>
@@ -454,6 +543,113 @@ function LevelMatches({ stageId, locked }: { stageId: string; locked: boolean })
         </div>
       ))}
       {err && <p className="text-state-loss text-xs">{err}</p>}
+    </div>
+  );
+}
+
+type Slot = {
+  id: string;
+  bracket_round: number;
+  bracket_slot: number;
+  status: string;
+  team_home_id: string | null;
+  team_away_id: string | null;
+  next_match_id: string | null;
+  next_side: string | null;
+};
+
+// Manual bracket: the organiser puts a team into every open place. Places that are filled by
+// the winner of an earlier match are not editable.
+function ManualBracket({
+  stageId,
+  teams,
+  locked,
+}: {
+  stageId: string;
+  teams: { id: string; name: string }[];
+  locked: boolean;
+}) {
+  const [supabase] = useState(() => createClient());
+  const [slots, setSlots] = useState<Slot[]>([]);
+  const [err, setErr] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    const { data } = await supabase
+      .from('matches')
+      .select('id, bracket_round, bracket_slot, status, team_home_id, team_away_id, next_match_id, next_side')
+      .eq('stage_id', stageId)
+      .not('bracket_round', 'is', null)
+      .is('deleted_at', null)
+      .order('bracket_round')
+      .order('bracket_slot');
+    setSlots((data ?? []) as Slot[]);
+  }, [supabase, stageId]);
+
+  useEffect(() => {
+    const t = setTimeout(load, 0);
+    return () => clearTimeout(t);
+  }, [load]);
+
+  const fed = new Set(
+    slots.filter((m) => m.next_match_id && m.next_side).map((m) => `${m.next_match_id}:${m.next_side}`),
+  );
+  const used = new Set(slots.flatMap((m) => [m.team_home_id, m.team_away_id]).filter(Boolean) as string[]);
+
+  async function pick(matchId: string, side: 'home' | 'away', teamId: string) {
+    setErr(null);
+    const { error } = await supabase.rpc('set_bracket_team', {
+      p_match: matchId,
+      p_side: side,
+      p_team: teamId || null,
+    });
+    if (error) setErr(error.message);
+    load();
+  }
+
+  const rows = slots.filter((m) => m.bracket_round === 1 || !fed.has(`${m.id}:home`) || !fed.has(`${m.id}:away`));
+  if (rows.length === 0) return null;
+
+  return (
+    <div className="space-y-2 border border-border-line rounded p-3 bg-bg-void">
+      <p className="font-bold text-text-primary">Choose the teams</p>
+      <div className="space-y-2">
+        {rows.map((m) => (
+          <div key={m.id} className="flex flex-wrap items-center gap-2">
+            <span className="w-28 text-text-muted">
+              Round {m.bracket_round} · Match {m.bracket_slot}
+            </span>
+            {(['home', 'away'] as const).map((side) => {
+              const current = side === 'home' ? m.team_home_id : m.team_away_id;
+              if (fed.has(`${m.id}:${side}`)) {
+                return (
+                  <span key={side} className="w-44 text-text-muted italic">
+                    Winner of the earlier match
+                  </span>
+                );
+              }
+              return (
+                <select
+                  key={side}
+                  value={current ?? ''}
+                  disabled={locked || m.status !== 'scheduled'}
+                  onChange={(e) => pick(m.id, side, e.target.value)}
+                  className={`${input} w-44`}
+                >
+                  <option value="">Pick team</option>
+                  {teams
+                    .filter((t) => t.id === current || !used.has(t.id))
+                    .map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
+                </select>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+      {err && <p className="text-state-loss">{err}</p>}
     </div>
   );
 }

@@ -75,7 +75,7 @@ export default async function OrganiserCompetitionDetailPage({
 	// Fetch stages
 	const { data: stages } = await supabase
 		.from('comp_stages')
-		.select('id, name, stage_type, stage_order, best_of, game_title_id')
+		.select('id, name, stage_type, stage_order, best_of, game_title_id, qualify_mode, qualifiers_per_group, bracket_teams')
 		.eq('comp_instance_id', instanceId)
 		.order('stage_order');
 

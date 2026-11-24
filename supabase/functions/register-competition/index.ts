@@ -269,6 +269,8 @@
                     stage_type:       stage.stage_type,
                     stage_order:      stage.stage_order,
                     best_of:          stage.best_of ?? 1,
+                    qualify_mode:     stage.qualify_mode === 'manual' ? 'manual' : 'auto',
+                    qualifiers_per_group: Math.min(32, Math.max(1, Number(stage.qualifiers_per_group) || 2)),
                     starts_at:        stage.starts_at ?? null,
                     ends_at:          stage.ends_at ?? null
                 })

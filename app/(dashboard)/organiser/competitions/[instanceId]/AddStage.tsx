@@ -24,6 +24,8 @@ export default function AddStage({
   const [type, setType] = useState('group');
   const [bestOf, setBestOf] = useState(1);
   const [game, setGame] = useState('');
+  const [qualify, setQualify] = useState<'auto' | 'manual'>('auto');
+  const [perGroup, setPerGroup] = useState(2);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,6 +40,7 @@ export default function AddStage({
       stage_order: nextOrder,
       best_of: bestOf,
       game_title_id: game || null,
+      ...(type === 'knockout' ? { qualify_mode: qualify, qualifiers_per_group: perGroup } : {}),
     });
     setBusy(false);
     if (error) return setError(error.message);
@@ -78,6 +81,20 @@ export default function AddStage({
           ))}
         </select>
       </div>
+      {type === 'knockout' && (
+        <div className="flex flex-wrap items-center gap-3 text-text-muted">
+          <select value={qualify} onChange={(e) => setQualify(e.target.value as 'auto' | 'manual')} className={input}>
+            <option value="auto">Top teams from the earlier stage move on automatically</option>
+            <option value="manual">I will pick the teams myself</option>
+          </select>
+          {qualify === 'auto' && (
+            <label className="flex items-center gap-2">
+              Teams through per group
+              <input type="number" min={1} max={32} value={perGroup} onChange={(e) => setPerGroup(Math.min(32, Math.max(1, Number(e.target.value) || 2)))} className={`${input} w-16`} />
+            </label>
+          )}
+        </div>
+      )}
       <div className="flex gap-2">
         <button disabled={busy} onClick={save} className="px-3 py-2 rounded bg-accent-readout text-bg-void text-xs font-display font-bold uppercase tracking-wider disabled:opacity-50">
           {busy ? 'Saving...' : 'Add stage'}
