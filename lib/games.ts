@@ -23,15 +23,16 @@ export interface GameProfile {
 export const GAME_PROFILES: GameProfile[] = [
   { id: 'all', name: 'All Games', shortName: 'ALL', slug: 'all', category: 'all' },
   {
+    id: 'codm', name: 'Call of Duty: Mobile', shortName: 'CODM', slug: 'codm-mp', category: 'shooter',
+    iconSrc: '/games/codm.svg',
+    // Covers both Multiplayer and Battle Royale titles
+    matches: (t) => t.includes('codm') || t.includes('call of duty'),
+  },
+  {
     id: 'fc26', name: 'EA SPORTS FC', shortName: 'EAFC', slug: 'fc-26', category: 'football',
     iconSrc: '/games/eafc.svg',
     // FC 26, FC 27, ... but not "FC Mobile"
     matches: (t) => /\bfc\s?\d{2}\b/.test(t),
-  },
-  {
-    id: 'fcm', name: 'FC Mobile', shortName: 'FC MOBILE', slug: 'fc-mobile', category: 'football',
-    iconSrc: '/games/fcm.svg',
-    matches: (t) => t.includes('fc mobile'),
   },
   {
     id: 'efb', name: 'eFootball Mobile', shortName: 'EFOOTBALL', slug: 'efootball-mobile', category: 'football',
@@ -39,15 +40,9 @@ export const GAME_PROFILES: GameProfile[] = [
     matches: (t) => t.includes('efootball'),
   },
   {
-    id: 'codm', name: 'Call of Duty: Mobile', shortName: 'CODM', slug: 'codm-mp', category: 'shooter',
-    iconSrc: '/games/codm.svg',
-    // Covers both Multiplayer and Battle Royale titles
-    matches: (t) => t.includes('codm') || t.includes('call of duty'),
-  },
-  {
-    id: 'pubg', name: 'PUBG Mobile', shortName: 'PUBG', slug: 'pubg-br', category: 'br',
-    iconSrc: '/games/pubg.svg',
-    matches: (t) => t.includes('pubg'),
+    id: 'fcm', name: 'FC Mobile', shortName: 'FC MOBILE', slug: 'fc-mobile', category: 'football',
+    iconSrc: '/games/fcm.svg',
+    matches: (t) => t.includes('fc mobile'),
   },
   {
     id: 'ff', name: 'Free Fire', shortName: 'FREE FIRE', slug: 'freefire-br', category: 'br',
@@ -58,5 +53,10 @@ export const GAME_PROFILES: GameProfile[] = [
     id: 'mlbb', name: 'Mobile Legends: Bang Bang', shortName: 'MLBB', slug: 'mlbb', category: 'moba',
     iconSrc: '/games/mlbb.svg',
     matches: (t) => t.includes('mobile legends') || t.includes('mlbb'),
+  },
+  {
+    id: 'pubg', name: 'PUBG Mobile', shortName: 'PUBG', slug: 'pubg-br', category: 'br',
+    iconSrc: '/games/pubg.svg',
+    matches: (t) => t.includes('pubg'),
   },
 ];

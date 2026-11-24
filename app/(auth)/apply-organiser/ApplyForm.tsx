@@ -4,13 +4,13 @@ import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 const GAMES = [
-  'EA FC',
-  'FC Mobile',
-  'eFootball Mobile',
   'Call of Duty Mobile',
-  'PUBG Mobile',
+  'EA FC',
+  'eFootball Mobile',
+  'FC Mobile',
   'Free Fire',
   'Mobile Legends',
+  'PUBG Mobile',
 ];
 
 const field =
