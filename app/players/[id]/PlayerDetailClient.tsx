@@ -2,12 +2,12 @@
 
 import Link from 'next/link';
 import { PublicNav } from '@/components/layout/public-nav';
-import { MatchCard } from '@/components/broadcast/match-card';
-import { Shield, Award, Play, Flame } from 'lucide-react';
+import FormSection from '@/components/profile/FormSection';
+import { Shield, Play, Flame } from 'lucide-react';
 import { usePlayerDetail } from '@/hooks/usePlayerDetail';
 
 export function PlayerDetailClient({ id }: { id: string }) {
-	const { player, recentMatches, isLoading, notFound, error } =
+	const { player, assignments, form, isLoading, notFound, error } =
 		usePlayerDetail(id);
 
 	if (isLoading) {
@@ -121,21 +121,7 @@ export function PlayerDetailClient({ id }: { id: string }) {
 						))}
 					</div>
 
-					{/* Recent matches history */}
-					<div className="space-y-4">
-						<div className="flex items-center gap-2 border-b border-border-line pb-2">
-							<Award className="w-4 h-4 text-accent-readout" />
-							<h3 className="font-display font-bold text-base uppercase tracking-wider">
-								RECENT MATCH ASSIGNMENTS
-							</h3>
-						</div>
-
-						<div className="space-y-4">
-							{recentMatches.map((match) => (
-								<MatchCard key={match.id} {...match} />
-							))}
-						</div>
-					</div>
+					<FormSection entries={form} />
 				</section>
 
 				{/* Sidebar right: Game assignments */}
@@ -149,28 +135,24 @@ export function PlayerDetailClient({ id }: { id: string }) {
 						</div>
 
 						<div className="space-y-3 font-body">
-							<div className="p-3 bg-bg-void border border-border-line rounded flex items-center justify-between text-xs">
-								<div>
-									<span className="block font-display font-bold text-text-primary">
-										FC 26
-									</span>
-									<span className="text-[10px] text-text-muted">
-										Competitive Head-to-Head
-									</span>
-								</div>
-								<Play className="w-4 h-4 text-accent-readout shrink-0 ml-2" />
-							</div>
-							<div className="p-3 bg-bg-void border border-border-line rounded flex items-center justify-between text-xs">
-								<div>
-									<span className="block font-display font-bold text-text-primary">
-										FC Mobile
-									</span>
-									<span className="text-[10px] text-text-muted">
-										Touch-screen Competitive
-									</span>
-								</div>
-								<Play className="w-4 h-4 text-accent-readout shrink-0 ml-2" />
-							</div>
+							{assignments.length === 0 && (
+								<p className="text-xs text-text-muted">Not entered in any competition yet.</p>
+							)}
+							{assignments.map((a) => (
+								<Link
+									key={`${a.competitionSlug}-${a.teamId}-${a.gameId}`}
+									href={`/competitions/${a.competitionSlug}`}
+									className="p-3 bg-bg-void border border-border-line rounded flex items-center justify-between text-xs hover:border-accent-readout/30 transition-colors"
+								>
+									<div>
+										<span className="block font-display font-bold text-text-primary">{a.gameName}</span>
+										<span className="text-[10px] text-text-muted">
+											{a.teamName} · {a.competitionName}
+										</span>
+									</div>
+									<Play className="w-4 h-4 text-accent-readout shrink-0 ml-2" />
+								</Link>
+							))}
 						</div>
 					</div>
 				</section>

@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { MatchCardProps } from '@/components/broadcast/match-card';
+import {
+  FORM_MATCH_SELECT,
+  recordOf,
+  sortNewestFirst,
+  toFormEntry,
+  type FormEntry,
+  type RawFormMatch,
+} from '@/lib/profile-form';
 
 export interface TeamDetail {
   id: string;
@@ -29,36 +36,13 @@ function one<T>(value: T | T[] | null | undefined): T | null {
   return value ?? null;
 }
 
-interface RawTeamRef {
-  id: string;
-  name: string;
-  short_code: string | null;
-}
-
-interface RawRecentMatch {
-  id: string;
-  status: string;
-  scheduled_at: string | null;
-  home_maps_won: number | null;
-  away_maps_won: number | null;
-  best_of: number;
-  home_team: RawTeamRef | RawTeamRef[] | null;
-  away_team: RawTeamRef | RawTeamRef[] | null;
-  game_titles:
-    | { name: string }
-    | { name: string }[]
-    | null;
-  match_scores:
-    | { home_current_score: number; away_current_score: number }
-    | { home_current_score: number; away_current_score: number }[]
-    | null;
-}
 
 export function useTeamDetail(slug: string) {
   const [team, setTeam] = useState<TeamDetail | null>(null);
   const [roster, setRoster] = useState<TeamPlayer[]>([]);
   const [activeComps, setActiveComps] = useState<TeamCompetition[]>([]);
-  const [lastResults, setLastResults] = useState<MatchCardProps[]>([]);
+  const [form, setForm] = useState<FormEntry[]>([]);
+  const [record, setRecord] = useState({ played: 0, won: 0, drawn: 0, lost: 0, winRate: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -90,22 +74,48 @@ export function useTeamDetail(slug: string) {
           shortCode: teamRow.short_code ?? '',
         });
 
-        // Players
-        const { data: players } = await supabase
-          .from('players')
-          .select('id, gamer_tag, primary_role')
-          .eq('team_id', teamRow.id);
+        // Roster: current players, each with the games they are entered for.
+        const [{ data: rosterRows }, { data: assignRows }] = await Promise.all([
+          supabase
+            .from('team_rosters')
+            .select('role, players(id, gamertag)')
+            .eq('team_id', teamRow.id)
+            .is('left_at', null),
+          supabase
+            .from('player_game_assignments')
+            .select('player_id, game_titles(name)')
+            .eq('team_id', teamRow.id),
+        ]);
 
-        setRoster(
-          (players ?? []).map((p) => ({
+        const gamesByPlayer = new Map<string, Set<string>>();
+        for (const a of (assignRows ?? []) as unknown as {
+          player_id: string;
+          game_titles: { name: string } | { name: string }[] | null;
+        }[]) {
+          const name = one(a.game_titles)?.name;
+          if (!name) continue;
+          gamesByPlayer.set(a.player_id, (gamesByPlayer.get(a.player_id) ?? new Set()).add(name));
+        }
+
+        const seenPlayers = new Set<string>();
+        const rosterList: TeamPlayer[] = [];
+        for (const r of (rosterRows ?? []) as unknown as {
+          role: string | null;
+          players: { id: string; gamertag: string } | { id: string; gamertag: string }[] | null;
+        }[]) {
+          const p = one(r.players);
+          if (!p || seenPlayers.has(p.id)) continue;
+          seenPlayers.add(p.id);
+          rosterList.push({
             id: p.id,
-            name: p.gamer_tag,
-            role: p.primary_role ?? 'Player',
-            game: 'Esports',
-          })),
-        );
+            name: p.gamertag,
+            role: r.role ?? 'Player',
+            game: [...(gamesByPlayer.get(p.id) ?? [])].join(' · ') || 'Unassigned',
+          });
+        }
+        setRoster(rosterList);
 
-        // Active competitions
+        // Competitions the team is entered in
         const { data: regs } = await supabase
           .from('comp_registrations')
           .select('comp_instances(name, slug, status)')
@@ -123,47 +133,20 @@ export function useTeamDetail(slug: string) {
             })),
         );
 
-        // Recent matches
+        // Every finished match counts toward the record and form, across all games and competitions.
         const { data: matches } = await supabase
           .from('matches')
-          .select(`
-            id, status, scheduled_at, home_maps_won, away_maps_won, best_of,
-            home_team:teams!matches_team_home_id_fkey(id, name, short_code),
-            away_team:teams!matches_team_away_id_fkey(id, name, short_code),
-            game_titles(name),
-            match_scores(home_current_score, away_current_score)
-          `)
+          .select(FORM_MATCH_SELECT)
           .or(`team_home_id.eq.${teamRow.id},team_away_id.eq.${teamRow.id}`)
-          .eq('status', 'completed')
-          .order('scheduled_at', { ascending: false })
-          .limit(10);
+          .eq('status', 'completed');
 
-        setLastResults(
-          ((matches ?? []) as RawRecentMatch[]).map((m) => ({
-            id: m.id,
-            gameType: 'shooter',
-            gameTitle: one(m.game_titles)?.name ?? 'Match',
-            homeTeam: {
-              id: one(m.home_team)?.id ?? '',
-              name: one(m.home_team)?.name ?? 'TBD',
-              shortCode: one(m.home_team)?.short_code ?? '',
-            },
-            awayTeam: {
-              id: one(m.away_team)?.id ?? '',
-              name: one(m.away_team)?.name ?? 'TBD',
-              shortCode: one(m.away_team)?.short_code ?? '',
-            },
-            homeScore: one(m.match_scores)?.home_current_score ?? 0,
-            awayScore: one(m.match_scores)?.away_current_score ?? 0,
-            homeMapsWon: m.home_maps_won ?? undefined,
-            awayMapsWon: m.away_maps_won ?? undefined,
-            bestOf: m.best_of > 1 ? m.best_of : undefined,
-            status: 'completed',
-            timeLabel: m.scheduled_at
-              ? new Date(m.scheduled_at).toLocaleDateString()
-              : 'Finished',
-          })),
+        const entries = sortNewestFirst(
+          ((matches ?? []) as unknown as RawFormMatch[])
+            .map((m) => toFormEntry(m, teamRow.id))
+            .filter((e): e is FormEntry => e !== null),
         );
+        setForm(entries);
+        setRecord(recordOf(entries));
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Failed to load team'));
       } finally {
@@ -178,7 +161,8 @@ export function useTeamDetail(slug: string) {
     team,
     roster,
     activeComps,
-    lastResults,
+    form,
+    record,
     isLoading,
     notFound,
     error,

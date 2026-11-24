@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { PublicNav } from '@/components/layout/public-nav';
-import { MatchCard } from '@/components/broadcast/match-card';
+import FormSection from '@/components/profile/FormSection';
 import { Shield, Users, Award, Trophy } from 'lucide-react';
 import { useTeamDetail } from '@/hooks/useTeamDetail';
 
@@ -11,7 +11,8 @@ export function TeamDetailClient({ slug }: { slug: string }) {
 		team,
 		roster,
 		activeComps,
-		lastResults,
+		form,
+		record,
 		isLoading,
 		notFound,
 		error,
@@ -123,20 +124,31 @@ export function TeamDetailClient({ slug }: { slug: string }) {
 						</div>
 					</div>
 
-					{/* Recent results list */}
+					{/* Record and form */}
 					<div className="space-y-4">
 						<div className="flex items-center gap-2 border-b border-border-line pb-2">
 							<Award className="w-4 h-4 text-state-win" />
 							<h3 className="font-display font-bold text-base uppercase tracking-wider">
-								HISTORICAL PERFORMANCE
+								RECORD
 							</h3>
 						</div>
-
-						<div className="space-y-4">
-							{lastResults.map((match) => (
-								<MatchCard key={match.id} {...match} />
+						<div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+							{[
+								['PLAYED', record.played],
+								['WON', record.won],
+								['DRAWN', record.drawn],
+								['LOST', record.lost],
+								['WIN RATE', `${record.winRate}%`],
+							].map(([label, value]) => (
+								<div key={label} className="bg-bg-surface border border-border-line p-3 rounded text-center">
+									<span className="block text-[9px] text-text-muted font-display font-bold uppercase tracking-wider mb-1">
+										{label}
+									</span>
+									<span className="font-data font-bold text-lg text-text-primary">{value}</span>
+								</div>
 							))}
 						</div>
+						<FormSection entries={form} />
 					</div>
 				</section>
 
