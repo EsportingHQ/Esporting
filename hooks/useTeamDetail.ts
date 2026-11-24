@@ -59,7 +59,7 @@ export function useTeamDetail(slug: string) {
         const { data: teamRow, error: teamErr } = await supabase
           .from('teams')
           .select('id, name, slug, short_code')
-          .eq('slug', slug)
+          .eq(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug) ? 'id' : 'slug', slug)
           .single();
 
         if (teamErr || !teamRow) {

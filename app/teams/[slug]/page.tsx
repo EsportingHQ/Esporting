@@ -13,7 +13,7 @@ export async function generateMetadata({
 	const { data: team } = await supabase
 		.from('teams')
 		.select('name, description')
-		.eq('slug', slug)
+		.eq(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug) ? 'id' : 'slug', slug)
 		.single();
 
 	if (!team) return { title: 'Team Not Found' };

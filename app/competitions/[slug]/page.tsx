@@ -256,9 +256,12 @@ export default function CompetitionDetailPage({
 											key={team.id}
 											className="bg-bg-void border border-border-line px-3 py-1.5 rounded flex items-center justify-between"
 										>
-											<span className="font-medium">
+											<Link
+												href={`/teams/${team.id}`}
+												className="font-medium hover:underline hover:text-accent-primary"
+											>
 												{team.name}
-											</span>
+											</Link>
 											<span className="text-[9px] font-data text-text-muted">
 												{team.shortCode}
 											</span>

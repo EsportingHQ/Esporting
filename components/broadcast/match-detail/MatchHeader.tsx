@@ -140,6 +140,24 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
   );
 }
 
+function TeamLink({
+  teamId,
+  className,
+  children,
+}: {
+  teamId: string | null;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return teamId ? (
+    <Link href={`/teams/${teamId}`} className={`${className ?? ''} hover:opacity-80 transition-opacity`}>
+      {children}
+    </Link>
+  ) : (
+    <div className={className}>{children}</div>
+  );
+}
+
 function TeamBlock({
   team,
   teamId,
@@ -152,6 +170,7 @@ function TeamBlock({
   const name = team?.name ?? fallback;
   return (
     <div className="flex flex-col items-center text-center gap-2 min-w-0">
+      <TeamLink teamId={teamId} className="flex flex-col items-center text-center gap-2 min-w-0">
       <div className="w-16 h-16 sm:w-24 sm:h-24 overflow-hidden rounded-2xl bg-bg-void border border-border-line flex items-center justify-center font-display font-black text-lg sm:text-2xl text-text-muted shadow-inner">
         {team?.logo_url ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -163,6 +182,7 @@ function TeamBlock({
       <span className="font-display font-bold text-sm sm:text-xl text-text-primary leading-tight break-words max-w-full">
         {name}
       </span>
+      </TeamLink>
       {teamId && (
         <FavoriteStar entityType="team" entityId={teamId} entityName={name} size="sm" />
       )}

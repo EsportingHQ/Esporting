@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 interface Team {
@@ -64,7 +65,17 @@ function TeamRow({ team, score, won, lost }: { team: Team | null; score: number 
           team ? (won ? 'font-bold text-text-primary' : lost ? 'text-text-muted' : 'font-semibold text-text-primary') : 'text-text-muted/60 italic'
         }`}
       >
-        {team?.name ?? 'TBD'}
+        {team ? (
+          <Link
+            href={`/teams/${team.id}`}
+            onClick={(e) => e.stopPropagation()}
+            className="hover:underline"
+          >
+            {team.name}
+          </Link>
+        ) : (
+          'TBD'
+        )}
       </span>
       <span className={`font-data text-xs tabular-nums ${won ? 'font-black text-text-primary' : 'text-text-muted'}`}>
         {score ?? ''}
@@ -74,6 +85,7 @@ function TeamRow({ team, score, won, lost }: { team: Team | null; score: number 
 }
 
 function MatchBox({ m, slug }: { m: BracketMatch; slug: string }) {
+  const router = useRouter();
   const started = m.status === 'live' || m.status === 'completed' || m.status === 'walkover';
   const done = m.status === 'completed' || m.status === 'walkover';
   const hWon = done && !!m.winner_team_id && m.winner_team_id === m.home?.id;
@@ -96,10 +108,23 @@ function MatchBox({ m, slug }: { m: BracketMatch; slug: string }) {
     </div>
   );
   if (m.home && m.away) {
+    // A div, not a link, because the team names inside are links to the team pages.
+    const open = () => router.push(`/competitions/${slug}/matches/${m.id}`);
     return (
-      <Link href={`/competitions/${slug}/matches/${m.id}`} className="block hover:opacity-90 transition-opacity">
+      <div
+        role="link"
+        tabIndex={0}
+        onClick={open}
+        onKeyDown={(e) => {
+          if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            open();
+          }
+        }}
+        className="block cursor-pointer hover:opacity-90 transition-opacity"
+      >
         {body}
-      </Link>
+      </div>
     );
   }
   return body;

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ScoreFlash } from './ScoreFlash';
 import { FavoriteStar } from './FavoriteStar';
@@ -68,6 +69,7 @@ export function MatchCard({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.target !== e.currentTarget) return; // a team link inside the card handles its own keys
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       handleCardClick();
@@ -128,7 +130,17 @@ export function MatchCard({
                 isHomeWinner ? 'text-state-win font-bold' : 'text-text-primary'
               }`}
             >
-              {homeTeam.name}
+              {homeTeam.id ? (
+                <Link
+                  href={`/teams/${homeTeam.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="min-w-0 truncate hover:underline hover:text-accent-primary"
+                >
+                  {homeTeam.name}
+                </Link>
+              ) : (
+                homeTeam.name
+              )}
             </span>
           </div>
 
@@ -146,7 +158,17 @@ export function MatchCard({
                 isAwayWinner ? 'text-state-win font-bold' : 'text-text-primary'
               }`}
             >
-              {awayTeam.name}
+              {awayTeam.id ? (
+                <Link
+                  href={`/teams/${awayTeam.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="min-w-0 truncate hover:underline hover:text-accent-primary"
+                >
+                  {awayTeam.name}
+                </Link>
+              ) : (
+                awayTeam.name
+              )}
             </span>
           </div>
         </div>
