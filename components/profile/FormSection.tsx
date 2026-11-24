@@ -74,6 +74,11 @@ export default function FormSection({ entries }: { entries: FormEntry[] }) {
                     {e.playedAt ? ` · ${new Date(e.playedAt).toLocaleDateString()}` : ''}
                   </p>
                 </div>
+                {e.isMvp ? (
+                  <span className="shrink-0 rounded-full bg-amber-400/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-300">
+                    ★ MVP
+                  </span>
+                ) : null}
               </Link>
             </li>
           ))}

@@ -105,33 +105,26 @@ export function usePlayerDetail(id: string) {
         });
         setAssignments(mapped);
 
-        // Matches this player's team played in the competition and game they were entered for,
-        // finished by a contributor.
+        // Form counts only the matches this player actually played: the contributor ticks
+        // them in "Who played", and only finished matches count.
         let entries: FormEntry[] = [];
-        if (raw.length > 0) {
-          const compIds = Array.from(new Set(raw.map((a) => a.comp_instance_id)));
-          const teamIds = Array.from(new Set(raw.map((a) => a.team_id)));
+        const { data: lineupRows } = await supabase
+          .from('match_lineups')
+          .select('match_id, team_id')
+          .eq('player_id', playerRow.id);
+        const played = (lineupRows ?? []) as { match_id: string; team_id: string }[];
+
+        if (played.length > 0) {
           const { data: matchRows } = await supabase
             .from('matches')
             .select(FORM_MATCH_SELECT)
-            .in('comp_instance_id', compIds)
-            .eq('status', 'completed')
-            .or(`team_home_id.in.(${teamIds.join(',')}),team_away_id.in.(${teamIds.join(',')})`);
+            .in('id', played.map((l) => l.match_id))
+            .eq('status', 'completed');
 
-          const seen = new Set<string>();
           for (const m of (matchRows ?? []) as unknown as RawFormMatch[]) {
-            const a = raw.find(
-              (x) =>
-                x.comp_instance_id === m.comp_instance_id &&
-                x.game_title_id === m.game_title_id &&
-                (x.team_id === m.team_home_id || x.team_id === m.team_away_id),
-            );
-            if (!a || seen.has(m.id)) continue;
-            const entry = toFormEntry(m, a.team_id);
-            if (entry) {
-              seen.add(m.id);
-              entries.push(entry);
-            }
+            const teamId = played.find((l) => l.match_id === m.id)?.team_id;
+            const entry = teamId ? toFormEntry(m, teamId) : null;
+            if (entry) entries.push({ ...entry, isMvp: m.mvp_player_id === playerRow.id });
           }
           entries = sortNewestFirst(entries);
         }
@@ -152,6 +145,7 @@ export function usePlayerDetail(id: string) {
             { label: 'WINS', value: String(rec.won) },
             { label: 'DRAWS', value: String(rec.drawn) },
             { label: 'LOSSES', value: String(rec.lost) },
+            { label: 'MVP', value: String(entries.filter((e) => e.isMvp).length) },
           ],
         });
       } catch (err) {

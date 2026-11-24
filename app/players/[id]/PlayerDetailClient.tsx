@@ -105,7 +105,7 @@ export function PlayerDetailClient({ id }: { id: string }) {
 					</div>
 
 					{/* Stats matrix */}
-					<div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+					<div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
 						{player.stats.map((stat) => (
 							<div
 								key={stat.label}

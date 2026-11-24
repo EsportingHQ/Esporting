@@ -16,6 +16,8 @@ export interface FormEntry {
   competitionName: string;
   competitionSlug: string | null;
   playedAt: string | null;
+  // Set on player pages: this player was the match MVP
+  isMvp?: boolean;
 }
 
 type TeamRef = { id: string; name: string; slug: string | null };
@@ -28,6 +30,7 @@ export interface RawFormMatch {
   ended_at: string | null;
   best_of: number;
   winner_team_id: string | null;
+  mvp_player_id?: string | null;
   team_home_id: string | null;
   team_away_id: string | null;
   home_maps_won: number | null;
@@ -42,7 +45,7 @@ export interface RawFormMatch {
 }
 
 export const FORM_MATCH_SELECT = `
-  id, status, scheduled_at, ended_at, best_of, winner_team_id, team_home_id, team_away_id,
+  id, status, scheduled_at, ended_at, best_of, winner_team_id, mvp_player_id, team_home_id, team_away_id,
   home_maps_won, away_maps_won, game_title_id, comp_instance_id,
   home_team:teams!matches_team_home_id_fkey(id, name, slug),
   away_team:teams!matches_team_away_id_fkey(id, name, slug),
