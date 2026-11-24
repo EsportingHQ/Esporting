@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import SeriesPanel, { type SetupChange } from './SeriesPanel';
+import LineupPanel, { type LineupGate } from './LineupPanel';
 
 type Status = 'scheduled' | 'delayed' | 'live' | 'completed' | 'cancelled' | 'walkover';
 type MatchFormat = 'head_to_head' | 'battle_royale';
@@ -40,6 +41,7 @@ export type MatchRoomMatch = {
 	team_away_id: string | null;
 	game_title_id: string;
 	comp_instance_id: string;
+	mvp_player_id?: string | null;
 	game_titles: GameTitle | null;
 	comp_instances: { name: string; slug: string | null } | null;
 	comp_stages: { name: string } | null;
@@ -289,6 +291,13 @@ export default function MatchRoomClient({
 	const [correctionEventId, setCorrectionEventId] = useState('');
 	const [correctionReason, setCorrectionReason] = useState('');
 	const [replacementType, setReplacementType] = useState('');
+	// Who played / MVP rules, reported by the Who played panel
+	const [gate, setGate] = useState<LineupGate>({
+		lineupReady: false,
+		mvpReady: false,
+		startBlocker: 'Loading who played...',
+		endBlocker: 'Loading who played...',
+	});
 	const [brRows, setBrRows] = useState(
 		participants.map((participant, index) => ({
 			participant_id: participant.id,
@@ -310,6 +319,12 @@ export default function MatchRoomClient({
 	const liveMap = maps.find((map) => map.status === 'live') ?? null;
 	const selectedEventConfig =
 		FOOTBALL_EVENTS.find((item) => item.type === eventType) ?? FOOTBALL_EVENTS[0];
+	const lineupTeams = isBattleRoyale
+		? participants.flatMap((p) => (p.team_id && p.teams ? [{ id: p.team_id, name: p.teams.name }] : []))
+		: [
+				...(match.team_home_id ? [{ id: match.team_home_id, name: teamName(match.home_team) }] : []),
+				...(match.team_away_id ? [{ id: match.team_away_id, name: teamName(match.away_team) }] : []),
+			];
 	const eventPlayers = lineups.filter((lineup) => lineup.team_id === eventTeamId);
 
 	const refreshMaps = useCallback(async () => {
@@ -482,6 +497,12 @@ export default function MatchRoomClient({
 	}
 
 	async function updateStatus(nextStatus: Status) {
+		const blocker =
+			nextStatus === 'live' ? gate.startBlocker : nextStatus === 'completed' ? gate.endBlocker : null;
+		if (blocker) {
+			setError(blocker);
+			return;
+		}
 		await runAction(`status-${nextStatus}`, async () => {
 			await edgeCall('trigger-match-status', {
 				match_id: match.id,
@@ -533,6 +554,10 @@ export default function MatchRoomClient({
 	// Start one game using the map/mode already saved for it.
 	// The server refuses unless every game is set up and the earlier games have ended.
 	async function startGame(slot: MatchMap) {
+		if (match.status !== 'live' && gate.startBlocker) {
+			setError(gate.startBlocker);
+			return;
+		}
 		await runAction(`start-${slot.id}`, async () => {
 			// Starting a game also takes the match live if it is not live yet.
 			if (match.status === 'scheduled' || match.status === 'delayed') {
@@ -682,6 +707,17 @@ export default function MatchRoomClient({
 
 			<div className="grid gap-6 xl:grid-cols-[1.35fr_0.9fr]">
 				<div className="space-y-6">
+					<LineupPanel
+						matchId={match.id}
+						compId={match.comp_instance_id}
+						gameId={match.game_title_id}
+						status={match.status}
+						mvpRequired={!isFootball}
+						teams={lineupTeams}
+						initialLineups={lineups.flatMap((l) => (l.players ? [{ team_id: l.team_id, player_id: l.players.id }] : []))}
+						initialMvpId={match.mvp_player_id ?? null}
+						onGateChange={setGate}
+					/>
 					<section className="rounded-lg border border-border-line bg-bg-surface p-5">
 						<div className="mb-5 flex items-center justify-between">
 							<h3 className="font-semibold">Live Scoreboard</h3>
@@ -986,13 +1022,33 @@ export default function MatchRoomClient({
 							className="mb-3 w-full rounded-lg border border-border-line bg-bg-surface px-3 py-2 text-sm text-text-primary"
 							placeholder="Reason, if needed"
 						/>
+						{(match.status === 'scheduled' || match.status === 'delayed'
+							? gate.startBlocker
+							: match.status === 'live'
+								? gate.endBlocker
+								: null) ? (
+							<p className="mb-3 text-xs text-amber-600 dark:text-amber-400">
+								{match.status === 'live' ? gate.endBlocker : gate.startBlocker}
+							</p>
+						) : null}
 						<div className="grid gap-2">
 							{VALID_TRANSITIONS[match.status]?.map((action) => (
 								<button
 									key={action.status}
 									type="button"
 									onClick={() => updateStatus(action.status)}
-									disabled={pending === `status-${action.status}`}
+									disabled={
+										pending === `status-${action.status}` ||
+										(action.status === 'live' && !!gate.startBlocker) ||
+										(action.status === 'completed' && !!gate.endBlocker)
+									}
+									title={
+										action.status === 'live'
+											? (gate.startBlocker ?? undefined)
+											: action.status === 'completed'
+												? (gate.endBlocker ?? undefined)
+												: undefined
+									}
 									className="rounded-lg bg-bg-elevated px-4 py-2 text-left text-sm font-semibold text-text-primary hover:bg-bg-elevated disabled:opacity-50"
 								>
 									{action.label}

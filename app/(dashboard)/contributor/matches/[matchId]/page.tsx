@@ -154,7 +154,7 @@ export default async function ContributorMatchRoomPage({
 			`
         id, status, match_format, best_of, scheduled_at, started_at, ended_at,
         home_maps_won, away_maps_won, winner_team_id, team_home_id, team_away_id,
-        game_title_id, comp_instance_id, contrib_id,
+        game_title_id, comp_instance_id, contrib_id, mvp_player_id,
         game_titles(id, name, slug, short_code, game_types(name, slug)),
         comp_instances(name, slug),
         comp_stages(name),

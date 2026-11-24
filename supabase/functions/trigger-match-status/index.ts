@@ -1,6 +1,7 @@
         import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
         import { corsHeaders } from '../_shared/cors.ts'
         import { createAdminClient } from '../_shared/supabase.ts'
+        import { checkMatchRequirements } from '../_shared/match-requirements.ts'
 
         const VALID_TRANSITIONS: Record<string, string[]> = {
         scheduled: ['delayed', 'live', 'cancelled'],
@@ -97,6 +98,17 @@
                 }),
                 { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             )
+            }
+
+            // 7b. Who played / MVP must be recorded first
+            if (new_status === 'live' || new_status === 'completed') {
+            const problem = await checkMatchRequirements(adminClient, match_id, new_status)
+            if (problem) {
+                return new Response(
+                JSON.stringify({ error: problem }),
+                { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                )
+            }
             }
 
             // 8. Build update
