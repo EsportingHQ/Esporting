@@ -76,6 +76,9 @@ export function SiteFooter() {
           </ul>
         </nav>
       </div>
+      <div className="max-w-7xl mx-auto px-4 pb-6 text-xs text-text-muted font-body">
+        © {new Date().getFullYear()} EsportingHQ. All rights reserved.
+      </div>
     </footer>
   );
 }

@@ -21,7 +21,7 @@ import {
   Newspaper, 
   ArrowRight, 
   Star, 
-  Zap, 
+  
   ChevronDown, 
 } from 'lucide-react';
 
@@ -382,22 +382,6 @@ export default function HomeClient() {
 				</section>
 			</main>
 
-			{/* Modern Glass Footer */}
-			<footer className="glass-strong border-t border-text-primary/[0.08] py-8 relative z-20 select-none text-xs text-text-muted mt-auto">
-				<div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
-					<div className="flex items-center gap-2 font-display font-bold text-text-primary text-sm">
-						<Zap className="w-4 h-4 text-accent-primary" />
-						<span>ESPORTINGHQ</span>
-						<span className="text-xs text-text-muted font-normal">© {new Date().getFullYear()}</span>
-					</div>
-					<div className="flex items-center gap-2 font-display text-xs">
-						<span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-state-win/10 border border-state-win/20 text-state-win font-semibold">
-							<span className="w-1.5 h-1.5 rounded-full bg-state-win animate-pulse" />
-							Telemetry Feed Nominal
-						</span>
-					</div>
-				</div>
-			</footer>
 		</div>
 	);
 }
