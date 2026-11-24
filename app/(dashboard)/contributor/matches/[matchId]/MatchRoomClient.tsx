@@ -1,5 +1,6 @@
 'use client';
 
+import { ArrowLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import SeriesPanel, { type SetupChange } from './SeriesPanel';
@@ -641,7 +642,11 @@ export default function MatchRoomClient({
 	return (
 		<div className="space-y-6">
 			<div className="flex items-center justify-between gap-4">
-				<a href="/contributor" className="text-sm text-text-muted hover:text-text-primary">
+				<a
+					href="/contributor"
+					className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-border-line bg-bg-surface px-4 py-2 text-sm font-semibold text-text-primary transition-colors hover:border-accent-primary hover:text-accent-primary"
+				>
+					<ArrowLeft className="h-4 w-4" aria-hidden="true" />
 					Back to matches
 				</a>
 				<div className="flex items-center gap-3">
