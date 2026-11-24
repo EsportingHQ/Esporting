@@ -50,6 +50,32 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Suggested stages for each format. They replace the list only while the organiser
+  // has not renamed or added anything of their own.
+  const PRESET_NAMES = ['Group Stage', 'Knockout Playoffs', 'Knockout', 'League', 'Ranking'];
+  function changeFormat(next: string) {
+    setFormat(next);
+    setStages((prev) => {
+      const untouched = prev.every((s) => !s.name || PRESET_NAMES.includes(s.name));
+      if (!untouched) return prev;
+      const k = (order: number): StageInput => ({
+        name: 'Knockout Playoffs',
+        stage_type: 'knockout',
+        stage_order: order,
+        best_of: 1,
+        qualify_mode: 'auto',
+        qualifiers_per_group: 2,
+      });
+      if (next === 'group+knockout') {
+        return [{ name: 'Group Stage', stage_type: 'group', stage_order: 1, best_of: 1 }, k(2)];
+      }
+      if (next === 'knockout') return [{ ...k(1), name: 'Knockout' }];
+      if (next === 'league') return [{ name: 'League', stage_type: 'league', stage_order: 1, best_of: 1 }];
+      if (next === 'ranking') return [{ name: 'Ranking', stage_type: 'ranking', stage_order: 1, best_of: 1 }];
+      return prev;
+    });
+  }
+
   function toggleGame(slug: string) {
     setSelectedGames((prev) =>
       prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
@@ -302,7 +328,7 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
           </label>
           <select
             value={format}
-            onChange={(e) => setFormat(e.target.value)}
+            onChange={(e) => changeFormat(e.target.value)}
             className="w-full bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent-readout transition-colors"
           >
             <option value="league">League (Round-Robin with Standings Table)</option>
