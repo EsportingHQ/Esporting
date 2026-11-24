@@ -236,7 +236,7 @@
             .single()
         const typeRel = (titleRow as { game_types?: { slug?: string } | { slug?: string }[] | null } | null)?.game_types
         const typeSlug = Array.isArray(typeRel) ? typeRel[0]?.slug : typeRel?.slug
-        const winnerBased = typeSlug === 'moba'
+        const winnerBased = typeSlug === 'moba' || typeSlug === 'football'  // no map/mode choice for these
 
         const needsMap = (mapPoolCount ?? 0) > 0
         const isDone = (s: { status: string }) => ['completed', 'skipped'].includes(s.status)

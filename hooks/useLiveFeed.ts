@@ -249,8 +249,8 @@ export function useLiveFeed(day: Date) {
         gameCode: gameTitle?.name ?? '',
         homeTeam: home?.short_code ?? home?.name ?? 'TBD',
         awayTeam: away?.short_code ?? away?.name ?? 'TBD',
-        homeScore: scoreRow?.home_current_score ?? 0,
-        awayScore: scoreRow?.away_current_score ?? 0,
+        homeScore: row.best_of > 1 ? (row.home_maps_won ?? 0) : (scoreRow?.home_current_score ?? 0),
+        awayScore: row.best_of > 1 ? (row.away_maps_won ?? 0) : (scoreRow?.away_current_score ?? 0),
         status: 'live',
       };
     });

@@ -45,6 +45,8 @@ export function MatchCard({
   const isLive = status === 'live';
   const isCompleted = status === 'completed';
 
+  // Any best-of-2+ match (football included) shows games won, not the goals of one game
+  const isSeries = gameType !== 'br' && bestOf > 1;
   const isEnded = isCompleted || status === 'walkover';
   const borderStatusClass = isLive
     ? 'border-l-4 border-l-accent-primary shadow-[inset_4px_0_15px_rgba(255,31,109,0.15)]'
@@ -54,8 +56,8 @@ export function MatchCard({
 
   const accessibleLabel = `${homeTeam.name} ${homeScore}, ${awayTeam.name} ${awayScore}. ${gameTitle}. Status: ${status}. ${timeLabel || ''}`;
 
-  const isHomeWinner = isEnded && ((gameType === 'shooter' && bestOf > 1) ? homeMapsWon > awayMapsWon : homeScore > awayScore);
-  const isAwayWinner = isEnded && ((gameType === 'shooter' && bestOf > 1) ? awayMapsWon > homeMapsWon : awayScore > homeScore);
+  const isHomeWinner = isEnded && (isSeries ? homeMapsWon > awayMapsWon : homeScore > awayScore);
+  const isAwayWinner = isEnded && (isSeries ? awayMapsWon > homeMapsWon : awayScore > homeScore);
 
   const handleCardClick = () => {
     if (onClick) {
@@ -101,9 +103,9 @@ export function MatchCard({
               {status === 'delayed' ? `${timeLabel ?? ''}` : timeLabel}
             </span>
             <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-text-muted font-data leading-none">
-              {gameType === 'shooter' && bestOf > 1 && (
-                <span className="text-[9px] text-accent-glow font-display font-semibold px-1 py-0.2 rounded bg-accent-primary/10 border border-accent-primary/20">
-                  BO{bestOf}
+              {isSeries && (
+                <span className="text-[9px] text-text-muted font-display font-semibold tracking-wider uppercase">
+                  BEST OF {bestOf}
                 </span>
               )}
             </div>
@@ -154,14 +156,14 @@ export function MatchCard({
           <div className="flex flex-col items-end justify-center gap-1 min-w-[1.25rem] sm:min-w-[1.5rem] font-data text-sm sm:text-base font-bold leading-tight">
             <div className={isLive ? 'text-text-primary font-bold' : isHomeWinner ? 'text-state-win font-bold' : isCompleted ? 'text-state-win/70' : 'text-text-primary'}>
               <ScoreFlash
-                value={gameType === 'shooter' && bestOf > 1 ? homeMapsWon : homeScore}
+                value={isSeries ? homeMapsWon : homeScore}
                 isLive={isLive}
                 teamName={homeTeam.name}
               />
             </div>
             <div className={isLive ? 'text-text-primary font-bold' : isAwayWinner ? 'text-state-win font-bold' : isCompleted ? 'text-state-win/70' : 'text-text-primary'}>
               <ScoreFlash
-                value={gameType === 'shooter' && bestOf > 1 ? awayMapsWon : awayScore}
+                value={isSeries ? awayMapsWon : awayScore}
                 isLive={isLive}
                 teamName={awayTeam.name}
               />

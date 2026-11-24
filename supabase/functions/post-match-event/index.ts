@@ -73,7 +73,7 @@
         // 6. Fetch the match
         const { data: match, error: matchError } = await adminClient
         .from('matches')
-        .select('id, status, contrib_id, match_format, game_title_id, team_home_id, team_away_id')
+        .select('id, status, contrib_id, match_format, game_title_id, team_home_id, team_away_id, best_of')
         .eq('id', match_id)
         .single()
 
@@ -204,7 +204,7 @@
     meta,
     adminClient
     }: {
-    match: Record<string, string>,
+    match: Record<string, string | number>,
     event_type: string,
     team_id: string | null,
     player_id: string | null,
@@ -220,6 +220,19 @@
         // Must be a head_to_head match
         if (match.match_format !== 'head_to_head') {
         return 'Football events can only be posted on head_to_head matches'
+        }
+
+        // Football series (best of 2+): every goal belongs to the match being played
+        if (Number(match.best_of) > 1 || match_map_id) {
+        if (!match_map_id) return 'Start a match first, goals are logged against the live match'
+        const { data: liveMatch } = await adminClient
+            .from('match_maps')
+            .select('id, status')
+            .eq('id', match_map_id)
+            .eq('match_id', match.id)
+            .single()
+        if (!liveMatch) return 'match_map_id does not belong to this match'
+        if (liveMatch.status !== 'live') return 'That match is not live. Start it before logging goals'
         }
 
         // team_id is required for goal events
@@ -318,6 +331,7 @@
         .single()
         const typeRel = (titleRow as { game_types?: { slug?: string } | { slug?: string }[] | null } | null)?.game_types
         const typeSlug = Array.isArray(typeRel) ? typeRel[0]?.slug : typeRel?.slug
+        if (typeSlug === 'football') return null  // score comes from the goals logged in this match
         if (typeSlug === 'moba') {
         const w = (meta as Record<string, unknown> | null | undefined)?.winner
         if (w !== 'home' && w !== 'away') return 'Pick which team won this game before ending it'
@@ -365,7 +379,7 @@
     meta,
     adminClient
     }: {
-    match: Record<string, string>,
+    match: Record<string, string | number>,
     event: Record<string, unknown>,
     event_type: string,
     match_map_id: string | null,
@@ -392,6 +406,11 @@
         }
     }
 
+    // ── football goal logged in a series match: refresh that match's score ──
+    if (['goal', 'penalty_goal', 'own_goal'].includes(event_type) && match_map_id) {
+        await syncMapScoreFromGoals(adminClient, match, match_map_id)
+    }
+
     // ── map_end: mark map completed, determine winner ────────
     if (event_type === 'map_end' && match_map_id) {
         const { data: mapData } = await adminClient
@@ -399,6 +418,21 @@
         .select('home_score, away_score')
         .eq('id', match_map_id)
         .single()
+
+        // Football: the match score is exactly the goals logged, so the winner follows them
+        const { data: titleRow2 } = await adminClient
+        .from('game_titles')
+        .select('game_types(slug)')
+        .eq('id', match.game_title_id)
+        .single()
+        const rel2 = (titleRow2 as { game_types?: { slug?: string } | { slug?: string }[] | null } | null)?.game_types
+        const slug2 = Array.isArray(rel2) ? rel2[0]?.slug : rel2?.slug
+        if (slug2 === 'football') {
+        await syncMapScoreFromGoals(adminClient, match, match_map_id)
+        const { data: fresh } = await adminClient
+            .from('match_maps').select('home_score, away_score').eq('id', match_map_id).single()
+        if (fresh && mapData) { mapData.home_score = fresh.home_score; mapData.away_score = fresh.away_score }
+        }
 
         if (mapData) {
         const pickedWinner = (meta as Record<string, unknown> | null | undefined)?.winner
@@ -496,3 +530,32 @@
         .eq('id', match_map_id)
     }
     }
+
+// Goals logged against one match of a series decide that match's score
+// (own goals count for the other team). Voided and corrected events are ignored.
+async function syncMapScoreFromGoals(
+    adminClient: ReturnType<typeof createAdminClient>,
+    match: Record<string, string | number>,
+    matchMapId: string
+) {
+    const { data: goals } = await adminClient
+    .from('match_events')
+    .select('event_type, team_id, value')
+    .eq('match_id', match.id)
+    .eq('match_map_id', matchMapId)
+    .in('event_type', ['goal', 'penalty_goal', 'own_goal'])
+    .or('is_void.is.null,is_void.eq.false')
+
+    let home = 0
+    let away = 0
+    for (const g of (goals ?? []) as { event_type: string, team_id: string | null, value: number | null }[]) {
+    const v = Number(g.value ?? 1)
+    const forHome = g.event_type === 'own_goal' ? g.team_id === match.team_away_id : g.team_id === match.team_home_id
+    if (forHome) home += v; else away += v
+    }
+
+    await adminClient
+    .from('match_maps')
+    .update({ home_score: home, away_score: away })
+    .eq('id', matchMapId)
+}

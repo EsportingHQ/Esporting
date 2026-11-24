@@ -302,6 +302,9 @@ export default function MatchRoomClient({
 	// Football becomes a series too when the organiser sets best of 3 or more
 	const isSeries = !isBattleRoyale && (!isFootball || (match.best_of ?? 1) > 1);
 	const visibleEvents = events.filter((event) => !event.is_void);
+	// Series score = games won so far. It only changes when a game or match is ended.
+	const seriesHome = maps.filter((m) => m.status === 'completed' && m.map_winner === 'home').length;
+	const seriesAway = maps.filter((m) => m.status === 'completed' && m.map_winner === 'away').length;
 	// The game being played right now. Never falls back to a game that hasn't started.
 	const liveMap = maps.find((map) => map.status === 'live') ?? null;
 	const selectedEventConfig =
@@ -493,12 +496,15 @@ export default function MatchRoomClient({
 			await edgeCall('post-match-event', {
 				match_id: match.id,
 				event_type: eventType,
+				match_map_id: isSeries && liveMap ? liveMap.id : undefined,
 				team_id: selectedEventConfig.noTeam ? null : eventTeamId || null,
 				player_id: selectedEventConfig.noTeam ? null : eventPlayerId || null,
 				value: ['goal', 'own_goal', 'penalty_goal'].includes(eventType) ? 1 : null,
 				meta: eventMinute ? { minute: Number(eventMinute) } : {},
 			});
 			setEventMinute('');
+			await refreshMaps();
+			await refreshEvents();
 		});
 	}
 
@@ -714,9 +720,9 @@ export default function MatchRoomClient({
 									<p className="text-lg font-semibold">{teamName(match.home_team)}</p>
 								</div>
 								<div className="rounded-lg bg-bg-surface px-6 py-4 text-4xl font-bold">
-									{numberValue(score?.home_current_score)}
+									{isSeries ? seriesHome : numberValue(score?.home_current_score)}
 									<span className="px-4 text-text-muted">-</span>
-									{numberValue(score?.away_current_score)}
+									{isSeries ? seriesAway : numberValue(score?.away_current_score)}
 								</div>
 								<div className="text-right">
 									<p className="text-sm text-text-muted">{match.away_team?.short_code}</p>
@@ -751,8 +757,18 @@ export default function MatchRoomClient({
 					<section className="rounded-lg border border-border-line bg-bg-surface p-5">
 						<h3 className="mb-4 font-semibold">Event Logging</h3>
 
-						{isFootball ? (
+						{isFootball && isSeries && !liveMap ? (
+							<p className="text-sm text-text-muted">
+								Start a match in the Series panel above. The event log opens as soon as it is live,
+								and every goal you log counts for that match.
+							</p>
+						) : isFootball ? (
 							<div className="grid gap-4 md:grid-cols-2">
+								{isSeries && liveMap ? (
+									<p className="md:col-span-2 text-sm font-semibold text-accent-primary">
+										Logging for Match {liveMap.map_number}: {Number(liveMap.home_score ?? 0)} - {Number(liveMap.away_score ?? 0)}
+									</p>
+								) : null}
 								<label className="text-sm text-text-muted">
 									Event
 									<select
@@ -760,7 +776,7 @@ export default function MatchRoomClient({
 										onChange={(event) => setEventType(event.target.value)}
 										className="mt-2 w-full rounded-lg border border-border-line bg-bg-surface px-3 py-2 text-text-primary"
 									>
-										{FOOTBALL_EVENTS.map((item) => (
+										{FOOTBALL_EVENTS.filter((item) => !(isSeries && item.type === 'full_time')).map((item) => (
 											<option key={item.type} value={item.type}>
 												{item.label}
 											</option>
@@ -823,7 +839,7 @@ export default function MatchRoomClient({
 							</div>
 						) : null}
 
-						{isSeries ? (
+						{isSeries && !isFootball ? (
 							<p className="text-sm text-text-muted">
 								Games in this series are set up, started, scored and ended in the Series panel above.
 							</p>

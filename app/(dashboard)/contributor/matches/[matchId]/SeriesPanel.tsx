@@ -70,7 +70,11 @@ export default function SeriesPanel({
 	const [drafts, setDrafts] = useState<Record<string, Draft>>({});
 	// MLBB: who destroyed the base, chosen per game before it can end
 	const [winners, setWinners] = useState<Record<string, 'home' | 'away'>>({});
-	const winnerBased = match.game_titles?.game_types?.slug === 'moba';
+	const typeSlug = match.game_titles?.game_types?.slug;
+	const pickWinner = typeSlug === 'moba'; // MLBB: contributor picks who destroyed the base
+	const isFootball = typeSlug === 'football'; // goals in the event log decide each match
+	const winnerBased = pickWinner || isFootball; // neither needs a map or mode
+	const unit = isFootball ? 'Match' : 'Game';
 
 	const needsMap = !winnerBased && availableMaps.length > 0;
 	const homeLabel = match.home_team?.short_code ?? match.home_team?.name ?? 'Home';
@@ -148,7 +152,7 @@ export default function SeriesPanel({
 				<div>
 					<h3 className="font-semibold">Series</h3>
 					<p className="mt-1 text-xs text-text-muted">
-						Best of {match.best_of} - {total} game{total === 1 ? '' : 's'}
+						Best of {match.best_of} - {total} {unit.toLowerCase()}{total === 1 ? '' : 's'}
 					</p>
 				</div>
 				<div className="rounded-lg bg-bg-elevated px-4 py-2 text-lg font-bold">
@@ -168,7 +172,7 @@ export default function SeriesPanel({
 
 			{series.decided ? (
 				<div className="mb-4 rounded-lg border border-green-500/30 bg-green-500/10 p-3 text-sm text-green-200">
-					The series is decided {series.homeWins}-{series.awayWins}. The remaining games are not
+					The series is decided {series.homeWins}-{series.awayWins}. The remaining {unit.toLowerCase()}s are not
 					needed. Mark the match as completed in Match Status.
 				</div>
 			) : null}
@@ -240,7 +244,7 @@ export default function SeriesPanel({
 							}`}
 						>
 							<div className="flex flex-wrap items-center justify-between gap-2">
-								<p className="font-semibold">Game {slot.map_number}</p>
+								<p className="font-semibold">{unit} {slot.map_number}</p>
 								<span
 									className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase ${statusChip(slot.status)}`}
 								>
@@ -256,7 +260,7 @@ export default function SeriesPanel({
 										disabled={!control.canStart || pending === `start-${slot.id}`}
 										className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-text-primary hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-40"
 									>
-										Start Game {slot.map_number}
+										Start {unit} {slot.map_number}
 									</button>
 								</div>
 							) : isEditable ? (
@@ -304,7 +308,7 @@ export default function SeriesPanel({
 											disabled={!control.canStart || pending === `start-${slot.id}`}
 											className="w-full rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-text-primary hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-40 md:w-auto"
 										>
-											Start Game {slot.map_number}
+											Start {unit} {slot.map_number}
 										</button>
 									</div>
 								</div>
@@ -333,7 +337,43 @@ export default function SeriesPanel({
 								</p>
 							) : null}
 
-							{isLive && winnerBased ? (
+							{isLive && isFootball ? (
+								<div className="mt-4 space-y-3">
+									<div className="flex items-center justify-between rounded-lg bg-bg-elevated px-4 py-3">
+										<span className="text-sm font-semibold">{homeLabel}</span>
+										<span className="text-2xl font-black tabular-nums">
+											{Number(slot.home_score ?? 0)} - {Number(slot.away_score ?? 0)}
+										</span>
+										<span className="text-sm font-semibold">{awayLabel}</span>
+									</div>
+									<p className="text-xs text-text-muted">
+										This score comes from the goals you log in Event Logging below. Fix a wrong goal there and the score follows.
+									</p>
+									<div className="flex flex-wrap items-center gap-3">
+										<label className="text-xs text-text-muted">
+											Duration (minutes, optional)
+											<input
+												value={durationMinutes}
+												onChange={(event) => onDurationChange(event.target.value)}
+												type="number"
+												min="0"
+												className={inputClass}
+											/>
+										</label>
+										<button
+											type="button"
+											onClick={() => onEndGame()}
+											disabled={!matchIsLive || pending === 'map-end'}
+											className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-text-primary hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-40"
+										>
+											End {unit} {slot.map_number}
+										</button>
+									</div>
+									{!matchIsLive ? (
+										<p className="text-xs text-amber-300">Set the match to Live in Match Status first.</p>
+									) : null}
+								</div>
+							) : isLive && pickWinner ? (
 								<div className="mt-4 space-y-4">
 									<div className="grid gap-3 md:grid-cols-3">
 										<label className="text-xs text-text-muted">
@@ -402,7 +442,7 @@ export default function SeriesPanel({
 											disabled={!winners[slot.id] || !matchIsLive || pending === 'map-end'}
 											className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-text-primary hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-40"
 										>
-											End Game {slot.map_number}
+											End {unit} {slot.map_number}
 										</button>
 									</div>
 									{!matchIsLive ? (
@@ -462,7 +502,7 @@ export default function SeriesPanel({
 											disabled={!control.canEnd || pending === 'map-end'}
 											className="rounded-lg bg-bg-elevated px-4 py-2 text-sm font-semibold text-text-primary hover:bg-bg-elevated disabled:cursor-not-allowed disabled:opacity-40"
 										>
-											End Game {slot.map_number}
+											End {unit} {slot.map_number}
 										</button>
 									</div>
 									{!matchIsLive ? (
