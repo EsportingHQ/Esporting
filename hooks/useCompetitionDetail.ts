@@ -35,6 +35,7 @@ export interface StandingRow {
     metric: 'goals' | 'maps';
     gameName: string;
     groupName: string | null;
+    teamSlug?: string | null;
 }
 
 export interface BRStandingRow {
@@ -284,7 +285,7 @@ export function useCompetitionDetail(slug: string) {
             const { data: realStandings } = stageIds.length
                 ? await supabase
                     .from('standings')
-                    .select('rank, played, wins, draws, losses, score_diff, score_for, score_against, points, meta, teams(id, name, short_code), game_titles(name), comp_groups(name)')
+                    .select('rank, played, wins, draws, losses, score_diff, score_for, score_against, points, meta, teams(id, name, short_code, slug), game_titles(name), comp_groups(name)')
                     .in('stage_id', stageIds)
                     .order('game_title_id', { ascending: true })
                     .order('rank', { ascending: true })
@@ -303,12 +304,13 @@ export function useCompetitionDetail(slug: string) {
                 meta: { metric?: string } | null;
                 game_titles: { name: string } | { name: string }[] | null;
                 comp_groups: { name: string } | { name: string }[] | null;
-                teams: { id: string; name: string; short_code: string | null } | { id: string; name: string; short_code: string | null }[] | null;
+                teams: { id: string; name: string; short_code: string | null; slug: string | null } | { id: string; name: string; short_code: string | null; slug: string | null }[] | null;
             }[]).map((row, i) => {
                 const team = one(row.teams);
                 return {
                     rank: row.rank ?? i + 1,
                     teamId: team?.id ?? '',
+                    teamSlug: team?.slug ?? null,
                     name: team?.name ?? 'Unknown',
                     shortCode: team?.short_code ?? '',
                     played: row.played,
@@ -325,6 +327,7 @@ export function useCompetitionDetail(slug: string) {
                 };
             });
 
+                mapped.sort((a, b) => a.gameName.localeCompare(b.gameName) || (a.groupName ?? '').localeCompare(b.groupName ?? '', undefined, { numeric: true }) || a.rank - b.rank);
                 setStandings(mapped);
         }
 

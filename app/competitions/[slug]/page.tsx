@@ -145,7 +145,7 @@ export default function CompetitionDetailPage({
 				</div>
 
 				{/* Tab switcher */}
-				<div className="flex border-b border-border-line gap-2 font-display font-bold tracking-wider text-xs">
+				<div className="flex border-b border-border-line gap-2 font-display font-bold tracking-wider text-xs overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
 					{(
 						[
 							{
@@ -163,15 +163,6 @@ export default function CompetitionDetailPage({
 								label: 'RESULTS',
 								icon: <Award className="w-3.5 h-3.5" />,
 							},
-							...(hasKnockout
-								? [
-										{
-											id: 'bracket' as const,
-											label: 'BRACKET',
-											icon: <GitBranch className="w-3.5 h-3.5" />,
-										},
-									]
-								: []),
 							...(format === 'knockout'
 								? []
 								: [
@@ -181,6 +172,15 @@ export default function CompetitionDetailPage({
 											icon: <ListOrdered className="w-3.5 h-3.5" />,
 										},
 									]),
+							...(hasKnockout
+								? [
+										{
+											id: 'bracket' as const,
+											label: 'BRACKET',
+											icon: <GitBranch className="w-3.5 h-3.5" />,
+										},
+									]
+								: []),
 						] satisfies {
 							id: CompetitionTab;
 							label: string;
@@ -190,7 +190,7 @@ export default function CompetitionDetailPage({
 						<button
 							key={tab.id}
 							onClick={() => setActiveTab(tab.id)}
-							className={`px-4 py-2.5 border-b-2 flex items-center gap-1.5 transition-all ${
+							className={`px-4 py-2.5 border-b-2 flex items-center gap-1.5 transition-all shrink-0 ${
 								activeTab === tab.id
 									? 'border-accent-readout text-accent-readout'
 									: 'border-transparent text-text-muted hover:text-text-primary'

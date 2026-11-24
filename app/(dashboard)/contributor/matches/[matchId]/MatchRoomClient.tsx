@@ -533,6 +533,15 @@ export default function MatchRoomClient({
 	// The server refuses unless every game is set up and the earlier games have ended.
 	async function startGame(slot: MatchMap) {
 		await runAction(`start-${slot.id}`, async () => {
+			// Starting a game also takes the match live if it is not live yet.
+			if (match.status === 'scheduled' || match.status === 'delayed') {
+				await edgeCall('trigger-match-status', {
+					match_id: match.id,
+					new_status: 'live',
+					reason: null,
+				});
+				setMatch((current) => ({ ...current, status: 'live' }));
+			}
 			await edgeCall('select-map-mode', {
 				match_id: match.id,
 				match_map_id: slot.id,

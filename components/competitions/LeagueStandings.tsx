@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { StandingRow } from '@/hooks/useCompetitionDetail';
 
 // One table per game and group. The columns follow how each game is scored:
@@ -62,7 +63,14 @@ export default function LeagueStandings({ rows }: { rows: StandingRow[] }) {
                 {list.map((r) => (
                   <tr key={r.teamId} className="hover:bg-bg-void/40 transition-colors">
                     <td className={`${th} font-bold`}>{r.rank}</td>
-                    <td className="py-3 px-4 font-body font-medium text-text-primary">{r.name}</td>
+                    <td className="py-3 px-4 font-body font-medium text-text-primary">{r.teamSlug ? (
+                        <Link href={`/teams/${r.teamSlug}`} className="hover:text-accent-primary hover:underline">
+                          {r.name}
+                        </Link>
+                      ) : (
+                        r.name
+                      )}
+                    </td>
                     <td className={th}>{r.played}</td>
                     <td className={th}>{r.won}</td>
                     {football && <td className={th}>{r.drawn}</td>}
