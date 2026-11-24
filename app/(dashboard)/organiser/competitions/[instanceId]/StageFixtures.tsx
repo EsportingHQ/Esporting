@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
@@ -23,7 +23,7 @@ function splitText(teams: number, groups: number): string {
 const TYPE_HELP: Record<string, string> = {
   league: 'Everyone plays everyone.',
   group: 'Teams play each other inside their group. Let us draw the groups evenly, or pick them yourself.',
-  knockout: 'Teams are paired at random. Later rounds are created once a round finishes.',
+  knockout: 'Teams are drawn at random into a full bracket. If the number of teams is not 2, 4, 8, 16..., some teams skip round 1. Winners move into the next round on their own.',
 };
 
 export default function StageFixtures({
@@ -120,16 +120,6 @@ export default function StageFixtures({
     if (error) return setMsg({ text: error.message, ok: false });
     setPreview(null);
     setMsg({ text: `${data} fixtures created. Set their times in the Matches tab.`, ok: true });
-    router.refresh();
-  }
-
-  async function next() {
-    setBusy('next');
-    setMsg(null);
-    const { data, error } = await supabase.rpc('generate_next_knockout_round', { p_comp: compId, p_stage: stage.id });
-    setBusy(null);
-    if (error) return setMsg({ text: error.message, ok: false });
-    setMsg({ text: `${data} fixtures created for the next round.`, ok: true });
     router.refresh();
   }
 
@@ -372,11 +362,6 @@ export default function StageFixtures({
             </button>
           </div>
         <div className="flex flex-wrap gap-2">
-          {type === 'knockout' && (
-            <button disabled={busy !== null || locked} onClick={next} className={`${btn} bg-accent-readout text-bg-void`}>
-              {busy === 'next' ? 'Working...' : 'Generate next round'}
-            </button>
-          )}
           <button
             disabled={busy !== null || locked}
             onClick={clear}
@@ -387,7 +372,88 @@ export default function StageFixtures({
         </div>
         </div>
       )}
+      {type === 'knockout' && fixtureCount > 0 && <LevelMatches stageId={stage.id} locked={locked} />}
       {msg && <p className={msg.ok ? 'text-state-win' : 'text-state-loss'}>{msg.text}</p>}
+    </div>
+  );
+}
+
+type Level = {
+  id: string;
+  bracket_round: number;
+  home: { id: string; name: string } | null;
+  away: { id: string; name: string } | null;
+};
+
+// A knockout match that ended level has no winner yet. The organiser picks who went through
+// (extra time, penalties) and the bracket moves them on.
+function LevelMatches({ stageId, locked }: { stageId: string; locked: boolean }) {
+  const [supabase] = useState(() => createClient());
+  const [rows, setRows] = useState<Level[]>([]);
+  const [err, setErr] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    const { data } = await supabase
+      .from('matches')
+      .select(
+        'id, bracket_round, home:teams!matches_team_home_id_fkey(id, name), away:teams!matches_team_away_id_fkey(id, name)',
+      )
+      .eq('stage_id', stageId)
+      .eq('status', 'completed')
+      .is('winner_team_id', null)
+      .not('bracket_round', 'is', null)
+      .is('deleted_at', null)
+      .order('bracket_round');
+    const list = (data ?? []) as unknown as {
+      id: string;
+      bracket_round: number;
+      home: Level['home'] | Level['home'][];
+      away: Level['away'] | Level['away'][];
+    }[];
+    setRows(
+      list.map((r) => ({
+        id: r.id,
+        bracket_round: r.bracket_round,
+        home: Array.isArray(r.home) ? (r.home[0] ?? null) : r.home,
+        away: Array.isArray(r.away) ? (r.away[0] ?? null) : r.away,
+      })),
+    );
+  }, [supabase, stageId]);
+
+  useEffect(() => {
+    const t = setTimeout(load, 0);
+    return () => clearTimeout(t);
+  }, [load]);
+
+  async function pick(matchId: string, teamId: string) {
+    setErr(null);
+    const { error } = await supabase.rpc('set_knockout_winner', { p_match: matchId, p_team: teamId });
+    if (error) return setErr(error.message);
+    load();
+  }
+
+  if (rows.length === 0 && !err) return null;
+  return (
+    <div className="border border-state-alert/40 rounded p-3 space-y-2">
+      <p className="text-xs font-bold text-state-alert">Level after the match. Pick who goes through:</p>
+      {rows.map((m) => (
+        <div key={m.id} className="flex flex-wrap items-center gap-2 text-xs">
+          <span className="text-text-muted">Round {m.bracket_round}</span>
+          {[m.home, m.away].map((t) =>
+            t ? (
+              <button
+                key={t.id}
+                disabled={locked}
+                onClick={() => pick(m.id, t.id)}
+                className={`${btn} bg-bg-void border border-border-line text-text-primary`}
+              >
+                {t.name} goes through
+              </button>
+            ) : null,
+          )}
+        </div>
+      ))}
+      {err && <p className="text-state-loss text-xs">{err}</p>}
     </div>
   );
 }

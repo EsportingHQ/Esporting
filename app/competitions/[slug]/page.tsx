@@ -1,20 +1,21 @@
 'use client';
 
 import LeagueStandings from '@/components/competitions/LeagueStandings';
+import KnockoutBracket from '@/components/competitions/KnockoutBracket';
 import { useState, use } from 'react';
 import Link from 'next/link';
 import { PublicNav } from '@/components/layout/public-nav';
 import { MatchCard, MatchCardProps } from '@/components/broadcast/match-card';
 import { TierBadge } from '@/components/organiser/TierBadge';
 import { EventBadge } from '@/components/broadcast/event-badge';
-import { Trophy, Calendar, Award, ListOrdered, FileText } from 'lucide-react';
+import { Trophy, Calendar, Award, ListOrdered, FileText, GitBranch } from 'lucide-react';
 import {
 	useCompetitionDetail,
 	StandingRow,
 	BRStandingRow,
 } from '@/hooks/useCompetitionDetail';
 
-type CompetitionTab = 'overview' | 'schedule' | 'results' | 'standings';
+type CompetitionTab = 'overview' | 'schedule' | 'results' | 'standings' | 'bracket';
 
 export default function CompetitionDetailPage({
 	params: paramsPromise,
@@ -41,6 +42,8 @@ export default function CompetitionDetailPage({
 	} = useCompetitionDetail(slug);
 
 	const formatLabel = competition?.format ?? 'league';
+	const format = competition?.format ?? 'league';
+	const hasKnockout = format === 'knockout' || format === 'group+knockout';
 
 	if (isLoading) {
 		return (
@@ -160,11 +163,24 @@ export default function CompetitionDetailPage({
 								label: 'RESULTS',
 								icon: <Award className="w-3.5 h-3.5" />,
 							},
-							{
-								id: 'standings',
-								label: 'STANDINGS',
-								icon: <ListOrdered className="w-3.5 h-3.5" />,
-							},
+							...(hasKnockout
+								? [
+										{
+											id: 'bracket' as const,
+											label: 'BRACKET',
+											icon: <GitBranch className="w-3.5 h-3.5" />,
+										},
+									]
+								: []),
+							...(format === 'knockout'
+								? []
+								: [
+										{
+											id: 'standings' as const,
+											label: 'STANDINGS',
+											icon: <ListOrdered className="w-3.5 h-3.5" />,
+										},
+									]),
 						] satisfies {
 							id: CompetitionTab;
 							label: string;
@@ -287,6 +303,11 @@ export default function CompetitionDetailPage({
 								))}
 							</div>
 						</div>
+					)}
+
+					{/* Bracket */}
+					{activeTab === 'bracket' && hasKnockout && (
+						<KnockoutBracket compId={competition.id} slug={slug} />
 					)}
 
 					{/* Tab 4: Standings */}
