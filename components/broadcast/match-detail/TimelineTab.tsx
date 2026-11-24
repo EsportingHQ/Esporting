@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Flame, Clock, Award, ListOrdered } from 'lucide-react';
 import { StatusDot } from '../StatusDot';
 import {
@@ -49,19 +50,29 @@ export function TimelineTab({
 		}
 	};
 
-	const getEventText = (ev: MatchEvent) => {
+	const playerLink = (ev: MatchEvent) =>
+		ev.player ? (
+			<Link
+				href={`/players/${ev.player.id}`}
+				className="font-semibold underline-offset-2 hover:underline hover:text-accent-primary"
+			>
+				{ev.player.gamertag}
+			</Link>
+		) : null;
+
+	const getEventText = (ev: MatchEvent): React.ReactNode => {
 		const timeText = ev.meta?.minute ? `${ev.meta.minute}' ` : '';
 		switch (ev.event_type) {
 			case 'goal':
-				return `${timeText}GOAL! ${ev.team?.name || 'Player'} scores.`;
+				return <>{timeText}GOAL! {playerLink(ev) ?? ev.team?.name ?? 'Player'}{ev.player && ev.team ? ` (${ev.team.name})` : ''} scores.</>;
 			case 'penalty_goal':
-				return `${timeText}PENALTY CONVERTED! ${ev.team?.name || 'Player'} scores.`;
+				return <>{timeText}PENALTY CONVERTED! {playerLink(ev) ?? ev.team?.name ?? 'Player'} scores.</>;
 			case 'own_goal':
-				return `${timeText}OWN GOAL! Credited to opponent.`;
+				return <>{timeText}OWN GOAL! {playerLink(ev)} Credited to opponent.</>;
 			case 'yellow_card':
-				return `${timeText}Yellow Card issued.`;
+				return <>{timeText}Yellow card{ev.player ? ': ' : ' issued.'}{playerLink(ev)}</>;
 			case 'red_card':
-				return `${timeText}RED CARD! Player sent off.`;
+				return <>{timeText}RED CARD! {playerLink(ev) ?? 'Player'} sent off.</>;
 			case 'status_change':
 				const status =
 					typeof ev.meta?.status === 'string'

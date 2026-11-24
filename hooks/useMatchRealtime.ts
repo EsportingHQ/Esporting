@@ -85,7 +85,7 @@ export interface MatchEvent {
     is_void: boolean;
     sequence_no: number;
     created_at: string;
-    player?: { display_name: string };
+    player?: { id: string; gamertag: string } | null;
 team?: { name: string; slug: string };
 }
 
@@ -226,7 +226,7 @@ export function useMatchRealtime(matchId: string) {
 
             const { data: eventsData } = await supabase
             .from('match_events')
-            .select('*, team:teams(*)')
+            .select('*, team:teams(*), player:players(id, gamertag)')
             .eq('match_id', matchId)
             .eq('is_void', false)
             .order('sequence_no', { ascending: false });
@@ -390,7 +390,16 @@ export function useMatchRealtime(matchId: string) {
             (payload) => {
             const newEv = payload.new as MatchEvent;
             if (newEv.is_void) return;
-            setEvents((prev) => [newEv, ...prev]);
+            // The realtime payload has no joined rows, so load the team and player names too.
+            void supabase
+                .from('match_events')
+                .select('*, team:teams(*), player:players(id, gamertag)')
+                .eq('id', newEv.id)
+                .maybeSingle()
+                .then(({ data }) => {
+                    const full = (data as MatchEvent | null) ?? newEv;
+                    setEvents((prev) => (prev.some((e) => e.id === full.id) ? prev : [full, ...prev]));
+                });
             },
         )
         .on(
