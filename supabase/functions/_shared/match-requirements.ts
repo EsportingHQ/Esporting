@@ -1,5 +1,5 @@
 // Rules a match must meet before it goes live or ends:
-//  * every team that has a squad for this game must have said who is playing
+//  * every team that has a roster for this game must have its roster confirmed for the match
 //  * a game other than football needs an MVP before the match can end
 // Returns an error message, or null when the match is good to go.
 // deno-lint-ignore no-explicit-any
@@ -30,7 +30,7 @@ export async function checkMatchRequirements(admin: any, matchId: string, stage:
       .eq('is_active', true)
     if ((count ?? 0) > 0 && !played.has(teamId)) {
       const { data: t } = await admin.from('teams').select('name').eq('id', teamId).single()
-      return `Select who is playing for ${t?.name ?? 'each team'} first (Who played).`
+      return `Confirm the rosters first (${t?.name ?? 'a team'} is not confirmed).`
     }
   }
 

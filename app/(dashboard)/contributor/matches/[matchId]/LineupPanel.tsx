@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 
 type Player = { id: string; gamertag: string };
 type TeamRef = { id: string; name: string };
+type NewPlayer = { gamertag: string };
 
 export type LineupGate = {
 	lineupReady: boolean;
@@ -21,7 +22,6 @@ type Props = {
 	status: string;
 	mvpRequired: boolean;
 	teams: TeamRef[];
-	initialLineups: { team_id: string; player_id: string }[];
 	initialMvpId: string | null;
 	onGateChange: (gate: LineupGate) => void;
 };
@@ -35,17 +35,13 @@ function computeGate(
 ): LineupGate {
 	const missing = teams.find((t) => (squads[t.id]?.length ?? 0) > 0 && (selected[t.id]?.length ?? 0) === 0);
 	const anyPlayed = teams.some((t) => (selected[t.id]?.length ?? 0) > 0);
-	const lineupReady = !missing;
 	const mvpReady = !mvpRequired || !anyPlayed || !!mvpId;
+	const confirmMsg = missing ? `Confirm the rosters first (${missing.name} is not confirmed).` : null;
 	return {
-		lineupReady,
+		lineupReady: !missing,
 		mvpReady,
-		startBlocker: missing ? `Select who is playing for ${missing.name} first (Who played).` : null,
-		endBlocker: missing
-			? `Select who played for ${missing.name} first (Who played).`
-			: !mvpReady
-				? 'Pick the match MVP before ending the match.'
-				: null,
+		startBlocker: confirmMsg,
+		endBlocker: confirmMsg ?? (!mvpReady ? 'Pick the match MVP before ending the match.' : null),
 	};
 }
 
@@ -56,75 +52,113 @@ export default function LineupPanel({
 	status,
 	mvpRequired,
 	teams,
-	initialLineups,
 	initialMvpId,
 	onGateChange,
 }: Props) {
 	const supabase = useMemo(() => createClient(), []);
 	const [squads, setSquads] = useState<Record<string, Player[]> | null>(null);
-	const [selected, setSelected] = useState<Record<string, string[]>>(() => {
-		const out: Record<string, string[]> = {};
-		for (const l of initialLineups) (out[l.team_id] ??= []).push(l.player_id);
-		return out;
-	});
+	const [selected, setSelected] = useState<Record<string, string[]>>({});
 	const [mvpId, setMvpId] = useState<string | null>(initialMvpId);
+	const [editing, setEditing] = useState(false);
+	const [removals, setRemovals] = useState<Record<string, string[]>>({});
+	const [additions, setAdditions] = useState<Record<string, NewPlayer[]>>({});
+	const [drafts, setDrafts] = useState<Record<string, string>>({});
 	const [busy, setBusy] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const locked = status === 'completed' || status === 'cancelled';
 	const teamKey = teams.map((t) => t.id).join(',');
 
-	// Load each team's squad for this competition and game
+	// Squads (the roster locked in at registration) and what is already confirmed for this match
+	async function loadAll(): Promise<{ squads: Record<string, Player[]>; selected: Record<string, string[]> }> {
+		const squadsOut: Record<string, Player[]> = {};
+		for (const teamId of teamKey ? teamKey.split(',') : []) {
+			const { data } = await supabase
+				.from('player_game_assignments')
+				.select('players(id, gamertag)')
+				.eq('comp_instance_id', compId)
+				.eq('game_title_id', gameId)
+				.eq('team_id', teamId)
+				.eq('is_active', true);
+			const rows = (data ?? []) as unknown as { players: Player | Player[] | null }[];
+			squadsOut[teamId] = rows
+				.map((r) => (Array.isArray(r.players) ? r.players[0] : r.players))
+				.filter((p): p is Player => !!p)
+				.sort((a, b) => a.gamertag.localeCompare(b.gamertag));
+		}
+		const { data: lineupRows } = await supabase
+			.from('match_lineups')
+			.select('team_id, player_id')
+			.eq('match_id', matchId);
+		const selectedOut: Record<string, string[]> = {};
+		for (const l of (lineupRows ?? []) as { team_id: string; player_id: string }[]) {
+			(selectedOut[l.team_id] ??= []).push(l.player_id);
+		}
+		return { squads: squadsOut, selected: selectedOut };
+	}
+
 	useEffect(() => {
 		let cancelled = false;
 		(async () => {
-			const out: Record<string, Player[]> = {};
-			for (const teamId of teamKey ? teamKey.split(',') : []) {
-				const { data } = await supabase
-					.from('player_game_assignments')
-					.select('players(id, gamertag)')
-					.eq('comp_instance_id', compId)
-					.eq('game_title_id', gameId)
-					.eq('team_id', teamId)
-					.eq('is_active', true);
-				const rows = (data ?? []) as unknown as { players: Player | Player[] | null }[];
-				out[teamId] = rows
-					.map((r) => (Array.isArray(r.players) ? r.players[0] : r.players))
-					.filter((p): p is Player => !!p)
-					.sort((a, b) => a.gamertag.localeCompare(b.gamertag));
-			}
+			const loaded = await loadAll();
 			if (cancelled) return;
-			setSquads(out);
-			onGateChange(computeGate(teams, out, selected, mvpId, mvpRequired));
+			setSquads(loaded.squads);
+			setSelected(loaded.selected);
+			onGateChange(computeGate(teams, loaded.squads, loaded.selected, mvpId, mvpRequired));
 		})();
 		return () => {
 			cancelled = true;
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [supabase, compId, gameId, teamKey]);
+	}, [supabase, compId, gameId, matchId, teamKey]);
 
-	async function toggle(teamId: string, playerId: string) {
-		if (locked || busy || !squads) return;
-		const current = selected[teamId] ?? [];
-		const next = current.includes(playerId) ? current.filter((id) => id !== playerId) : [...current, playerId];
+	async function refresh(nextMvp: string | null) {
+		const loaded = await loadAll();
+		setSquads(loaded.squads);
+		setSelected(loaded.selected);
+		// The database clears an MVP who is no longer on a confirmed roster
+		const stillIn = nextMvp ? Object.values(loaded.selected).some((ids) => ids.includes(nextMvp)) : false;
+		const mvp = stillIn ? nextMvp : null;
+		setMvpId(mvp);
+		onGateChange(computeGate(teams, loaded.squads, loaded.selected, mvp, mvpRequired));
+	}
+
+	async function confirmRosters() {
 		setBusy(true);
 		setError(null);
-		const { error: err } = await supabase.rpc('set_match_lineup', {
-			p_match: matchId,
-			p_team: teamId,
-			p_players: next,
-		});
-		setBusy(false);
+		const { error: err } = await supabase.rpc('confirm_match_roster', { p_match: matchId });
 		if (err) {
+			setBusy(false);
 			setError(err.message);
 			return;
 		}
-		const nextSel = { ...selected, [teamId]: next };
-		// An MVP who was taken out of the lineup is cleared by the database too
-		const stillIn = mvpId ? Object.values(nextSel).some((ids) => ids.includes(mvpId)) : false;
-		const nextMvp = stillIn ? mvpId : null;
-		setSelected(nextSel);
-		setMvpId(nextMvp);
-		onGateChange(computeGate(teams, squads, nextSel, nextMvp, mvpRequired));
+		await refresh(mvpId);
+		setEditing(false);
+		setBusy(false);
+	}
+
+	async function saveChangesAndConfirm() {
+		setBusy(true);
+		setError(null);
+		for (const team of teams) {
+			const out = removals[team.id] ?? [];
+			const add = (additions[team.id] ?? []).map((a) => ({ gamertag: a.gamertag }));
+			if (out.length === 0 && add.length === 0) continue;
+			const { error: err } = await supabase.rpc('change_match_roster', {
+				p_match: matchId,
+				p_team: team.id,
+				p_remove: out,
+				p_add: add,
+			});
+			if (err) {
+				setBusy(false);
+				setError(`${team.name}: ${err.message}`);
+				return;
+			}
+		}
+		setRemovals({});
+		setAdditions({});
+		setDrafts({});
+		await confirmRosters();
 	}
 
 	async function chooseMvp(playerId: string) {
@@ -145,67 +179,201 @@ export default function LineupPanel({
 		onGateChange(computeGate(teams, squads, selected, next, mvpRequired));
 	}
 
-	const played = teams.flatMap((t) =>
+	function toggleRemove(teamId: string, playerId: string) {
+		setRemovals((r) => {
+			const cur = r[teamId] ?? [];
+			return { ...r, [teamId]: cur.includes(playerId) ? cur.filter((x) => x !== playerId) : [...cur, playerId] };
+		});
+	}
+
+	function addDraft(teamId: string) {
+		const tag = (drafts[teamId] ?? '').trim();
+		if (!tag) return;
+		const exists =
+			(squads?.[teamId] ?? []).some((p) => p.gamertag.toLowerCase() === tag.toLowerCase()) ||
+			(additions[teamId] ?? []).some((a) => a.gamertag.toLowerCase() === tag.toLowerCase());
+		if (exists) {
+			setError(`${tag} is already on this roster.`);
+			return;
+		}
+		setError(null);
+		setAdditions((a) => ({ ...a, [teamId]: [...(a[teamId] ?? []), { gamertag: tag }] }));
+		setDrafts((d) => ({ ...d, [teamId]: '' }));
+	}
+
+	const everyTeamConfirmed =
+		squads !== null && teams.every((t) => (squads[t.id]?.length ?? 0) === 0 || (selected[t.id]?.length ?? 0) > 0);
+	const hasSquads = squads !== null && teams.some((t) => (squads[t.id]?.length ?? 0) > 0);
+
+	const confirmedPlayers = teams.flatMap((t) =>
 		(squads?.[t.id] ?? [])
 			.filter((p) => (selected[t.id] ?? []).includes(p.id))
 			.map((p) => ({ ...p, team: t.name })),
 	);
 
+	const pendingChanges =
+		Object.values(removals).some((r) => r.length > 0) || Object.values(additions).some((a) => a.length > 0);
+
 	return (
 		<section className="rounded-lg border border-border-line bg-bg-surface p-5">
 			<div className="mb-1 flex items-center justify-between gap-3">
-				<h3 className="font-semibold">Who played</h3>
+				<h3 className="font-semibold">Rosters</h3>
 				{locked ? <span className="text-xs text-text-muted">Locked, the match has ended</span> : null}
 			</div>
-			<p className="mb-4 text-xs text-text-muted">
-				Tick the players who are playing. Only they get this match in their form{mvpRequired ? ' and can be MVP' : ''}.
-				It must be done before the match goes live.
-			</p>
 
 			{squads === null ? (
-				<p className="text-sm text-text-muted">Loading squads...</p>
-			) : (
-				<div className="space-y-4">
+				<p className="text-sm text-text-muted">Loading rosters...</p>
+			) : !hasSquads ? (
+				<p className="text-sm text-text-muted">
+					No roster was registered for this game, so there is nothing to confirm.
+				</p>
+			) : editing && !locked ? (
+				<div className="space-y-5">
+					<p className="text-xs text-text-muted">
+						Tap a player to take them out. Add anyone new by gamertag, even if they are not in the system yet.
+						Then confirm.
+					</p>
 					{teams.map((team) => {
 						const squad = squads[team.id] ?? [];
+						const out = removals[team.id] ?? [];
+						const added = additions[team.id] ?? [];
 						return (
 							<div key={team.id}>
 								<p className="mb-2 text-sm font-semibold">{team.name}</p>
-								{squad.length === 0 ? (
-									<p className="text-xs text-text-muted">
-										No squad registered for this game, so nothing to select.
-									</p>
-								) : (
-									<div className="flex flex-wrap gap-2">
-										{squad.map((p) => {
-											const on = (selected[team.id] ?? []).includes(p.id);
-											return (
-												<button
-													key={p.id}
-													type="button"
-													onClick={() => toggle(team.id, p.id)}
-													disabled={locked || busy}
-													aria-pressed={on}
-													className={`min-h-10 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors disabled:opacity-60 ${
-														on
-															? 'border-green-500 bg-green-500/15 text-green-700 dark:text-green-300'
-															: 'border-border-line bg-bg-void text-text-muted hover:text-text-primary'
-													}`}
-												>
-													{on ? '✓ ' : ''}
-													{p.gamertag}
-												</button>
-											);
-										})}
-									</div>
-								)}
+								<div className="flex flex-wrap gap-2">
+									{squad.map((p) => {
+										const removing = out.includes(p.id);
+										return (
+											<button
+												key={p.id}
+												type="button"
+												onClick={() => toggleRemove(team.id, p.id)}
+												aria-pressed={removing}
+												className={`min-h-10 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${
+													removing
+														? 'border-red-500 bg-red-500/10 text-red-600 line-through dark:text-red-300'
+														: 'border-border-line bg-bg-void text-text-primary'
+												}`}
+											>
+												{p.gamertag}
+												{removing ? ' (out)' : ''}
+											</button>
+										);
+									})}
+									{added.map((a) => (
+										<button
+											key={a.gamertag}
+											type="button"
+											onClick={() =>
+												setAdditions((all) => ({
+													...all,
+													[team.id]: (all[team.id] ?? []).filter((x) => x.gamertag !== a.gamertag),
+												}))
+											}
+											className="min-h-10 rounded-lg border border-green-500 bg-green-500/10 px-3 py-2 text-sm font-semibold text-green-700 dark:text-green-300"
+											title="Tap to cancel this new player"
+										>
+											+ {a.gamertag} (new)
+										</button>
+									))}
+								</div>
+								<div className="mt-3 flex gap-2">
+									<input
+										value={drafts[team.id] ?? ''}
+										onChange={(e) => setDrafts((d) => ({ ...d, [team.id]: e.target.value }))}
+										onKeyDown={(e) => {
+											if (e.key === 'Enter') {
+												e.preventDefault();
+												addDraft(team.id);
+											}
+										}}
+										placeholder="New player gamertag"
+										className="min-h-10 flex-1 rounded-lg border border-border-line bg-bg-surface px-3 py-2 text-sm text-text-primary"
+									/>
+									<button
+										type="button"
+										onClick={() => addDraft(team.id)}
+										className="min-h-10 rounded-lg border border-border-line bg-bg-elevated px-4 py-2 text-sm font-semibold text-text-primary"
+									>
+										Add
+									</button>
+								</div>
 							</div>
 						);
 					})}
+					<div className="flex flex-wrap gap-2">
+						<button
+							type="button"
+							onClick={saveChangesAndConfirm}
+							disabled={busy}
+							className="min-h-11 rounded-lg bg-green-600 px-5 py-2 text-sm font-bold text-white disabled:opacity-50"
+						>
+							{pendingChanges ? 'Save changes and confirm rosters' : 'Confirm rosters'}
+						</button>
+						<button
+							type="button"
+							onClick={() => {
+								setEditing(false);
+								setRemovals({});
+								setAdditions({});
+								setDrafts({});
+							}}
+							disabled={busy}
+							className="min-h-11 rounded-lg border border-border-line px-5 py-2 text-sm font-semibold text-text-primary"
+						>
+							Cancel
+						</button>
+					</div>
+				</div>
+			) : !everyTeamConfirmed ? (
+				<div className="space-y-4">
+					<p className="text-sm">Are there any roster changes before this match?</p>
+					<div className="flex flex-wrap gap-2">
+						<button
+							type="button"
+							onClick={confirmRosters}
+							disabled={busy || locked}
+							className="min-h-11 rounded-lg bg-green-600 px-5 py-2 text-sm font-bold text-white disabled:opacity-50"
+						>
+							No changes, confirm rosters
+						</button>
+						<button
+							type="button"
+							onClick={() => setEditing(true)}
+							disabled={busy || locked}
+							className="min-h-11 rounded-lg border border-border-line px-5 py-2 text-sm font-semibold text-text-primary disabled:opacity-50"
+						>
+							Yes, roster changes
+						</button>
+					</div>
+				</div>
+			) : (
+				<div className="space-y-4">
+					<p className="text-xs text-green-600 dark:text-green-400">Rosters confirmed for this match.</p>
+					{teams.map((team) => (
+						<div key={team.id}>
+							<p className="mb-1 text-sm font-semibold">{team.name}</p>
+							<p className="text-sm text-text-muted">
+								{(squads[team.id] ?? [])
+									.filter((p) => (selected[team.id] ?? []).includes(p.id))
+									.map((p) => p.gamertag)
+									.join(', ') || 'No roster registered'}
+							</p>
+						</div>
+					))}
+					{!locked ? (
+						<button
+							type="button"
+							onClick={() => setEditing(true)}
+							className="text-sm font-semibold text-accent-primary"
+						>
+							Roster changes
+						</button>
+					) : null}
 				</div>
 			)}
 
-			{mvpRequired && squads !== null ? (
+			{mvpRequired && squads !== null && hasSquads ? (
 				<div className="mt-5 border-t border-border-line pt-4">
 					<label className="mb-2 block text-sm font-semibold" htmlFor="match-mvp">
 						Match MVP
@@ -214,17 +382,19 @@ export default function LineupPanel({
 						id="match-mvp"
 						value={mvpId ?? ''}
 						onChange={(e) => chooseMvp(e.target.value)}
-						disabled={locked || busy || played.length === 0}
+						disabled={locked || busy || confirmedPlayers.length === 0}
 						className="w-full rounded-lg border border-border-line bg-bg-surface px-3 py-2 text-sm text-text-primary disabled:opacity-60"
 					>
-						<option value="">{played.length === 0 ? 'Select who played first' : 'Choose the MVP'}</option>
-						{played.map((p) => (
+						<option value="">
+							{confirmedPlayers.length === 0 ? 'Confirm rosters first' : 'Choose the MVP'}
+						</option>
+						{confirmedPlayers.map((p) => (
 							<option key={p.id} value={p.id}>
 								{p.gamertag} ({p.team})
 							</option>
 						))}
 					</select>
-					<p className="mt-1 text-xs text-text-muted">Required before the match can be ended.</p>
+					<p className="mt-1 text-xs text-text-muted">Pick this at the end of the match. Required before it can be ended.</p>
 				</div>
 			) : null}
 

@@ -295,8 +295,8 @@ export default function MatchRoomClient({
 	const [gate, setGate] = useState<LineupGate>({
 		lineupReady: false,
 		mvpReady: false,
-		startBlocker: 'Loading who played...',
-		endBlocker: 'Loading who played...',
+		startBlocker: 'Loading rosters...',
+		endBlocker: 'Loading rosters...',
 	});
 	const [brRows, setBrRows] = useState(
 		participants.map((participant, index) => ({
@@ -714,7 +714,6 @@ export default function MatchRoomClient({
 						status={match.status}
 						mvpRequired={!isFootball}
 						teams={lineupTeams}
-						initialLineups={lineups.flatMap((l) => (l.players ? [{ team_id: l.team_id, player_id: l.players.id }] : []))}
 						initialMvpId={match.mvp_player_id ?? null}
 						onGateChange={setGate}
 					/>
