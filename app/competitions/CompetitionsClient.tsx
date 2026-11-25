@@ -8,7 +8,7 @@ import { FavoriteStar } from '@/components/broadcast/FavoriteStar';
 import { StatusDot } from '@/components/broadcast/StatusDot';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { GameIcon } from '@/components/ui/GameIcon';
-import { GAME_PROFILES } from '@/lib/games';
+import { GAME_PROFILES, shortGameName } from '@/lib/games';
 import { Trophy, Calendar, Users, Filter, CheckCircle2, PlayCircle, PlusCircle, Sparkles } from 'lucide-react';
 
 export interface Competition {
@@ -21,6 +21,7 @@ export interface Competition {
   prizePool: string;
   startDate: string;
   teamCount: number;
+  logoUrl?: string | null;
   liveMatchesCount?: number;
 }
 
@@ -212,7 +213,16 @@ export default function CompetitionsPage({
                 </div>
 
                 {/* Title */}
-                <Link href={`/competitions/${comp.slug}`}>
+                <Link href={`/competitions/${comp.slug}`} className="flex items-center gap-3">
+                  {comp.logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={comp.logoUrl}
+                      alt=""
+                      loading="lazy"
+                      className="w-11 h-11 rounded-lg object-cover bg-text-primary/[0.04] border border-text-primary/[0.08] shrink-0"
+                    />
+                  ) : null}
                   <h2 className="font-display font-bold text-xl text-text-primary group-hover:text-accent-glow transition-colors leading-snug">
                     {comp.name}
                   </h2>
@@ -225,7 +235,7 @@ export default function CompetitionsPage({
                       key={title}
                       className="px-2.5 py-0.5 bg-text-primary/[0.04] border border-text-primary/[0.08] text-[10px] font-display font-semibold text-text-muted tracking-wider uppercase rounded-full"
                     >
-                      {title}
+                      {shortGameName(title)}
                     </span>
                   ))}
                 </div>

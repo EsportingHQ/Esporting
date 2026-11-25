@@ -218,6 +218,7 @@ export function useLiveFeed(day: Date) {
       .select(MATCH_QUERY)
       .in('status', ['live', 'scheduled', 'delayed', 'completed', 'walkover'])
       .is('deleted_at', null)
+      .or('match_format.eq.battle_royale,and(team_home_id.not.is.null,team_away_id.not.is.null)')
       .gte('scheduled_at', start.toISOString())
       .lt('scheduled_at', end.toISOString())
       .order('scheduled_at', { ascending: true })
@@ -266,6 +267,7 @@ export function useLiveFeed(day: Date) {
       .select('scheduled_at')
       .in('status', ['live', 'scheduled', 'delayed', 'completed', 'walkover'])
       .is('deleted_at', null)
+      .or('match_format.eq.battle_royale,and(team_home_id.not.is.null,team_away_id.not.is.null)')
       .gte('scheduled_at', new Date(Date.now() - 45 * 86400000).toISOString())
       .lt('scheduled_at', new Date(Date.now() + 120 * 86400000).toISOString())
       .limit(2000);

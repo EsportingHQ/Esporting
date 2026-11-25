@@ -12,6 +12,7 @@ export interface CompetitionDetail {
     status: string;
     prize_pool: string | null;
     description: string | null;
+    banner_url: string | null;
     starts_at: string | null;
     ends_at: string | null;
     seriesName: string;
@@ -93,6 +94,7 @@ function mapTimeLabel(status: string, scheduledAt: string | null): string {
     if (status === 'scheduled' && scheduledAt) {
         return new Date(scheduledAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     }
+    if (status === 'scheduled') return 'Date to be announced';
     return status;
 }
 
@@ -151,7 +153,7 @@ export function useCompetitionDetail(slug: string) {
         const { data: instanceRaw, error: instanceErr } = await supabase
             .from('comp_instances')
             .select(`
-                id, name, slug, format, status, prize_pool, description, starts_at, ends_at,
+                id, name, slug, format, status, prize_pool, description, banner_url, starts_at, ends_at,
                 comp_series(name),
                 organiser_id
             `)
@@ -185,6 +187,7 @@ export function useCompetitionDetail(slug: string) {
         description: instanceRaw.description,
         starts_at: instanceRaw.starts_at,
         ends_at: instanceRaw.ends_at,
+        banner_url: instanceRaw.banner_url ?? null,
         seriesName,
         organiserName: orgProfile?.org_name ?? '',
         organiserTier: orgProfile?.tier ?? null,

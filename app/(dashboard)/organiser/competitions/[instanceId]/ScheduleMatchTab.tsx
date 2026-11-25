@@ -204,16 +204,6 @@ export default function ScheduleMatchTab({
 
 			if (insertError) throw insertError;
 
-			if (matchFormat === 'head_to_head') {
-				const count = bestOf > 1 ? bestOf : 1;
-				const mapSlots = Array.from({ length: count }, (_, i) => ({
-					match_id: data.id,
-					map_number: i + 1,
-					status: 'pending',
-				}));
-				await supabase.from('match_maps').insert(mapSlots);
-			}
-
 			setMatches((prev) => [...prev, data as unknown as Match]);
 			try {
 				await applyReporter(data.id, reporter);

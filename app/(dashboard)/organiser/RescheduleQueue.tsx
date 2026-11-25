@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { AlertTriangle } from 'lucide-react';
+import MatchRemoveActions from './MatchRemoveActions';
 import MatchTimeEditor from './competitions/[instanceId]/MatchTimeEditor';
 import type { RescheduleItem } from './rescheduleQueue';
 
@@ -44,6 +45,11 @@ export default function RescheduleQueue({ items, showCompetition = true }: { ite
 						</p>
 						{m.reason ? <p className="text-text-primary">Reason: {m.reason}</p> : null}
 						<MatchTimeEditor matchId={m.id} scheduledAt={null} disabled={false} status="cancelled" />
+						<MatchRemoveActions
+							matchId={m.id}
+							label={`${m.home} vs ${m.away}`}
+							walkover={{ homeId: m.homeId, homeName: m.home, awayId: m.awayId, awayName: m.away }}
+						/>
 						{showCompetition ? (
 							<Link
 								href={`/organiser/competitions/${m.competitionId}`}

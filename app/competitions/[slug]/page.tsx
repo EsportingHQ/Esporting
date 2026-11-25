@@ -98,7 +98,16 @@ export default function CompetitionDetailPage({
 			<main className="max-w-7xl w-full mx-auto px-4 py-8 flex-1 space-y-6">
 				{/* Banner Card / Profile header */}
 				<div className="bg-bg-surface border border-border-line rounded p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
-					<div className="space-y-2">
+					<div className="flex items-start gap-4">
+						{competition.banner_url ? (
+							// eslint-disable-next-line @next/next/no-img-element
+							<img
+								src={competition.banner_url}
+								alt=""
+								className="w-16 h-16 md:w-20 md:h-20 rounded-lg object-cover border border-border-line bg-bg-void shrink-0"
+							/>
+						) : null}
+						<div className="space-y-2 min-w-0">
 						<div className="flex items-center gap-2">
 							<span className="text-[10px] font-data text-accent-readout font-bold tracking-wider uppercase">
 								{isBRFormat
@@ -122,6 +131,7 @@ export default function CompetitionDetailPage({
 							{competition.description ??
 								'Live competition data from EsportingHQ.'}
 						</p>
+						</div>
 					</div>
 
 					<div className="grid grid-cols-2 gap-4 border-l border-border-line pl-6 shrink-0 text-xs font-data">

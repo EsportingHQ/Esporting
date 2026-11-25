@@ -1,5 +1,7 @@
 'use client';
 
+import RosterHistory from '@/components/RosterHistory';
+
 import { useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -399,6 +401,12 @@ export default function LineupPanel({
 			) : null}
 
 			{error ? <p className="mt-3 text-sm text-red-500">{error}</p> : null}
+
+			{hasSquads ? (
+				<div className="mt-5 border-t border-border-line pt-4">
+					<RosterHistory matchId={matchId} title="Changes for this match" />
+				</div>
+			) : null}
 		</section>
 	);
 }

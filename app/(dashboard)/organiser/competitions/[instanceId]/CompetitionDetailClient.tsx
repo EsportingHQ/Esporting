@@ -18,6 +18,8 @@ import AddStage from './AddStage';
 import MatchReporterRow from './MatchReporterRow';
 import MatchTimeEditor from './MatchTimeEditor';
 import RescheduleQueue from '../../RescheduleQueue';
+import MatchRemoveActions from '../../MatchRemoveActions';
+import RosterHistory from '@/components/RosterHistory';
 import type { RescheduleItem } from '../../rescheduleQueue';
 import BulkImportPanel from './BulkImportPanel';
 import LogoUpload from '@/components/ui/LogoUpload';
@@ -643,6 +645,7 @@ export default function CompetitionDetailClient({
 							</div>
 						))}
 					</div>
+					<RosterHistory instanceId={instance.id} />
 				</div>
 			)}
 
@@ -726,6 +729,16 @@ export default function CompetitionDetailClient({
 							<div className="border-t border-border-line pt-2">
 								<MatchReporterRow match={m} contributors={contributors} />
 							</div>
+							{['scheduled', 'delayed', 'cancelled'].includes(m.status) ? (
+								<MatchRemoveActions
+									matchId={m.id}
+									label={
+										m.match_format === 'head_to_head'
+											? `${getTeamName(m.home_team)} vs ${getTeamName(m.away_team)}`
+											: 'this Battle Royale match'
+									}
+								/>
+							) : null}
 							<p className="text-[10px] text-text-muted">
 								Times must be at least 8 hours before kickoff.
 							</p>

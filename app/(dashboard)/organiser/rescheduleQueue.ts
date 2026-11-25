@@ -6,11 +6,14 @@ export type RescheduleItem = {
 	competitionName: string;
 	home: string;
 	away: string;
+	homeId: string | null;
+	awayId: string | null;
 	game: string;
 	stage: string | null;
 	round: number | null;
 	originalAt: string | null;
 	reason: string | null;
+	carryRequested: boolean;
 };
 
 type One<T> = T | T[] | null;
@@ -22,7 +25,7 @@ export async function loadRescheduleQueue(supabase: SupabaseClient, compIds: str
 	const { data } = await supabase
 		.from('matches')
 		.select(
-			`id, scheduled_at, comp_instance_id, bracket_round,
+			`id, scheduled_at, comp_instance_id, bracket_round, team_home_id, team_away_id, cancel_carry_over,
 			 game_titles(name), comp_instances(name), comp_stages(name),
 			 home_team:teams!matches_team_home_id_fkey(name),
 			 away_team:teams!matches_team_away_id_fkey(name)`,
@@ -37,6 +40,9 @@ export async function loadRescheduleQueue(supabase: SupabaseClient, compIds: str
 		scheduled_at: string | null;
 		comp_instance_id: string;
 		bracket_round: number | null;
+		team_home_id: string | null;
+		team_away_id: string | null;
+		cancel_carry_over: boolean | null;
 		game_titles: One<{ name: string }>;
 		comp_instances: One<{ name: string }>;
 		comp_stages: One<{ name: string }>;
@@ -63,6 +69,9 @@ export async function loadRescheduleQueue(supabase: SupabaseClient, compIds: str
 		competitionName: one(r.comp_instances)?.name ?? 'Competition',
 		home: one(r.home_team)?.name ?? 'TBD',
 		away: one(r.away_team)?.name ?? 'TBD',
+		homeId: r.team_home_id,
+		awayId: r.team_away_id,
+		carryRequested: r.cancel_carry_over === true,
 		game: one(r.game_titles)?.name ?? '',
 		stage: one(r.comp_stages)?.name ?? null,
 		round: r.bracket_round,

@@ -1,5 +1,7 @@
 'use client';
 
+import { shortGameName } from '@/lib/games';
+
 import { useState } from 'react';
 import LogoUpload from '@/components/ui/LogoUpload';
 import { useRouter } from 'next/navigation';
@@ -369,7 +371,7 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
                       : 'bg-bg-void border-border-line text-text-muted hover:text-text-primary'
                   }`}
                 >
-                  {g.name}
+                  {shortGameName(g.name)}
                 </button>
               );
             })}

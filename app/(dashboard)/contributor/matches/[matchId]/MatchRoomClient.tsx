@@ -3,6 +3,7 @@
 import { ArrowLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import CancelFlow from './CancelFlow';
 import SeriesPanel, { type SetupChange } from './SeriesPanel';
 import LineupPanel, { type LineupGate } from './LineupPanel';
 
@@ -280,7 +281,6 @@ export default function MatchRoomClient({
 	const [message, setMessage] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [pending, setPending] = useState<string | null>(null);
-	const [statusReason, setStatusReason] = useState('');
 	const [eventType, setEventType] = useState('goal');
 	const [eventTeamId, setEventTeamId] = useState(match.team_home_id ?? '');
 	const [eventPlayerId, setEventPlayerId] = useState('');
@@ -496,26 +496,57 @@ export default function MatchRoomClient({
 		}
 	}
 
-	async function updateStatus(nextStatus: Status) {
+	async function updateStatus(nextStatus: Status, reason?: string) {
 		const blocker =
 			nextStatus === 'live' ? gate.startBlocker : nextStatus === 'completed' ? gate.endBlocker : null;
 		if (blocker) {
 			setError(blocker);
 			return;
 		}
-		if (nextStatus === 'cancelled' && !statusReason.trim()) {
-			setError('Add a reason before cancelling, so the organiser knows why and can reschedule.');
-			return;
-		}
 		await runAction(`status-${nextStatus}`, async () => {
 			await edgeCall('trigger-match-status', {
 				match_id: match.id,
 				new_status: nextStatus,
-				reason: statusReason || null,
+				reason: reason || null,
 			});
-			setStatusReason('');
 		});
 	}
+
+	// Pop-up flows: these throw so the pop-up can show the error and stay open.
+	async function delayMatch(reason: string) {
+		await edgeCall('trigger-match-status', { match_id: match.id, new_status: 'delayed', reason: reason || null });
+	}
+
+	async function cancelMatch(reason: string, carryOver: boolean | null) {
+		await edgeCall('trigger-match-status', { match_id: match.id, new_status: 'cancelled', reason });
+		if (carryOver !== null) {
+			const { error: carryError } = await supabase.rpc('set_cancel_carry_over', {
+				p_match: match.id,
+				p_carry: carryOver,
+			});
+			if (carryError) throw new Error(carryError.message);
+		}
+		setMatch((current) => ({ ...current, status: 'cancelled' }));
+		setMessage('Cancelled. The organiser will see it under Needs rescheduling.');
+	}
+
+	async function awardWalkover(winnerId: string, reason: string) {
+		const { error: walkError } = await supabase.rpc('declare_walkover', {
+			p_match: match.id,
+			p_winner: winnerId,
+			p_reason: reason,
+		});
+		if (walkError) throw new Error(walkError.message);
+		setMatch((current) => ({ ...current, status: 'walkover', winner_team_id: winnerId }));
+		setMessage('Walkover recorded.');
+	}
+
+	// Has anything been recorded yet? Decides whether the carry-over question is asked.
+	const hasPlay =
+		events.some((e) => !e.is_void && e.event_type !== 'map_selected' && e.event_type !== 'mode_selected') ||
+		maps.some((m) => m.status === 'completed') ||
+		(score?.home_current_score ?? 0) > 0 ||
+		(score?.away_current_score ?? 0) > 0;
 
 	async function postFootballEvent() {
 		await runAction('event', async () => {
@@ -1019,12 +1050,6 @@ export default function MatchRoomClient({
 				<div className="space-y-6">
 					<section className="rounded-lg border border-border-line bg-bg-surface p-5">
 						<h3 className="mb-4 font-semibold">Status Controls</h3>
-						<input
-							value={statusReason}
-							onChange={(event) => setStatusReason(event.target.value)}
-							className="mb-3 w-full rounded-lg border border-border-line bg-bg-surface px-3 py-2 text-sm text-text-primary"
-							placeholder="Reason, if needed"
-						/>
 						{(match.status === 'scheduled' || match.status === 'delayed'
 							? gate.startBlocker
 							: match.status === 'live'
@@ -1035,7 +1060,7 @@ export default function MatchRoomClient({
 							</p>
 						) : null}
 						<div className="grid gap-2">
-							{VALID_TRANSITIONS[match.status]?.map((action) => (
+							{VALID_TRANSITIONS[match.status]?.filter((action) => action.status === 'live' || action.status === 'completed').map((action) => (
 								<button
 									key={action.status}
 									type="button"
@@ -1052,11 +1077,22 @@ export default function MatchRoomClient({
 												? (gate.endBlocker ?? undefined)
 												: undefined
 									}
-									className="rounded-lg bg-bg-elevated px-4 py-2 text-left text-sm font-semibold text-text-primary hover:bg-bg-elevated disabled:opacity-50"
+									className="rounded-lg bg-accent-primary px-4 py-2 text-left text-sm font-semibold text-white disabled:opacity-50"
 								>
 									{action.label}
 								</button>
 							))}
+							{match.status === 'scheduled' || match.status === 'delayed' || match.status === 'live' ? (
+								<CancelFlow
+									status={match.status}
+									home={match.team_home_id ? { id: match.team_home_id, name: teamName(match.home_team) } : null}
+									away={match.team_away_id ? { id: match.team_away_id, name: teamName(match.away_team) } : null}
+									hasPlay={hasPlay}
+									onDelay={delayMatch}
+									onCancel={cancelMatch}
+									onWalkover={awardWalkover}
+								/>
+							) : null}
 							{match.status === 'cancelled' ? (
 								<p className="text-xs text-text-muted">
 									Cancelled. The organiser will see this under Needs rescheduling and set a new date.

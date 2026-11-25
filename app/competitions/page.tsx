@@ -29,6 +29,7 @@ type Row = {
   status: Competition['status'];
   prize_pool: string | null;
   starts_at: string | null;
+  banner_url: string | null;
   comp_game_titles: { game_titles: { name: string } | { name: string }[] | null }[] | null;
   comp_registrations: { id: string }[] | null;
   matches: { status: string }[] | null;
@@ -43,7 +44,7 @@ export default async function CompetitionsPage() {
   const { data } = await supabase
     .from('comp_instances')
     .select(
-      `id, name, slug, format, status, prize_pool, starts_at,
+      `id, name, slug, format, status, prize_pool, starts_at, banner_url,
        comp_game_titles(game_titles(name)),
        comp_registrations(id),
        matches(status)`,
@@ -63,6 +64,7 @@ export default async function CompetitionsPage() {
       return t ? (Array.isArray(t) ? t : [t]).map((x) => x.name) : [];
     }),
     prizePool: c.prize_pool ?? '',
+    logoUrl: c.banner_url,
     startDate: c.starts_at
       ? new Date(c.starts_at).toLocaleDateString('en-NG', { year: 'numeric', month: 'long', day: 'numeric' })
       : 'Date to be announced',

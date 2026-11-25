@@ -60,3 +60,21 @@ export const GAME_PROFILES: GameProfile[] = [
     matches: (t) => t.includes('pubg'),
   },
 ];
+
+/**
+ * The short name used in game filters, for any game title in the database.
+ * 'Mobile Legends: Bang Bang' -> 'MLBB', 'Free Fire Battle Royale' -> 'FREE FIRE', 'FC 26' -> 'EAFC 26'.
+ * CODM keeps its mode ('CODM MP' / 'CODM BR') because one competition can run both.
+ */
+export function shortGameName(title: string): string {
+  const t = title.toLowerCase();
+  if (t.includes('codm') || t.includes('call of duty')) {
+    if (t.includes('battle royale') || /\bbr\b/.test(t)) return 'CODM BR';
+    if (t.includes('multiplayer') || /\bmp\b/.test(t)) return 'CODM MP';
+    return 'CODM';
+  }
+  const m = /\bfc\s?(\d{2})\b/.exec(t);
+  if (m) return `EAFC ${m[1]}`;
+  const profile = GAME_PROFILES.find((g) => g.id !== 'all' && g.matches?.(t));
+  return profile ? profile.shortName : title;
+}
