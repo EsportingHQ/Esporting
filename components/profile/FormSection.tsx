@@ -69,6 +69,11 @@ export default function FormSection({ entries }: { entries: FormEntry[] }) {
                   <p className="truncate font-semibold text-text-primary">
                     {e.teamName} <span className="font-data">{e.scoreFor} - {e.scoreAgainst}</span> {e.opponentName}
                   </p>
+                  {e.isSeries && e.goalsFor !== undefined ? (
+                    <p className="text-[11px] text-text-muted">
+                      Goals: {e.goalsFor} - {e.goalsAgainst}
+                    </p>
+                  ) : null}
                   <p className="truncate text-[11px] text-text-muted">
                     {[e.gameName, e.competitionName].filter(Boolean).join(' · ')}
                     {e.playedAt ? ` · ${new Date(e.playedAt).toLocaleDateString()}` : ''}

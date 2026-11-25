@@ -139,6 +139,13 @@ export function TeamDetailClient({ slug }: { slug: string }) {
 								['DRAWN', record.drawn],
 								['LOST', record.lost],
 								['WIN RATE', `${record.winRate}%`],
+								...(record.hasGoals
+									? [
+											['GOALS FOR', record.goalsFor],
+											['GOALS AGAINST', record.goalsAgainst],
+											['GOAL DIFF', record.goalsFor - record.goalsAgainst],
+										]
+									: []),
 							].map(([label, value]) => (
 								<div key={label} className="bg-bg-surface border border-border-line p-3 rounded text-center">
 									<span className="block text-[9px] text-text-muted font-display font-bold uppercase tracking-wider mb-1">

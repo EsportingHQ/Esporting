@@ -16,6 +16,10 @@ export interface FormEntry {
   competitionName: string;
   competitionSlug: string | null;
   playedAt: string | null;
+  // Football only: real goals scored and conceded across the whole match (every game of a series)
+  goalsFor?: number;
+  goalsAgainst?: number;
+  isSeries: boolean;
   // Set on player pages: this player was the match MVP
   isMvp?: boolean;
 }
@@ -39,7 +43,7 @@ export interface RawFormMatch {
   comp_instance_id: string | null;
   home_team: Maybe<TeamRef>;
   away_team: Maybe<TeamRef>;
-  game_titles: Maybe<{ name: string }>;
+  game_titles: Maybe<{ name: string; game_types?: Maybe<{ slug: string }> }>;
   comp_instances: Maybe<{ name: string; slug: string }>;
   match_scores: Maybe<{ home_current_score: number; away_current_score: number }>;
 }
@@ -49,7 +53,7 @@ export const FORM_MATCH_SELECT = `
   home_maps_won, away_maps_won, game_title_id, comp_instance_id,
   home_team:teams!matches_team_home_id_fkey(id, name, slug),
   away_team:teams!matches_team_away_id_fkey(id, name, slug),
-  game_titles(name),
+  game_titles(name, game_types(slug)),
   comp_instances(name, slug),
   match_scores(home_current_score, away_current_score)
 `;
@@ -76,6 +80,11 @@ export function toFormEntry(m: RawFormMatch, teamId: string): FormEntry | null {
   const homeScore = series ? (m.home_maps_won ?? 0) : (scores?.home_current_score ?? 0);
   const awayScore = series ? (m.away_maps_won ?? 0) : (scores?.away_current_score ?? 0);
 
+  // Football goal stats always use the real goals, never the games-won series score
+  const isFootball = one(one(m.game_titles)?.game_types)?.slug === 'football';
+  const homeGoals = scores?.home_current_score ?? 0;
+  const awayGoals = scores?.away_current_score ?? 0;
+
   const result: FormResult = m.winner_team_id === teamId ? 'W' : m.winner_team_id ? 'L' : 'D';
 
   return {
@@ -91,6 +100,10 @@ export function toFormEntry(m: RawFormMatch, teamId: string): FormEntry | null {
     competitionName: one(m.comp_instances)?.name ?? '',
     competitionSlug: one(m.comp_instances)?.slug ?? null,
     playedAt: m.ended_at ?? m.scheduled_at,
+    isSeries: series,
+    ...(isFootball
+      ? { goalsFor: isHome ? homeGoals : awayGoals, goalsAgainst: isHome ? awayGoals : homeGoals }
+      : {}),
   };
 }
 
@@ -103,7 +116,13 @@ export function recordOf(entries: FormEntry[]) {
   const won = entries.filter((e) => e.result === 'W').length;
   const drawn = entries.filter((e) => e.result === 'D').length;
   const lost = entries.filter((e) => e.result === 'L').length;
+  const withGoals = entries.filter((e) => e.goalsFor !== undefined);
+  const goalsFor = withGoals.reduce((n, e) => n + (e.goalsFor ?? 0), 0);
+  const goalsAgainst = withGoals.reduce((n, e) => n + (e.goalsAgainst ?? 0), 0);
   return {
+    hasGoals: withGoals.length > 0,
+    goalsFor,
+    goalsAgainst,
     played: entries.length,
     won,
     drawn,

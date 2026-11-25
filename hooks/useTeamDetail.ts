@@ -42,7 +42,7 @@ export function useTeamDetail(slug: string) {
   const [roster, setRoster] = useState<TeamPlayer[]>([]);
   const [activeComps, setActiveComps] = useState<TeamCompetition[]>([]);
   const [form, setForm] = useState<FormEntry[]>([]);
-  const [record, setRecord] = useState({ played: 0, won: 0, drawn: 0, lost: 0, winRate: 0 });
+  const [record, setRecord] = useState({ played: 0, won: 0, drawn: 0, lost: 0, winRate: 0, hasGoals: false, goalsFor: 0, goalsAgainst: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState<Error | null>(null);
