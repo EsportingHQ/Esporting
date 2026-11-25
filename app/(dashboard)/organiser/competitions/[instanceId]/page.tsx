@@ -1,3 +1,4 @@
+import { loadRescheduleQueue } from '../../rescheduleQueue';
 import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { redirect, notFound } from 'next/navigation';
@@ -124,6 +125,7 @@ export default async function OrganiserCompetitionDetailPage({
 			allTeams={allTeams ?? []}
 			matches={matches ?? []}
 			contributors={(contributors ?? []) as { id: string; name: string }[]}
+			rescheduleItems={await loadRescheduleQueue(supabase, [instanceId])}
 		/>
 	);
 }

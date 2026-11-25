@@ -43,6 +43,8 @@ function roundName(round: number, total: number): string {
 
 function when(m: BracketMatch): string {
   if (m.status === 'live') return 'LIVE';
+  if (m.status === 'cancelled') return 'CANCELLED';
+  if (m.status === 'delayed') return 'DELAYED';
   if (m.status === 'completed' || m.status === 'walkover') return m.football ? 'FT' : 'ENDED';
   if (!m.scheduled_at) return 'TBD';
   const d = new Date(m.scheduled_at);
@@ -93,11 +95,25 @@ function MatchBox({ m, slug }: { m: BracketMatch; slug: string }) {
   const body = (
     <div
       className={`w-52 rounded-xl border bg-bg-surface overflow-hidden ${
-        m.status === 'live' ? 'border-accent-primary shadow-[0_0_14px_rgba(255,31,109,0.25)]' : 'border-text-primary/[0.1]'
+        m.status === 'live'
+          ? 'border-accent-primary shadow-[0_0_14px_rgba(255,31,109,0.25)]'
+          : m.status === 'cancelled'
+            ? 'border-amber-500/60 opacity-80'
+            : 'border-text-primary/[0.1]'
       }`}
     >
       <div className="flex items-center justify-between px-2.5 pt-1.5 text-[9px] font-display font-bold tracking-wider">
-        <span className={m.status === 'live' ? 'text-accent-primary animate-pulse' : done ? 'text-accent-cyan' : 'text-text-muted'}>
+        <span
+          className={
+            m.status === 'live'
+              ? 'text-accent-primary animate-pulse'
+              : done
+                ? 'text-accent-cyan'
+                : m.status === 'cancelled' || m.status === 'delayed'
+                  ? 'text-amber-600 dark:text-amber-400'
+                  : 'text-text-muted'
+          }
+        >
           {when(m)}
         </span>
         {m.best_of > 1 && <span className="text-text-muted">BEST OF {m.best_of}</span>}
@@ -105,6 +121,11 @@ function MatchBox({ m, slug }: { m: BracketMatch; slug: string }) {
       <TeamRow team={m.home} score={started ? m.scoreHome : null} won={hWon} lost={aWon} />
       <div className="h-px bg-text-primary/[0.06]" />
       <TeamRow team={m.away} score={started ? m.scoreAway : null} won={aWon} lost={hWon} />
+      {m.status === 'cancelled' && (
+        <p className="border-t border-text-primary/[0.06] px-2.5 py-1 text-[9px] font-semibold text-amber-600 dark:text-amber-400">
+          Cancelled, to be rescheduled
+        </p>
+      )}
     </div>
   );
   if (m.home && m.away) {

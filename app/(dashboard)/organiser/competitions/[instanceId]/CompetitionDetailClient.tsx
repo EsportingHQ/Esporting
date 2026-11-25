@@ -17,6 +17,8 @@ import StageFixtures from './StageFixtures';
 import AddStage from './AddStage';
 import MatchReporterRow from './MatchReporterRow';
 import MatchTimeEditor from './MatchTimeEditor';
+import RescheduleQueue from '../../RescheduleQueue';
+import type { RescheduleItem } from '../../rescheduleQueue';
 import BulkImportPanel from './BulkImportPanel';
 import LogoUpload from '@/components/ui/LogoUpload';
 
@@ -92,6 +94,7 @@ type Props = {
 	allTeams: TeamOption[];
 	matches: Match[];
 	contributors: { id: string; name: string }[];
+	rescheduleItems: RescheduleItem[];
 };
 
 const TAB_LABELS = {
@@ -109,6 +112,7 @@ export default function CompetitionDetailClient({
 	allTeams,
 	matches,
 	contributors,
+	rescheduleItems,
 }: Props) {
 	const supabase = createClient();
 
@@ -312,6 +316,7 @@ export default function CompetitionDetailClient({
 
 	return (
 		<div className="max-w-4xl space-y-6 font-body">
+			<RescheduleQueue items={rescheduleItems} showCompetition={false} />
 			{/* Header Panel */}
 			<div className="bg-bg-surface border border-border-line rounded p-6 space-y-4">
 				<LogoUpload
@@ -715,7 +720,8 @@ export default function CompetitionDetailClient({
 							<MatchTimeEditor
 								matchId={m.id}
 								scheduledAt={m.scheduled_at}
-								disabled={m.status !== 'scheduled'}
+								status={m.status}
+								disabled={!['scheduled', 'cancelled', 'delayed'].includes(m.status)}
 							/>
 							<div className="border-t border-border-line pt-2">
 								<MatchReporterRow match={m} contributors={contributors} />

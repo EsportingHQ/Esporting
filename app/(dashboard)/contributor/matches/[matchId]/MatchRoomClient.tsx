@@ -503,6 +503,10 @@ export default function MatchRoomClient({
 			setError(blocker);
 			return;
 		}
+		if (nextStatus === 'cancelled' && !statusReason.trim()) {
+			setError('Add a reason before cancelling, so the organiser knows why and can reschedule.');
+			return;
+		}
 		await runAction(`status-${nextStatus}`, async () => {
 			await edgeCall('trigger-match-status', {
 				match_id: match.id,
@@ -1053,6 +1057,11 @@ export default function MatchRoomClient({
 									{action.label}
 								</button>
 							))}
+							{match.status === 'cancelled' ? (
+								<p className="text-xs text-text-muted">
+									Cancelled. The organiser will see this under Needs rescheduling and set a new date.
+								</p>
+							) : null}
 							{VALID_TRANSITIONS[match.status]?.length === 0 ? (
 								<p className="rounded-lg bg-bg-surface p-4 text-sm text-text-muted">
 									This match is in a terminal state.

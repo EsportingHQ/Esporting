@@ -3,6 +3,8 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Layers, Calendar, Award } from 'lucide-react';
+import RescheduleQueue from './RescheduleQueue';
+import { loadRescheduleQueue } from './rescheduleQueue';
 
 type CompInstance = {
 	id: string;
@@ -55,6 +57,8 @@ export default async function OrganiserPage() {
 
 	const ownedCompetitionIds = comps.map((c) => c.id);
 
+	const rescheduleItems = await loadRescheduleQueue(supabase, ownedCompetitionIds);
+
 	const [{ count: liveMatches }] = await Promise.all([
 		ownedCompetitionIds.length
 			? supabase
@@ -74,6 +78,7 @@ export default async function OrganiserPage() {
 
 	return (
 		<div className="space-y-6 font-body">
+			<RescheduleQueue items={rescheduleItems} />
 			<div className="flex items-center justify-between">
 				<div>
 					<h2 className="font-display font-black text-2xl tracking-wider text-text-primary uppercase">
