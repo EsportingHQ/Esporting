@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Bell } from 'lucide-react';
+import { X } from 'lucide-react';
 import { StatusDot } from '../broadcast/StatusDot';
 
 export interface ToastMessage {
@@ -22,14 +22,15 @@ interface ScoreToastProps {
   onDismiss: (id: string) => void;
 }
 
+// A slim, ticker-style strip: one line per alert, tap to open the match.
 export function ScoreToast({ toasts, onDismiss }: ScoreToastProps) {
   return (
     <div
-      aria-live="assertive"
-      className="fixed bottom-4 right-4 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-4 sm:px-0"
+      aria-live="polite"
+      className="fixed bottom-3 left-1/2 z-50 flex w-full max-w-md -translate-x-1/2 flex-col gap-1.5 px-3 pointer-events-none"
     >
       <AnimatePresence>
-        {toasts.map((toast) => (
+        {toasts.slice(-2).map((toast) => (
           <ToastItem key={toast.id} toast={toast} onDismiss={onDismiss} />
         ))}
       </AnimatePresence>
@@ -37,66 +38,39 @@ export function ScoreToast({ toasts, onDismiss }: ScoreToastProps) {
   );
 }
 
-function ToastItem({
-  toast,
-  onDismiss,
-}: {
-  toast: ToastMessage;
-  onDismiss: (id: string) => void;
-}) {
+function ToastItem({ toast, onDismiss }: { toast: ToastMessage; onDismiss: (id: string) => void }) {
   useEffect(() => {
-    const timer = setTimeout(() => {
-      onDismiss(toast.id);
-    }, 5000);
+    const timer = setTimeout(() => onDismiss(toast.id), 5000);
     return () => clearTimeout(timer);
   }, [toast.id, onDismiss]);
 
-  const href = toast.competitionSlug
-    ? `/competitions/${toast.competitionSlug}/matches/${toast.matchId}`
-    : '#';
+  const href = `/competitions/${toast.competitionSlug || 'match'}/matches/${toast.matchId}`;
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: 50, scale: 0.95 }}
-      animate={{ opacity: 1, x: 0, scale: 1 }}
-      exit={{ opacity: 0, x: 50, scale: 0.9 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-      role="alert"
-      className="pointer-events-auto glass-strong border border-accent-primary/40 rounded-2xl p-4 shadow-[0_15px_40px_rgba(0,0,0,0.6)] select-none flex items-start justify-between gap-3 text-xs backdrop-blur-2xl"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 16 }}
+      transition={{ type: 'spring', stiffness: 420, damping: 30 }}
+      role="status"
+      className="pointer-events-auto flex items-center gap-2 rounded-full border border-accent-primary/40 glass-strong py-1.5 pl-3 pr-1.5 text-xs shadow-lg select-none"
     >
-      <div className="flex items-start gap-3 flex-1 min-w-0">
-        <div className="w-8 h-8 rounded-xl bg-accent-primary/15 border border-accent-primary/30 flex items-center justify-center text-accent-glow shrink-0 mt-0.5 shadow-[0_0_15px_rgba(255,31,109,0.2)]">
-          <Bell className="w-4 h-4" />
-        </div>
-
-        <Link href={href} onClick={() => onDismiss(toast.id)} className="flex-1 min-w-0 group">
-          <div className="flex items-center justify-between gap-2">
-            <span className="font-display font-bold text-accent-glow text-[10px] uppercase tracking-wider">
-              {toast.gameCode} • {toast.eventType}
-            </span>
-            <span className="flex items-center gap-1.5 text-[10px] text-accent-live font-semibold">
-              <StatusDot status="live" size="sm" />
-              <span>LIVE</span>
-            </span>
-          </div>
-
-          <div className="font-display font-bold text-sm text-text-primary group-hover:text-accent-glow transition-colors truncate mt-1">
-            {toast.homeTeam} vs {toast.awayTeam}
-          </div>
-
-          <div className="font-data font-bold text-xs text-accent-live mt-1">
-            SCORE: {toast.newScore}
-          </div>
-        </Link>
-      </div>
-
+      <Link href={href} onClick={() => onDismiss(toast.id)} className="flex min-w-0 flex-1 items-center gap-2">
+        <span className="flex shrink-0 items-center gap-1 font-display text-[10px] font-bold tracking-wider text-accent-live">
+          <StatusDot status="live" size="sm" />
+          LIVE
+        </span>
+        <span className="min-w-0 flex-1 truncate font-semibold text-text-primary">
+          {toast.homeTeam} <span className="font-data text-accent-live">{toast.newScore}</span> {toast.awayTeam}
+        </span>
+      </Link>
       <button
         type="button"
         onClick={() => onDismiss(toast.id)}
-        aria-label="Dismiss notification"
-        className="p-1 text-text-muted hover:text-text-primary rounded-lg hover:bg-text-primary/[0.06] transition-colors shrink-0"
+        aria-label="Dismiss"
+        className="shrink-0 rounded-full p-1.5 text-text-muted hover:bg-text-primary/[0.06] hover:text-text-primary"
       >
-        <X className="w-4 h-4" />
+        <X className="h-3.5 w-3.5" />
       </button>
     </motion.div>
   );

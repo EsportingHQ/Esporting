@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { MatchCardProps } from '@/components/broadcast/match-card';
 import { TickerMatch } from '@/components/broadcast/broadcast-ticker';
 import { ToastMessage } from '@/components/ui/ScoreToast';
 import { useNotificationPrefs } from './useNotificationPrefs';
+import { useFavorites } from './useFavorites';
 
 export interface CompetitionGroup {
   id: string;
@@ -160,6 +161,14 @@ export function useLiveFeed(day: Date) {
   const [error, setError] = useState<Error | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const { prefs } = useNotificationPrefs();
+  const { favorites } = useFavorites();
+  // Latest follows, read inside the realtime handler without re-subscribing
+  const favoritesRef = useRef(favorites);
+  useEffect(() => {
+    favoritesRef.current = favorites;
+  }, [favorites]);
+  // Matches already known to be live, so a pop-up fires only when a match actually goes live
+  const liveSeen = useRef<Set<string>>(new Set());
 
   const addToast = useCallback((toast: Omit<ToastMessage, 'id'>) => {
     const id = `toast-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
@@ -169,6 +178,35 @@ export function useLiveFeed(day: Date) {
   const dismissToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
+
+  const notifyIfFollowed = useCallback(
+    async (supabase: ReturnType<typeof createClient>, matchId: string) => {
+      const { data } = await supabase.from('matches').select(MATCH_QUERY).eq('id', matchId).maybeSingle();
+      const row = data as unknown as RawMatchRow | null;
+      if (!row) return;
+      const home = one(row.home_team);
+      const away = one(row.away_team);
+      const comp = one(row.comp_instance);
+      const follows = favoritesRef.current;
+      const followed = follows.some(
+        (f) =>
+          (f.type === 'team' && (f.id === home?.id || f.id === away?.id)) ||
+          (f.type === 'competition' && f.id === row.comp_instance_id),
+      );
+      if (!followed) return;
+      const scoreRow = one(row.match_scores);
+      addToast({
+        gameCode: one(row.game_titles)?.name ?? '',
+        homeTeam: home?.name ?? 'TBD',
+        awayTeam: away?.name ?? 'TBD',
+        newScore: `${row.best_of > 1 ? (row.home_maps_won ?? 0) : (scoreRow?.home_current_score ?? 0)} - ${row.best_of > 1 ? (row.away_maps_won ?? 0) : (scoreRow?.away_current_score ?? 0)}`,
+        eventType: 'Match is now live',
+        matchId: row.id,
+        competitionSlug: comp?.slug ?? '',
+      });
+    },
+    [addToast],
+  );
 
   const refetchGroups = useCallback(async (supabase: ReturnType<typeof createClient>) => {
     const [yy, mm, dd] = dayStr.split('-').map(Number);
@@ -221,6 +259,7 @@ export function useLiveFeed(day: Date) {
       .limit(100);
     const allLive = (liveData ?? []) as unknown as RawMatchRow[];
     setLiveTotal(allLive.length);
+    liveSeen.current = new Set(allLive.map((r) => r.id));
     const liveRows = allLive.slice(0, 6);
     const { data: dayData } = await supabase
       .from('matches')
@@ -238,6 +277,12 @@ export function useLiveFeed(day: Date) {
     }
     setMatchDays(counts);
 
+    const liveCompIds = [...new Set(liveRows.map((r) => r.comp_instance_id))];
+    const { data: liveComps } = liveCompIds.length
+      ? await supabase.from('comp_instances').select('id, slug').in('id', liveCompIds)
+      : { data: [] as { id: string; slug: string }[] };
+    const slugById = new Map((liveComps ?? []).map((c) => [c.id, c.slug]));
+
     const ticker: TickerMatch[] = liveRows.map((row) => {
       const home = one(row.home_team);
       const away = one(row.away_team);
@@ -252,6 +297,7 @@ export function useLiveFeed(day: Date) {
         homeScore: row.best_of > 1 ? (row.home_maps_won ?? 0) : (scoreRow?.home_current_score ?? 0),
         awayScore: row.best_of > 1 ? (row.away_maps_won ?? 0) : (scoreRow?.away_current_score ?? 0),
         status: 'live',
+        href: `/competitions/${slugById.get(row.comp_instance_id) ?? 'match'}/matches/${row.id}`,
       };
     });
     setTickerMatches(ticker);
@@ -292,16 +338,10 @@ export function useLiveFeed(day: Date) {
         { event: 'UPDATE', schema: 'public', table: 'matches' },
         (payload) => {
           const newRow = payload.new as { status?: string; id?: string };
-          if (newRow.status === 'live' && prefs.matchStart) {
-            addToast({
-              gameCode: '',
-              homeTeam: '',
-              awayTeam: '',
-              newScore: '',
-              eventType: 'Match is now live',
-              matchId: newRow.id ?? '',
-              competitionSlug: '',
-            });
+          // Pop up only when a match really goes live, and only for matches the person follows
+          if (newRow.status === 'live' && newRow.id && !liveSeen.current.has(newRow.id)) {
+            liveSeen.current.add(newRow.id);
+            if (prefs.matchStart) void notifyIfFollowed(supabase, newRow.id);
           }
           refetchGroups(supabase).catch((err) =>
             setError(err instanceof Error ? err : new Error(String(err))),
@@ -313,7 +353,7 @@ export function useLiveFeed(day: Date) {
     return () => {
       channel.unsubscribe();
     };
-  }, [refetchGroups, prefs.matchStart, addToast]);
+  }, [refetchGroups, prefs.matchStart, notifyIfFollowed]);
 
   const liveCount = liveTotal;
 

@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import Link from 'next/link';
 
 import { TallyLight } from './tally-light';
 import { RollDigit } from './roll-digit';
@@ -13,6 +14,7 @@ export interface TickerMatch {
   awayScore: number;
   status: 'live' | 'delayed' | 'scheduled';
   timeLabel?: string;
+  href?: string;
 }
 
 interface BroadcastTickerProps {
@@ -51,8 +53,9 @@ export function BroadcastTicker({ matches }: BroadcastTickerProps) {
             </button>
 
             {matches.map((match) => (
-              <div
+              <Link
                 key={match.id}
+                href={match.href ?? '#'}
                 className="flex items-center justify-between gap-2 px-4 py-3 min-h-[44px] hover:bg-text-primary/[0.04] transition-colors"
               >
                 <div className="flex flex-col gap-1">
@@ -86,7 +89,7 @@ export function BroadcastTicker({ matches }: BroadcastTickerProps) {
                     {match.timeLabel || 'UPCOMING'}
                   </span>
                 )}
-              </div>
+              </Link>
             ))}
 
             {matches.length === 0 && (
@@ -109,8 +112,9 @@ export function BroadcastTicker({ matches }: BroadcastTickerProps) {
 
           {/* Matches list */}
           {matches.map((match) => (
-            <div
+            <Link
               key={match.id}
+              href={match.href ?? '#'}
               className="flex items-center gap-4 px-5 h-full shrink-0 hover:bg-text-primary/[0.04] transition-colors cursor-pointer"
             >
               <span className="font-display font-bold text-accent-glow tracking-wider text-[10px] px-1.5 py-0.5 rounded bg-accent-primary/15 border border-accent-primary/25">
@@ -146,7 +150,7 @@ export function BroadcastTicker({ matches }: BroadcastTickerProps) {
                   {match.timeLabel || 'UPCOMING'}
                 </span>
               )}
-            </div>
+            </Link>
           ))}
 
           {matches.length === 0 && (
