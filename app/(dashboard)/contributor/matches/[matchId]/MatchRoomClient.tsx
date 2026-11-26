@@ -98,6 +98,7 @@ export type MatchMap = {
 	home_score: number | null;
 	away_score: number | null;
 	map_winner: string | null;
+	mvp_player_id?: string | null;
 	status: string;
 	started_at: string | null;
 	ended_at: string | null;
@@ -331,7 +332,7 @@ export default function MatchRoomClient({
 		const { data } = await supabase
 			.from('match_maps')
 			.select(
-				'id, match_id, map_number, map_id, mode_id, home_score, away_score, map_winner, status, started_at, ended_at, duration_seconds, maps(name, slug), modes(name, slug, metric_type, unit_label)',
+				'id, match_id, map_number, map_id, mode_id, home_score, away_score, map_winner, mvp_player_id, status, started_at, ended_at, duration_seconds, maps(name, slug), modes(name, slug, metric_type, unit_label)',
 			)
 			.eq('match_id', match.id)
 			.order('map_number', { ascending: true });
@@ -750,6 +751,8 @@ export default function MatchRoomClient({
 						mvpRequired={!isFootball}
 						teams={lineupTeams}
 						initialMvpId={match.mvp_player_id ?? null}
+						bestOf={match.best_of}
+						maps={maps}
 						onGateChange={setGate}
 					/>
 					<section className="rounded-lg border border-border-line bg-bg-surface p-5">

@@ -25,8 +25,12 @@ type Props = {
 	mvpRequired: boolean;
 	teams: TeamRef[];
 	initialMvpId: string | null;
+	bestOf: number;
+	maps: { id: string; map_number: number; status: string; mvp_player_id?: string | null }[];
 	onGateChange: (gate: LineupGate) => void;
 };
+
+type MapRef = Props['maps'][number];
 
 function computeGate(
 	teams: TeamRef[],
@@ -34,16 +38,26 @@ function computeGate(
 	selected: Record<string, string[]>,
 	mvpId: string | null,
 	mvpRequired: boolean,
+	bestOf: number,
+	maps: MapRef[],
+	mapMvps: Record<string, string | null>,
 ): LineupGate {
 	const missing = teams.find((t) => (squads[t.id]?.length ?? 0) > 0 && (selected[t.id]?.length ?? 0) === 0);
 	const anyPlayed = teams.some((t) => (selected[t.id]?.length ?? 0) > 0);
 	const mvpReady = !mvpRequired || !anyPlayed || !!mvpId;
 	const confirmMsg = missing ? `Confirm the rosters first (${missing.name} is not confirmed).` : null;
+	const missingMap =
+		mvpRequired && anyPlayed && bestOf > 1
+			? maps.find((m) => m.status === 'completed' && !(mapMvps[m.id] ?? m.mvp_player_id))
+			: undefined;
 	return {
 		lineupReady: !missing,
 		mvpReady,
 		startBlocker: confirmMsg,
-		endBlocker: confirmMsg ?? (!mvpReady ? 'Pick the match MVP before ending the match.' : null),
+		endBlocker:
+			confirmMsg ??
+			(missingMap ? `Pick the MVP for game ${missingMap.map_number} before ending the match.` : null) ??
+			(!mvpReady ? 'Pick the match MVP before ending the match.' : null),
 	};
 }
 
@@ -55,12 +69,15 @@ export default function LineupPanel({
 	mvpRequired,
 	teams,
 	initialMvpId,
+	bestOf,
+	maps,
 	onGateChange,
 }: Props) {
 	const supabase = useMemo(() => createClient(), []);
 	const [squads, setSquads] = useState<Record<string, Player[]> | null>(null);
 	const [selected, setSelected] = useState<Record<string, string[]>>({});
 	const [mvpId, setMvpId] = useState<string | null>(initialMvpId);
+	const [mapMvps, setMapMvps] = useState<Record<string, string | null>>({});
 	const [editing, setEditing] = useState(false);
 	const [removals, setRemovals] = useState<Record<string, string[]>>({});
 	const [additions, setAdditions] = useState<Record<string, NewPlayer[]>>({});
@@ -105,7 +122,7 @@ export default function LineupPanel({
 			if (cancelled) return;
 			setSquads(loaded.squads);
 			setSelected(loaded.selected);
-			onGateChange(computeGate(teams, loaded.squads, loaded.selected, mvpId, mvpRequired));
+			onGateChange(computeGate(teams, loaded.squads, loaded.selected, mvpId, mvpRequired, bestOf, maps, mapMvps));
 		})();
 		return () => {
 			cancelled = true;
@@ -121,7 +138,7 @@ export default function LineupPanel({
 		const stillIn = nextMvp ? Object.values(loaded.selected).some((ids) => ids.includes(nextMvp)) : false;
 		const mvp = stillIn ? nextMvp : null;
 		setMvpId(mvp);
-		onGateChange(computeGate(teams, loaded.squads, loaded.selected, mvp, mvpRequired));
+		onGateChange(computeGate(teams, loaded.squads, loaded.selected, mvp, mvpRequired, bestOf, maps, mapMvps));
 	}
 
 	async function confirmRosters() {
@@ -163,6 +180,26 @@ export default function LineupPanel({
 		await confirmRosters();
 	}
 
+	// Keep the start/end gate in step with games finishing and MVPs being picked
+	useEffect(() => {
+		if (squads === null) return;
+		onGateChange(computeGate(teams, squads, selected, mvpId, mvpRequired, bestOf, maps, mapMvps));
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [squads, selected, mvpId, mvpRequired, bestOf, maps, mapMvps]);
+
+	async function chooseMapMvp(mapId: string, playerId: string) {
+		if (locked || busy) return;
+		setBusy(true);
+		setError(null);
+		const { error: err } = await supabase.rpc('set_map_mvp', { p_map: mapId, p_player: playerId || null });
+		setBusy(false);
+		if (err) {
+			setError(err.message);
+			return;
+		}
+		setMapMvps((cur) => ({ ...cur, [mapId]: playerId || null }));
+	}
+
 	async function chooseMvp(playerId: string) {
 		if (locked || busy || !squads) return;
 		setBusy(true);
@@ -178,7 +215,7 @@ export default function LineupPanel({
 		}
 		const next = playerId || null;
 		setMvpId(next);
-		onGateChange(computeGate(teams, squads, selected, next, mvpRequired));
+		onGateChange(computeGate(teams, squads, selected, next, mvpRequired, bestOf, maps, mapMvps));
 	}
 
 	function toggleRemove(teamId: string, playerId: string) {
@@ -205,6 +242,10 @@ export default function LineupPanel({
 
 	const everyTeamConfirmed =
 		squads !== null && teams.every((t) => (squads[t.id]?.length ?? 0) === 0 || (selected[t.id]?.length ?? 0) > 0);
+	const anyLive = maps.some((m) => m.status === 'live');
+	const anyDone = maps.some((m) => m.status === 'completed');
+	// With game slots: finished once none is live and one has ended. Without (battle royale): once the match is live.
+	const gamesFinished = maps.length > 0 ? !anyLive && anyDone : status === 'live';
 	const hasSquads = squads !== null && teams.some((t) => (squads[t.id]?.length ?? 0) > 0);
 
 	const confirmedPlayers = teams.flatMap((t) =>
@@ -376,27 +417,38 @@ export default function LineupPanel({
 			)}
 
 			{mvpRequired && squads !== null && hasSquads ? (
-				<div className="mt-5 border-t border-border-line pt-4">
-					<label className="mb-2 block text-sm font-semibold" htmlFor="match-mvp">
-						Match MVP
-					</label>
-					<select
-						id="match-mvp"
-						value={mvpId ?? ''}
-						onChange={(e) => chooseMvp(e.target.value)}
-						disabled={locked || busy || confirmedPlayers.length === 0}
-						className="w-full rounded-lg border border-border-line bg-bg-surface px-3 py-2 text-sm text-text-primary disabled:opacity-60"
-					>
-						<option value="">
-							{confirmedPlayers.length === 0 ? 'Confirm rosters first' : 'Choose the MVP'}
-						</option>
-						{confirmedPlayers.map((p) => (
-							<option key={p.id} value={p.id}>
-								{p.gamertag} ({p.team})
-							</option>
-						))}
-					</select>
-					<p className="mt-1 text-xs text-text-muted">Pick this at the end of the match. Required before it can be ended.</p>
+				<div className="mt-5 space-y-4 border-t border-border-line pt-4">
+					{bestOf > 1
+						? maps
+								.filter((m) => m.status === 'completed')
+								.map((m) => (
+									<MvpSelect
+										key={m.id}
+										id={`map-mvp-${m.id}`}
+										label={`Game ${m.map_number} MVP`}
+										value={mapMvps[m.id] ?? m.mvp_player_id ?? null}
+										players={confirmedPlayers}
+										disabled={locked || busy || confirmedPlayers.length === 0}
+										onChange={(v) => chooseMapMvp(m.id, v)}
+									/>
+								))
+						: null}
+					{gamesFinished ? (
+						<MvpSelect
+							id="match-mvp"
+							label={bestOf > 1 ? 'Overall match MVP' : 'Match MVP'}
+							value={mvpId}
+							players={confirmedPlayers}
+							disabled={locked || busy || confirmedPlayers.length === 0}
+							onChange={chooseMvp}
+						/>
+					) : (
+						<p className="text-xs text-text-muted">
+							{bestOf > 1
+								? 'Each game gets its own MVP when it ends. The overall match MVP opens once the games are finished.'
+								: 'The MVP can be picked once the game has ended.'}
+						</p>
+					)}
 				</div>
 			) : null}
 
@@ -408,5 +460,43 @@ export default function LineupPanel({
 				</div>
 			) : null}
 		</section>
+	);
+}
+
+function MvpSelect({
+	id,
+	label,
+	value,
+	players,
+	disabled,
+	onChange,
+}: {
+	id: string;
+	label: string;
+	value: string | null;
+	players: { id: string; gamertag: string; team: string }[];
+	disabled: boolean;
+	onChange: (playerId: string) => void;
+}) {
+	return (
+		<div>
+			<label className="mb-2 block text-sm font-semibold" htmlFor={id}>
+				{label}
+			</label>
+			<select
+				id={id}
+				value={value ?? ''}
+				onChange={(e) => onChange(e.target.value)}
+				disabled={disabled}
+				className="w-full rounded-lg border border-border-line bg-bg-surface px-3 py-2 text-sm text-text-primary disabled:opacity-60"
+			>
+				<option value="">{players.length === 0 ? 'Confirm rosters first' : 'Choose the MVP'}</option>
+				{players.map((p) => (
+					<option key={p.id} value={p.id}>
+						{p.gamertag} ({p.team})
+					</option>
+				))}
+			</select>
+		</div>
 	);
 }

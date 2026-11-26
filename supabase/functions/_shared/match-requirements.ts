@@ -1,12 +1,13 @@
 // Rules a match must meet before it goes live or ends:
 //  * every team that has a roster for this game must have its roster confirmed for the match
-//  * a game other than football needs an MVP before the match can end
+//  * a game other than football needs an MVP before the match can end,
+//    and in a series every finished game needs its own MVP
 // Returns an error message, or null when the match is good to go.
 // deno-lint-ignore no-explicit-any
 export async function checkMatchRequirements(admin: any, matchId: string, stage: 'live' | 'completed'): Promise<string | null> {
   const { data: m } = await admin
     .from('matches')
-    .select('comp_instance_id, game_title_id, team_home_id, team_away_id, mvp_player_id, game_titles(game_types(slug))')
+    .select('comp_instance_id, game_title_id, team_home_id, team_away_id, mvp_player_id, best_of, game_titles(game_types(slug))')
     .eq('id', matchId)
     .single()
   if (!m) return null
@@ -37,6 +38,16 @@ export async function checkMatchRequirements(admin: any, matchId: string, stage:
   if (stage === 'completed') {
     const gt = Array.isArray(m.game_titles) ? m.game_titles[0] : m.game_titles
     const gtype = Array.isArray(gt?.game_types) ? gt.game_types[0] : gt?.game_types
+    if (gtype?.slug !== 'football' && played.size > 0 && (m.best_of ?? 1) > 1) {
+      const { data: maps } = await admin
+        .from('match_maps')
+        .select('map_number, mvp_player_id')
+        .eq('match_id', matchId)
+        .eq('status', 'completed')
+        .order('map_number', { ascending: true })
+      const missing = (maps ?? []).find((x: { mvp_player_id: string | null }) => !x.mvp_player_id)
+      if (missing) return `Pick the MVP for game ${missing.map_number} before ending the match.`
+    }
     if (gtype?.slug !== 'football' && played.size > 0 && !m.mvp_player_id) {
       return 'Pick the match MVP before ending the match.'
     }

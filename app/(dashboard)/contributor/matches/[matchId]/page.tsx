@@ -203,7 +203,7 @@ export default async function ContributorMatchRoomPage({
 		supabase
 			.from('match_maps')
 			.select(
-				'id, match_id, map_number, map_id, mode_id, home_score, away_score, map_winner, status, started_at, ended_at, duration_seconds, maps(name, slug), modes(name, slug, metric_type, unit_label)',
+				'id, match_id, map_number, map_id, mode_id, home_score, away_score, map_winner, mvp_player_id, status, started_at, ended_at, duration_seconds, maps(name, slug), modes(name, slug, metric_type, unit_label)',
 			)
 			.eq('match_id', matchId)
 			.order('map_number', { ascending: true }),
