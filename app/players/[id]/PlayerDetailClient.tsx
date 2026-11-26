@@ -1,14 +1,18 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
+import { Modal, modalButton } from '@/components/ui/Modal';
 import { PublicNav } from '@/components/layout/public-nav';
 import FormSection from '@/components/profile/FormSection';
 import { Shield, Play, Flame } from 'lucide-react';
-import { usePlayerDetail } from '@/hooks/usePlayerDetail';
+import { usePlayerDetail, type MvpEntry } from '@/hooks/usePlayerDetail';
 
 export function PlayerDetailClient({ id }: { id: string }) {
-	const { player, assignments, form, isLoading, notFound, error } =
+	const { player, assignments, form, mvps, isLoading, notFound, error } =
 		usePlayerDetail(id);
+	const [openMvp, setOpenMvp] = useState<'match' | 'map' | null>(null);
+	const list: MvpEntry[] = openMvp ? mvps[openMvp] : [];
 
 	if (isLoading) {
 		return (
@@ -105,20 +109,36 @@ export function PlayerDetailClient({ id }: { id: string }) {
 					</div>
 
 					{/* Stats matrix */}
-					<div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-						{player.stats.map((stat) => (
-							<div
-								key={stat.label}
-								className="bg-bg-surface border border-border-line p-4 rounded text-center"
-							>
-								<span className="block text-[9px] text-text-muted font-display font-bold uppercase tracking-wider mb-1">
-									{stat.label}
-								</span>
-								<span className="font-data font-bold text-xl text-text-primary">
-									{stat.value}
-								</span>
-							</div>
-						))}
+					<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+						{player.stats.map((stat) => {
+							const body = (
+								<>
+									<span className="block text-[9px] text-text-muted font-display font-bold uppercase tracking-wider mb-1">
+										{stat.label}
+									</span>
+									<span className="font-data font-bold text-xl text-text-primary">
+										{stat.value}
+									</span>
+								</>
+							);
+							const cls = 'bg-bg-surface border border-border-line p-4 rounded text-center';
+							const kind = stat.mvp;
+							return kind ? (
+								<button
+									key={stat.label}
+									type="button"
+									onClick={() => setOpenMvp(kind)}
+									className={`${cls} hover:border-accent-readout/40 transition-colors cursor-pointer`}
+									aria-label={`${stat.label}: ${stat.value}. Show details`}
+								>
+									{body}
+								</button>
+							) : (
+								<div key={stat.label} className={cls}>
+									{body}
+								</div>
+							);
+						})}
 					</div>
 
 					<FormSection entries={form} />
@@ -157,6 +177,45 @@ export function PlayerDetailClient({ id }: { id: string }) {
 					</div>
 				</section>
 			</main>
+
+			<Modal
+				open={openMvp !== null}
+				title={openMvp === 'map' ? 'Map MVP awards' : 'Match MVP awards'}
+				onClose={() => setOpenMvp(null)}
+			>
+				<div className="space-y-3 text-sm">
+					{list.length === 0 ? (
+						<p className="text-text-muted">None yet.</p>
+					) : (
+						<ul className="max-h-[50vh] divide-y divide-border-line overflow-y-auto rounded border border-border-line">
+							{list.map((m) => (
+								<li key={m.id} className="space-y-0.5 px-3 py-2">
+									<p className="font-semibold text-text-primary">
+										{[m.mapName, m.modeName].filter(Boolean).join(' · ') ||
+											(m.kind === 'match' ? 'Overall match MVP' : 'Game MVP')}
+									</p>
+									<p className="text-xs text-text-muted">
+										{[
+											m.gameName,
+											m.mapNumber ? `Game ${m.mapNumber}` : null,
+											m.opponentName ? `vs ${m.opponentName}` : null,
+											m.competitionName,
+											m.at ? new Date(m.at).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' }) : null,
+										]
+											.filter(Boolean)
+											.join(' · ')}
+									</p>
+								</li>
+							))}
+						</ul>
+					)}
+					<div className="flex justify-end">
+						<button type="button" onClick={() => setOpenMvp(null)} className={modalButton}>
+							Close
+						</button>
+					</div>
+				</div>
+			</Modal>
 		</div>
 	);
 }
