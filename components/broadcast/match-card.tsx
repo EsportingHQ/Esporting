@@ -105,9 +105,9 @@ export function MatchCard({
               {status === 'delayed' ? `${timeLabel ?? ''}` : timeLabel}
             </span>
             <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-text-muted font-data leading-none">
-              {isSeries && (
+              {gameType !== 'br' && (
                 <span className="text-[9px] text-text-muted font-display font-semibold tracking-wider uppercase">
-                  BEST OF {bestOf}
+                  BO{bestOf}
                 </span>
               )}
             </div>

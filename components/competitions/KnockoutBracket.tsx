@@ -116,7 +116,7 @@ function MatchBox({ m, slug }: { m: BracketMatch; slug: string }) {
         >
           {when(m)}
         </span>
-        {m.best_of > 1 && <span className="text-text-muted">BEST OF {m.best_of}</span>}
+        <span className="text-text-muted">BO{m.best_of}</span>
       </div>
       <TeamRow team={m.home} score={started ? m.scoreHome : null} won={hWon} lost={aWon} />
       <div className="h-px bg-text-primary/[0.06]" />

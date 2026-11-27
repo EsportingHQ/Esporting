@@ -105,9 +105,9 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
                   </span>
                 </>
               )}
-              {showSeries && (
+              {!isBR && (
                 <span className="text-[9px] sm:text-[10px] text-text-muted font-display tracking-widest mt-1 uppercase">
-                  Best of {match.best_of}
+                  BO{match.best_of}
                 </span>
               )}
             </div>

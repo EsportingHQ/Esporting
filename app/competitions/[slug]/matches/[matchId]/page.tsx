@@ -9,6 +9,7 @@ import { TimelineTab } from '@/components/broadcast/match-detail/TimelineTab';
 import { LineupsTab } from '@/components/broadcast/match-detail/LineupsTab';
 import { StatsTab } from '@/components/broadcast/match-detail/StatsTab';
 import { GamesTab } from '@/components/broadcast/match-detail/GamesTab';
+import { MvpSummary } from '@/components/broadcast/match-detail/MvpSummary';
 import { HeadToHeadTab } from '@/components/broadcast/match-detail/HeadToHeadTab';
 import { useMatchRealtime } from '@/hooks/useMatchRealtime';
 import { Flame, Users, BarChart2, History, Swords, ListOrdered } from 'lucide-react';
@@ -160,6 +161,10 @@ export default function MatchDetailPage({
 			/>
 
 			<main className="max-w-7xl w-full mx-auto px-4 py-8 flex-1 space-y-8">
+				{!isBR && !isFootball ? (
+					<MvpSummary matchId={matchId} refreshKey={`${match.status}:${matchMaps.map((m) => m.status).join(',')}`} />
+				) : null}
+
 				{/* Navigation TabBar */}
 				<TabBar
 					tabs={tabItems}

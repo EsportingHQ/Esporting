@@ -82,6 +82,9 @@ export default function LineupPanel({
 	const [removals, setRemovals] = useState<Record<string, string[]>>({});
 	const [additions, setAdditions] = useState<Record<string, NewPlayer[]>>({});
 	const [drafts, setDrafts] = useState<Record<string, string>>({});
+	// Who plays this match by default, per team, and bench players the contributor brings in
+	const [defaults, setDefaults] = useState<Record<string, string[]>>({});
+	const [benchAdds, setBenchAdds] = useState<Record<string, string[]>>({});
 	const [busy, setBusy] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const locked = status === 'completed' || status === 'cancelled';
@@ -155,12 +158,40 @@ export default function LineupPanel({
 		setBusy(false);
 	}
 
+	async function startEditing() {
+		setBusy(true);
+		setError(null);
+		const out: Record<string, string[]> = {};
+		for (const team of teams) {
+			const { data, error: err } = await supabase.rpc('default_match_lineup', { p_match: matchId, p_team: team.id });
+			if (err) {
+				setBusy(false);
+				setError(err.message);
+				return;
+			}
+			out[team.id] = (data as string[] | null) ?? [];
+		}
+		setDefaults(out);
+		setBusy(false);
+		setEditing(true);
+	}
+
+	function toggleBench(teamId: string, playerId: string) {
+		setBenchAdds((b) => {
+			const cur = b[teamId] ?? [];
+			return { ...b, [teamId]: cur.includes(playerId) ? cur.filter((x) => x !== playerId) : [...cur, playerId] };
+		});
+	}
+
 	async function saveChangesAndConfirm() {
 		setBusy(true);
 		setError(null);
 		for (const team of teams) {
 			const out = removals[team.id] ?? [];
-			const add = (additions[team.id] ?? []).map((a) => ({ gamertag: a.gamertag }));
+			const add = [
+				...(benchAdds[team.id] ?? []).map((id) => ({ player_id: id })),
+				...(additions[team.id] ?? []).map((a) => ({ gamertag: a.gamertag })),
+			];
 			if (out.length === 0 && add.length === 0) continue;
 			const { error: err } = await supabase.rpc('change_match_roster', {
 				p_match: matchId,
@@ -176,6 +207,7 @@ export default function LineupPanel({
 		}
 		setRemovals({});
 		setAdditions({});
+		setBenchAdds({});
 		setDrafts({});
 		await confirmRosters();
 	}
@@ -255,7 +287,9 @@ export default function LineupPanel({
 	);
 
 	const pendingChanges =
-		Object.values(removals).some((r) => r.length > 0) || Object.values(additions).some((a) => a.length > 0);
+		Object.values(removals).some((r) => r.length > 0) ||
+		Object.values(additions).some((a) => a.length > 0) ||
+		Object.values(benchAdds).some((a) => a.length > 0);
 
 	return (
 		<section className="rounded-lg border border-border-line bg-bg-surface p-5">
@@ -273,18 +307,24 @@ export default function LineupPanel({
 			) : editing && !locked ? (
 				<div className="space-y-5">
 					<p className="text-xs text-text-muted">
-						Tap a player to take them out. Add anyone new by gamertag, even if they are not in the system yet.
+						Tap a player to take them out of this match. They stay on the team and can play the next one. Bring a
+						player in from the bench, or add someone new by gamertag, even if they are not in the system yet.
 						Then confirm.
 					</p>
 					{teams.map((team) => {
 						const squad = squads[team.id] ?? [];
+						const playingIds = defaults[team.id] ?? [];
+						const playing = squad.filter((p) => playingIds.includes(p.id));
+						const bench = squad.filter((p) => !playingIds.includes(p.id));
 						const out = removals[team.id] ?? [];
+						const benchIn = benchAdds[team.id] ?? [];
 						const added = additions[team.id] ?? [];
 						return (
 							<div key={team.id}>
 								<p className="mb-2 text-sm font-semibold">{team.name}</p>
+								<p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-text-muted">Playing</p>
 								<div className="flex flex-wrap gap-2">
-									{squad.map((p) => {
+									{playing.map((p) => {
 										const removing = out.includes(p.id);
 										return (
 											<button
@@ -303,6 +343,19 @@ export default function LineupPanel({
 											</button>
 										);
 									})}
+									{bench
+										.filter((p) => benchIn.includes(p.id))
+										.map((p) => (
+											<button
+												key={p.id}
+												type="button"
+												onClick={() => toggleBench(team.id, p.id)}
+												className="min-h-10 rounded-lg border border-green-500 bg-green-500/10 px-3 py-2 text-sm font-semibold text-green-700 dark:text-green-300"
+												title="Tap to cancel"
+											>
+												+ {p.gamertag} (in)
+											</button>
+										))}
 									{added.map((a) => (
 										<button
 											key={a.gamertag}
@@ -320,6 +373,27 @@ export default function LineupPanel({
 										</button>
 									))}
 								</div>
+								{bench.some((p) => !benchIn.includes(p.id)) ? (
+									<div className="mt-3">
+										<p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-text-muted">
+											On the bench
+										</p>
+										<div className="flex flex-wrap gap-2">
+											{bench
+												.filter((p) => !benchIn.includes(p.id))
+												.map((p) => (
+													<button
+														key={p.id}
+														type="button"
+														onClick={() => toggleBench(team.id, p.id)}
+														className="min-h-10 rounded-lg border border-dashed border-border-line px-3 py-2 text-sm font-semibold text-text-muted hover:text-text-primary"
+													>
+														+ {p.gamertag}
+													</button>
+												))}
+										</div>
+									</div>
+								) : null}
 								<div className="mt-3 flex gap-2">
 									<input
 										value={drafts[team.id] ?? ''}
@@ -359,6 +433,7 @@ export default function LineupPanel({
 								setEditing(false);
 								setRemovals({});
 								setAdditions({});
+								setBenchAdds({});
 								setDrafts({});
 							}}
 							disabled={busy}
@@ -382,7 +457,7 @@ export default function LineupPanel({
 						</button>
 						<button
 							type="button"
-							onClick={() => setEditing(true)}
+							onClick={startEditing}
 							disabled={busy || locked}
 							className="min-h-11 rounded-lg border border-border-line px-5 py-2 text-sm font-semibold text-text-primary disabled:opacity-50"
 						>
@@ -407,7 +482,7 @@ export default function LineupPanel({
 					{!locked ? (
 						<button
 							type="button"
-							onClick={() => setEditing(true)}
+							onClick={startEditing}
 							className="text-sm font-semibold text-accent-primary"
 						>
 							Roster changes

@@ -115,7 +115,7 @@ function mapRowToCard(row: RawMatchRow, competitionSlug: string): MatchCardProps
         awayScore: scoreRow?.away_current_score ?? 0,
         homeMapsWon: row.home_maps_won ?? undefined,
         awayMapsWon: row.away_maps_won ?? undefined,
-        bestOf: row.best_of > 1 ? row.best_of : undefined,
+        bestOf: row.best_of ?? 1,
         status: row.status as MatchCardProps['status'],
         timeLabel: mapTimeLabel(row.status, row.scheduled_at),
         competitionSlug,

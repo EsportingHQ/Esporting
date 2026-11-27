@@ -8,14 +8,15 @@ import { PublicNav } from '@/components/layout/public-nav';
 import { MatchCard, MatchCardProps } from '@/components/broadcast/match-card';
 import { TierBadge } from '@/components/organiser/TierBadge';
 import { EventBadge } from '@/components/broadcast/event-badge';
-import { Trophy, Calendar, Award, ListOrdered, FileText, GitBranch } from 'lucide-react';
+import { Trophy, Calendar, Award, ListOrdered, FileText, GitBranch, BarChart2 } from 'lucide-react';
+import CompetitionStats from '@/components/competitions/CompetitionStats';
 import {
 	useCompetitionDetail,
 	StandingRow,
 	BRStandingRow,
 } from '@/hooks/useCompetitionDetail';
 
-type CompetitionTab = 'overview' | 'schedule' | 'results' | 'standings' | 'bracket';
+type CompetitionTab = 'overview' | 'schedule' | 'results' | 'standings' | 'bracket' | 'stats';
 
 export default function CompetitionDetailPage({
 	params: paramsPromise,
@@ -191,6 +192,11 @@ export default function CompetitionDetailPage({
 										},
 									]
 								: []),
+							{
+								id: 'stats' as const,
+								label: 'STATS',
+								icon: <BarChart2 className="w-3.5 h-3.5" />,
+							},
 						] satisfies {
 							id: CompetitionTab;
 							label: string;
@@ -317,6 +323,8 @@ export default function CompetitionDetailPage({
 							</div>
 						</div>
 					)}
+
+					{activeTab === 'stats' && <CompetitionStats compId={competition.id} />}
 
 					{/* Bracket */}
 					{activeTab === 'bracket' && hasKnockout && (
