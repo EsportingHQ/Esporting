@@ -206,9 +206,12 @@ serve(async (req: Request) => {
       message: `Invite sent to ${normalizedEmail} for ${scopeLabel}`,
     })
   } catch (err) {
-    const error = err instanceof Error ? err : new Error(String(err))
-    console.error('invite-contributor error:', error)
-    return json({ error: 'Internal server error', detail: error.message }, 500)
+    // Supabase client errors are often plain objects, so String(err) would hide the real reason.
+    const e = err as { message?: string; code?: string; details?: string; hint?: string } | null
+    const message =
+      err instanceof Error ? err.message : e?.message ?? (typeof err === 'string' ? err : JSON.stringify(err))
+    console.error('invite-contributor error:', message, e?.code ?? '', e?.details ?? '', e?.hint ?? '')
+    return json({ error: message || 'Internal server error', code: e?.code ?? null }, 500)
   }
 })
 

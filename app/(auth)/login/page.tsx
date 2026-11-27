@@ -81,6 +81,10 @@ export default async function LoginPage({
             />
           </div>
 
+          <div className="text-right -mt-2">
+            <Link href="/forgot-password" className="text-accent-readout text-xs">Forgot password?</Link>
+          </div>
+
           <button
             formAction={login}
             type="submit"

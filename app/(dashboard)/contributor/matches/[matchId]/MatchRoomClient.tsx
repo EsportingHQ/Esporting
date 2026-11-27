@@ -1078,22 +1078,25 @@ export default function MatchRoomClient({
 						) : null}
 						{!isBattleRoyale && ['scheduled', 'delayed', 'live'].includes(match.status) ? (
 							<div className="mb-3">
-								<label htmlFor="best-of" className="mb-1 block text-xs font-semibold text-text-muted">
+								<label htmlFor="best-of" id="best-of-label" className="mb-1 block text-xs font-semibold text-text-muted">
 									Games in this match
 								</label>
-								<select
-									id="best-of"
-									value={match.best_of}
-									onChange={(event) => changeBestOf(Number(event.target.value))}
-									disabled={hasPlay || maps.some((m) => m.status === 'live' || m.status === 'completed')}
-									className="w-full rounded-lg border border-border-line bg-bg-surface px-3 py-2 text-sm text-text-primary disabled:opacity-60"
-								>
-									{Array.from(new Set([1, 2, 3, 4, 5, match.best_of])).sort((a, b) => a - b).map((n) => (
-										<option key={n} value={n}>
-											Best of {n}
-										</option>
-									))}
-								</select>
+								{(() => {
+									const locked = hasPlay || maps.some((m) => m.status === 'live' || m.status === 'completed');
+									const btn =
+										'flex h-9 w-9 items-center justify-center rounded-lg border border-border-line bg-bg-surface text-lg font-bold text-text-primary disabled:opacity-40';
+									return (
+										<div id="best-of" className="flex items-center gap-3" role="group" aria-label="Games in this match">
+											<button type="button" className={btn} aria-label="Fewer games" disabled={locked || match.best_of <= 1} onClick={() => changeBestOf(match.best_of - 1)}>
+												−
+											</button>
+											<span className="min-w-[5.5rem] text-center text-sm font-semibold text-text-primary">Best of {match.best_of}</span>
+											<button type="button" className={btn} aria-label="More games" disabled={locked || match.best_of >= 99} onClick={() => changeBestOf(match.best_of + 1)}>
+												+
+											</button>
+										</div>
+									);
+								})()}
 								<p className="mt-1 text-[11px] text-text-muted">
 									Set before the first game. It shows on the live feed.
 								</p>
