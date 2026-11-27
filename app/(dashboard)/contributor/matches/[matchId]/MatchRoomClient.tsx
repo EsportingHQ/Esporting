@@ -549,6 +549,20 @@ export default function MatchRoomClient({
 		(score?.home_current_score ?? 0) > 0 ||
 		(score?.away_current_score ?? 0) > 0;
 
+	// Series length for this match: the stage sets the default, the contributor can change it before play starts.
+	async function changeBestOf(next: number) {
+		setError(null);
+		setMessage(null);
+		const { error: bestOfError } = await supabase.rpc('set_match_best_of', { p_match: match.id, p_best_of: next });
+		if (bestOfError) {
+			setError(bestOfError.message);
+			return;
+		}
+		setMatch((current) => ({ ...current, best_of: next }));
+		await refreshMaps();
+		setMessage(`Series set to best of ${next}.`);
+	}
+
 	async function postFootballEvent() {
 		await runAction('event', async () => {
 			await edgeCall('post-match-event', {
@@ -1061,6 +1075,29 @@ export default function MatchRoomClient({
 							<p className="mb-3 text-xs text-amber-600 dark:text-amber-400">
 								{match.status === 'live' ? gate.endBlocker : gate.startBlocker}
 							</p>
+						) : null}
+						{!isBattleRoyale && ['scheduled', 'delayed', 'live'].includes(match.status) ? (
+							<div className="mb-3">
+								<label htmlFor="best-of" className="mb-1 block text-xs font-semibold text-text-muted">
+									Games in this match
+								</label>
+								<select
+									id="best-of"
+									value={match.best_of}
+									onChange={(event) => changeBestOf(Number(event.target.value))}
+									disabled={hasPlay || maps.some((m) => m.status === 'live' || m.status === 'completed')}
+									className="w-full rounded-lg border border-border-line bg-bg-surface px-3 py-2 text-sm text-text-primary disabled:opacity-60"
+								>
+									{Array.from(new Set([1, 2, 3, 4, 5, match.best_of])).sort((a, b) => a - b).map((n) => (
+										<option key={n} value={n}>
+											Best of {n}
+										</option>
+									))}
+								</select>
+								<p className="mt-1 text-[11px] text-text-muted">
+									Set before the first game. It shows on the live feed.
+								</p>
+							</div>
 						) : null}
 						<div className="grid gap-2">
 							{VALID_TRANSITIONS[match.status]?.filter((action) => action.status === 'live' || action.status === 'completed').map((action) => (
