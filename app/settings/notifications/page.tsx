@@ -22,7 +22,7 @@ export default function NotificationSettingsPage() {
     const id = `test-toast-${Date.now()}`;
     const newToast: ToastMessage = {
       id,
-      gameCode: 'FC26',
+      gameCode: 'EAFC',
       homeTeam: 'KUTI',
       awayTeam: 'BELLO',
       newScore: '2 - 1',

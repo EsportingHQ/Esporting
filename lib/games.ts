@@ -17,7 +17,7 @@ export interface GameProfile {
   matches?: (titleLower: string) => boolean;
 }
 
-// Matched against game_titles.name as seeded in the database: 'FC 26', 'FC Mobile',
+// Matched against game_titles.name as stored in the database: 'EAFC', 'FC Mobile',
 // 'eFootball Mobile', 'CODM Multiplayer', 'CODM Battle Royale', 'PUBG Battle Royale',
 // 'Free Fire Battle Royale', 'Mobile Legends: Bang Bang'.
 export const GAME_PROFILES: GameProfile[] = [
@@ -29,10 +29,10 @@ export const GAME_PROFILES: GameProfile[] = [
     matches: (t) => t.includes('codm') || t.includes('call of duty'),
   },
   {
-    id: 'fc26', name: 'EA SPORTS FC', shortName: 'EAFC', slug: 'fc-26', category: 'football',
+    id: 'eafc', name: 'EA SPORTS FC', shortName: 'EAFC', slug: 'eafc', category: 'football',
     iconSrc: '/games/eafc.svg',
-    // FC 26, FC 27, ... but not "FC Mobile"
-    matches: (t) => /\bfc\s?\d{2}\b/.test(t),
+    // "EAFC" (and any old "FC 26" style names), but not "FC Mobile"
+    matches: (t) => !t.includes('mobile') && (t.includes('eafc') || /\bea\s?(sports\s)?fc\b/.test(t) || /\bfc\s?\d{2}\b/.test(t)),
   },
   {
     id: 'efb', name: 'eFootball Mobile', shortName: 'EFOOTBALL', slug: 'efootball-mobile', category: 'football',
@@ -63,7 +63,7 @@ export const GAME_PROFILES: GameProfile[] = [
 
 /**
  * The short name used in game filters, for any game title in the database.
- * 'Mobile Legends: Bang Bang' -> 'MLBB', 'Free Fire Battle Royale' -> 'FREE FIRE', 'FC 26' -> 'EAFC 26'.
+ * 'Mobile Legends: Bang Bang' -> 'MLBB', 'Free Fire Battle Royale' -> 'FREE FIRE', 'EAFC' -> 'EAFC'.
  * CODM keeps its mode ('CODM MP' / 'CODM BR') because one competition can run both.
  */
 export function shortGameName(title: string): string {
@@ -73,8 +73,7 @@ export function shortGameName(title: string): string {
     if (t.includes('multiplayer') || /\bmp\b/.test(t)) return 'CODM MP';
     return 'CODM';
   }
-  const m = /\bfc\s?(\d{2})\b/.exec(t);
-  if (m) return `EAFC ${m[1]}`;
+  if (!t.includes('mobile') && (t.includes('eafc') || /\bea\s?(sports\s)?fc\b/.test(t) || /\bfc\s?\d{2}\b/.test(t))) return 'EAFC';
   const profile = GAME_PROFILES.find((g) => g.id !== 'all' && g.matches?.(t));
   return profile ? profile.shortName : title;
 }

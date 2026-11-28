@@ -213,7 +213,7 @@
                 JSON.stringify({
                 error: `Game title slugs not found or inactive: ${notFound.join(', ')}`,
                 valid_slugs: [
-                    'fc-26', 'fc-mobile', 'efootball-mobile',
+                    'eafc', 'fc-mobile', 'efootball-mobile',
                     'codm-mp', 'codm-br', 'pubg-br', 'freefire-br'
                 ]
                 }),
