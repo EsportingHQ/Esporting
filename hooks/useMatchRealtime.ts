@@ -110,6 +110,8 @@ export interface MatchMap {
     away_score: number | null;
     map_winner: string | null;
     duration_seconds: number | null;
+    started_at?: string | null;
+    ended_at?: string | null;
     status: string;
     maps?: { name: string } | null;
     modes?: { name: string; unit_label?: string | null } | null;

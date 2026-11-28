@@ -43,6 +43,9 @@
   --font-data: var(--font-geist-mono), "Courier New", monospace;
 }
 
+/* Status colours for inline-styled admin screens (bright on dark, deep on light) */
+:root { --c-info: #93C5FD; --c-ok: #4ADE80; --c-warn: #FBBF24; --c-bad: #F87171; --c-link: #00E0FF; }
+
 /* ── Explicit Dark Theme ── */
 [data-theme="dark"] {
   --color-bg-void: #000000;
@@ -74,6 +77,14 @@
   --color-text-muted: #4B5563;
   --color-bg-skeleton: #E5E5E5;
   --color-bg-skeleton-highlight: #D4D4D4;
+  --color-accent-cyan: #0E7490;
+  --color-state-win: #0369A1;
+  --color-state-alert: #B45309;
+  --c-info: #1D4ED8;
+  --c-ok: #15803D;
+  --c-warn: #B45309;
+  --c-bad: #B91C1C;
+  --c-link: #0369A1;
 }
 
 /* ── Dimmed Alternative Theme ── */
@@ -105,6 +116,14 @@
     --color-text-muted: #4B5563;
     --color-bg-skeleton: #E5E5E5;
     --color-bg-skeleton-highlight: #D4D4D4;
+    --color-accent-cyan: #0E7490;
+    --color-state-win: #0369A1;
+    --color-state-alert: #B45309;
+    --c-info: #1D4ED8;
+    --c-ok: #15803D;
+    --c-warn: #B45309;
+    --c-bad: #B91C1C;
+    --c-link: #0369A1;
   }
 }
 

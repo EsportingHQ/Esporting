@@ -76,16 +76,16 @@ export default function AdminMatchesClient({
 			<h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>
 				Match Assignments
 			</h2>
-			<p style={{ fontSize: 13, color: '#888', marginBottom: 20 }}>
+			<p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 20 }}>
 				Assign contributors to matches so they can log live events.
 			</p>
 
 			{error && (
 				<div
 					style={{
-						background: '#7f1d1d33',
-						border: '1px solid #7f1d1d',
-						color: '#fca5a5',
+						background: 'rgba(239,68,68,0.12)',
+						border: '1px solid rgba(239,68,68,0.5)',
+						color: 'var(--c-bad)',
 						padding: 10,
 						borderRadius: 8,
 						marginBottom: 16,
@@ -113,7 +113,7 @@ export default function AdminMatchesClient({
 
 			<div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
 				{visibleMatches.length === 0 && (
-					<p style={{ color: '#666', fontSize: 13 }}>
+					<p style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>
 						{filter === 'unassigned'
 							? 'All matches are assigned.'
 							: 'No matches found.'}
@@ -124,7 +124,7 @@ export default function AdminMatchesClient({
 					<div
 						key={match.id}
 						style={{
-							background: '#111',
+							background: 'var(--color-bg-surface)',
 							borderRadius: 8,
 							padding: 14,
 							display: 'flex',
@@ -142,7 +142,7 @@ export default function AdminMatchesClient({
 							<p
 								style={{
 									fontSize: 12,
-									color: '#888',
+									color: 'var(--color-text-muted)',
 									marginTop: 2,
 								}}
 							>
@@ -152,8 +152,8 @@ export default function AdminMatchesClient({
 									style={{
 										color:
 											match.status === 'live'
-												? '#22c55e'
-												: '#999',
+												? 'var(--c-ok)'
+												: 'var(--color-text-muted)',
 									}}
 								>
 									{match.status}
@@ -164,7 +164,7 @@ export default function AdminMatchesClient({
 						<div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
 							<a
 								href={`/contributor/matches/${match.id}`}
-								style={{ fontSize: 12, color: '#00E0FF', textDecoration: 'underline', whiteSpace: 'nowrap' }}
+								style={{ fontSize: 12, color: 'var(--c-link)', textDecoration: 'underline', whiteSpace: 'nowrap' }}
 							>
 								Open match room
 							</a>
@@ -200,9 +200,9 @@ export default function AdminMatchesClient({
 
 function toggleButtonStyle(active: boolean): React.CSSProperties {
 	return {
-		background: active ? '#16a34a' : '#1a1a1a',
-		color: '#fff',
-		border: `1px solid ${active ? '#16a34a' : '#333'}`,
+		background: active ? '#16a34a' : 'var(--color-bg-elevated)',
+		color: active ? '#fff' : 'var(--color-text-primary)',
+		border: `1px solid ${active ? '#16a34a' : 'var(--color-border-strong)'}`,
 		borderRadius: 8,
 		padding: '6px 14px',
 		fontSize: 13,
@@ -211,9 +211,9 @@ function toggleButtonStyle(active: boolean): React.CSSProperties {
 }
 
 const selectStyle: React.CSSProperties = {
-	background: '#1a1a1a',
-	color: '#fff',
-	border: '1px solid #333',
+	background: 'var(--color-bg-elevated)',
+	color: 'var(--color-text-primary)',
+	border: '1px solid var(--color-border-strong)',
 	borderRadius: 8,
 	padding: '8px 10px',
 	fontSize: 13,

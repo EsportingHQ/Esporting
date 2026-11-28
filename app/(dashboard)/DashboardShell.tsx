@@ -1,5 +1,6 @@
 'use client';
 
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { ReactNode, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -111,6 +112,7 @@ export function DashboardShell({ children, nav, userEmail, title }: DashboardShe
 				</div>
 
 				<div className="flex items-center gap-4 text-xs font-body text-text-muted">
+					<ThemeToggle />
 					<span className="max-w-[140px] sm:max-w-none truncate font-data text-xs">{userEmail}</span>
 					<form>
 						<button

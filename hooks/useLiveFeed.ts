@@ -39,6 +39,11 @@ interface RawMatchRow {
   game_titles: RawGameTitle;
   comp_instance: RawCompInstance;
   match_scores: { home_current_score: number; away_current_score: number }[] | { home_current_score: number; away_current_score: number } | null;
+  match_maps?: { status: string }[] | null;
+  home_team_id?: string | null;
+  live_label?: string;
+  red_home?: number;
+  red_away?: number;
 }
 
 function one<T>(value: T | T[] | null | undefined): T | null {
@@ -62,6 +67,37 @@ function mapStatusLabel(status: string, scheduledAt: string | null, football: bo
   return 'TBD';
 }
 
+// Extra live state: HT (latest event is half time), BREAK (between games of a series), red-card counts.
+type EvRow = { match_id: string; event_type: string; team_id: string | null; created_at: string };
+const HT_WINDOW_MS = 25 * 60 * 1000;
+
+function applyLiveState(rows: RawMatchRow[], events: EvRow[]) {
+  const byMatch = new Map<string, EvRow[]>();
+  for (const e of events) {
+    if (!byMatch.has(e.match_id)) byMatch.set(e.match_id, []);
+    byMatch.get(e.match_id)!.push(e);
+  }
+  for (const row of rows) {
+    const evs = (byMatch.get(row.id) ?? []).sort((a, b) => a.created_at.localeCompare(b.created_at));
+    const homeId = one(row.home_team)?.id;
+    row.red_home = evs.filter((e) => e.event_type === 'red_card' && e.team_id === homeId).length;
+    row.red_away = evs.filter((e) => e.event_type === 'red_card' && e.team_id && e.team_id !== homeId).length;
+    if (row.status !== 'live') continue;
+    const football = mapGameType(one(one(row.game_titles)?.game_types ?? null)?.slug) === 'football';
+    const last = evs.filter((e) => !['correction', 'status_change'].includes(e.event_type)).pop();
+    if (football && last?.event_type === 'half_time' && Date.now() - new Date(last.created_at).getTime() < HT_WINDOW_MS) {
+      row.live_label = 'HT';
+      continue;
+    }
+    const maps = row.match_maps ?? [];
+    if ((row.best_of ?? 1) > 1 && maps.length > 1) {
+      const anyLive = maps.some((m) => m.status === 'live');
+      const done = maps.filter((m) => m.status === 'completed').length;
+      if (!anyLive && done > 0 && done < maps.length) row.live_label = 'BREAK';
+    }
+  }
+}
+
 function mapRowToCardProps(row: RawMatchRow): MatchCardProps {
   const home = one(row.home_team);
   const away = one(row.away_team);
@@ -82,7 +118,10 @@ function mapRowToCardProps(row: RawMatchRow): MatchCardProps {
     awayMapsWon: row.away_maps_won ?? undefined,
     bestOf: row.best_of ?? 1,
     status: row.status as MatchCardProps['status'],
-    timeLabel: mapStatusLabel(row.status, row.scheduled_at, mapGameType(gameTypeObj?.slug) === 'football'),
+    timeLabel: row.live_label ?? mapStatusLabel(row.status, row.scheduled_at, mapGameType(gameTypeObj?.slug) === 'football'),
+    breakLabel: row.live_label,
+    redHome: row.red_home ?? 0,
+    redAway: row.red_away ?? 0,
     competitionSlug:
       one(row.comp_instance)?.slug ??
         (row.comp_instance_id === 'e88e0b35-1782-4143-b857-af6d3d7ae807'
@@ -141,7 +180,8 @@ const MATCH_QUERY = `
   away_team:teams!matches_team_away_id_fkey(id, name, short_code, logo_url),
   game_titles(name, slug, game_types(slug)),
   comp_instance:comp_instances!matches_comp_instance_id_fkey(id, name, slug, banner_url),
-  match_scores(home_current_score, away_current_score)
+  match_scores(home_current_score, away_current_score),
+  match_maps(status)
 `;
 
 export function dayKey(d: Date): string {
@@ -227,6 +267,18 @@ export function useLiveFeed(day: Date) {
     if (fetchErr) throw fetchErr;
 
     const rows = (data ?? []) as unknown as RawMatchRow[];
+
+    const evIds = rows.filter((r) => r.status === 'live' || r.status === 'completed').map((r) => r.id);
+    if (evIds.length) {
+      const { data: evs } = await supabase
+        .from('match_events')
+        .select('match_id, event_type, team_id, created_at')
+        .in('match_id', evIds)
+        .eq('is_void', false)
+        .in('event_type', ['half_time', 'red_card', 'goal', 'penalty_goal', 'own_goal', 'yellow_card', 'penalty_miss', 'full_time'])
+        .limit(3000);
+      applyLiveState(rows, (evs ?? []) as EvRow[]);
+    }
 
     // Fetch competition metadata separately
     const compIds = [...new Set(rows.map((r) => r.comp_instance_id))];
@@ -329,6 +381,24 @@ export function useLiveFeed(day: Date) {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'match_scores' },
+        () => {
+          refetchGroups(supabase).catch((err) =>
+            setError(err instanceof Error ? err : new Error(String(err))),
+          );
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'match_events' },
+        () => {
+          refetchGroups(supabase).catch((err) =>
+            setError(err instanceof Error ? err : new Error(String(err))),
+          );
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'match_maps' },
         () => {
           refetchGroups(supabase).catch((err) =>
             setError(err instanceof Error ? err : new Error(String(err))),

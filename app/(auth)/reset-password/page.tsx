@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import PasswordInput from '@/components/ui/PasswordInput';
 
 const inputClass =
   'w-full bg-bg-void border border-border-line rounded px-4 py-2.5 text-text-primary placeholder-text-muted/40 focus:outline-none focus:border-accent-readout text-sm font-body transition-colors';
@@ -115,11 +116,11 @@ export default function ResetPasswordPage() {
             )}
             <div>
               <label htmlFor="password" className="block text-xs font-display font-bold text-text-muted mb-1.5 uppercase tracking-wider">New password</label>
-              <input id="password" type="password" autoComplete="new-password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" className={inputClass} />
+              <PasswordInput id="password" autoComplete="new-password" minLength={8} value={password} onChange={setPassword} placeholder="At least 8 characters" className={inputClass} />
             </div>
             <div>
               <label htmlFor="confirm" className="block text-xs font-display font-bold text-text-muted mb-1.5 uppercase tracking-wider">Confirm password</label>
-              <input id="confirm" type="password" autoComplete="new-password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} className={inputClass} />
+              <PasswordInput id="confirm" autoComplete="new-password" value={confirm} onChange={setConfirm} className={inputClass} />
             </div>
             <button type="submit" disabled={loading} className="w-full bg-accent-readout hover:bg-accent-readout/80 disabled:opacity-60 text-bg-void font-display font-black rounded px-4 py-2.5 text-sm uppercase tracking-widest transition-colors">
               {loading ? 'SAVING...' : 'SAVE PASSWORD'}

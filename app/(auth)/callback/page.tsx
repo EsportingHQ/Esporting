@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import PasswordInput from '@/components/ui/PasswordInput';
 
 export default function AuthCallbackPage() {
 	const router = useRouter();
@@ -204,10 +205,11 @@ export default function AuthCallbackPage() {
 						>
 							Password
 						</label>
-						<input
-							type="password"
+						<PasswordInput
+							id="new-password"
+							autoComplete="new-password"
 							value={password}
-							onChange={(e) => setPassword(e.target.value)}
+							onChange={setPassword}
 							style={inputStyle}
 							placeholder="At least 8 characters"
 						/>
@@ -224,10 +226,11 @@ export default function AuthCallbackPage() {
 						>
 							Confirm Password
 						</label>
-						<input
-							type="password"
+						<PasswordInput
+							id="confirm-password"
+							autoComplete="new-password"
 							value={confirmPassword}
-							onChange={(e) => setConfirmPassword(e.target.value)}
+							onChange={setConfirmPassword}
 							style={inputStyle}
 						/>
 					</div>

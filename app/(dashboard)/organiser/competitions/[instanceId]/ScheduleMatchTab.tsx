@@ -86,20 +86,20 @@ export default function ScheduleMatchTab({
 
 	function reporterLabel(m: Match): { text: string; color: string } {
 		if (m.assignment_mode === 'self')
-			return { text: 'You report this match', color: '#93c5fd' };
+			return { text: 'You report this match', color: 'var(--c-info)' };
 		if (m.contrib_id) {
 			const name = contributorName(m.contrib_id) ?? 'A contributor';
 			const backup = contributorName(m.backup_contrib_id);
 			const state = m.contrib_confirmed_at ? 'confirmed' : 'waiting to confirm';
 			return {
 				text: `${name} (${state})${backup ? ` \u00b7 backup ${backup}` : ''}`,
-				color: m.contrib_confirmed_at ? '#4ade80' : '#fbbf24',
+				color: m.contrib_confirmed_at ? 'var(--c-ok)' : 'var(--c-warn)',
 			};
 		}
-		if (m.needs_cover) return { text: 'Needs cover \u2014 contributor dropped out', color: '#f87171' };
+		if (m.needs_cover) return { text: 'Needs cover \u2014 contributor dropped out', color: 'var(--c-bad)' };
 		if (m.assignment_mode === 'open')
-			return { text: 'Open to claim', color: '#93c5fd' };
-		return { text: 'No contributor yet', color: '#fbbf24' };
+			return { text: 'Open to claim', color: 'var(--c-info)' };
+		return { text: 'No contributor yet', color: 'var(--c-warn)' };
 	}
 
 	async function applyReporter(matchId: string, v: ReporterValue) {
@@ -246,9 +246,9 @@ export default function ScheduleMatchTab({
 			{error && (
 				<div
 					style={{
-						background: '#7f1d1d33',
-						border: '1px solid #7f1d1d',
-						color: '#fca5a5',
+						background: 'rgba(239,68,68,0.12)',
+						border: '1px solid rgba(239,68,68,0.5)',
+						color: 'var(--c-bad)',
 						padding: 10,
 						borderRadius: 8,
 						marginBottom: 16,
@@ -262,9 +262,9 @@ export default function ScheduleMatchTab({
 			{notice && (
 				<div
 					style={{
-						background: '#14532d33',
-						border: '1px solid #14532d',
-						color: '#86efac',
+						background: 'rgba(34,197,94,0.12)',
+						border: '1px solid rgba(34,197,94,0.5)',
+						color: 'var(--c-ok)',
 						padding: 10,
 						borderRadius: 8,
 						marginBottom: 16,
@@ -277,7 +277,7 @@ export default function ScheduleMatchTab({
 
 			<div
 				style={{
-					background: '#111',
+					background: 'var(--color-bg-surface)',
 					borderRadius: 10,
 					padding: 16,
 					marginBottom: 24,
@@ -456,7 +456,7 @@ export default function ScheduleMatchTab({
 			</h4>
 			<div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
 				{matches.length === 0 && (
-					<p style={{ color: '#666', fontSize: 13 }}>
+					<p style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>
 						No matches scheduled yet.
 					</p>
 				)}
@@ -464,7 +464,7 @@ export default function ScheduleMatchTab({
 					<div
 						key={m.id}
 						style={{
-							background: '#111',
+							background: 'var(--color-bg-surface)',
 							borderRadius: 8,
 							padding: 12,
 							fontSize: 13,
@@ -481,14 +481,14 @@ export default function ScheduleMatchTab({
 									? `${getTeamName(m.home_team)} vs ${getTeamName(m.away_team)}`
 									: 'Battle Royale'}
 							</span>
-							<span style={{ color: '#888' }}>
+							<span style={{ color: 'var(--color-text-muted)' }}>
 								{getGameTitleName(m.game_titles)}
 							</span>
 						</div>
 						<span
 							style={{
 								fontSize: 12,
-								color: m.status === 'live' ? '#22c55e' : '#999',
+								color: m.status === 'live' ? 'var(--c-ok)' : 'var(--color-text-muted)',
 							}}
 						>
 							{m.status}
@@ -547,9 +547,9 @@ export default function ScheduleMatchTab({
 
 function toggleButtonStyle(active: boolean): React.CSSProperties {
 	return {
-		background: active ? '#16a34a' : '#1a1a1a',
-		color: '#fff',
-		border: `1px solid ${active ? '#16a34a' : '#333'}`,
+		background: active ? '#16a34a' : 'var(--color-bg-elevated)',
+		color: active ? '#fff' : 'var(--color-text-primary)',
+		border: `1px solid ${active ? '#16a34a' : 'var(--color-border-strong)'}`,
 		borderRadius: 8,
 		padding: '6px 14px',
 		fontSize: 13,
@@ -573,15 +573,15 @@ function buttonStyle(bg: string): React.CSSProperties {
 const labelStyle: React.CSSProperties = {
 	display: 'block',
 	fontSize: 12,
-	color: '#aaa',
+	color: 'var(--color-text-muted)',
 	marginBottom: 4,
 };
 
 const inputStyle: React.CSSProperties = {
 	width: '100%',
-	background: '#1a1a1a',
-	color: '#fff',
-	border: '1px solid #333',
+	background: 'var(--color-bg-elevated)',
+	color: 'var(--color-text-primary)',
+	border: '1px solid var(--color-border-strong)',
 	borderRadius: 6,
 	padding: '8px 10px',
 	fontSize: 13,

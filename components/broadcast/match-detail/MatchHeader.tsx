@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { RedCards } from '../match-card';
 import { StatusDot } from '../StatusDot';
 import { EventBadge } from '../event-badge';
 import { ScoreFlash } from '../ScoreFlash';
@@ -14,9 +15,12 @@ interface MatchHeaderProps {
   slug: string;
   connectionStatus: 'connecting' | 'connected' | 'disconnected' | 'error';
   recapString?: string;
+  redHome?: number;
+  redAway?: number;
+  liveLabel?: string;
 }
 
-export function MatchHeader({ match, score, slug, connectionStatus, recapString }: MatchHeaderProps) {
+export function MatchHeader({ match, score, slug, connectionStatus, recapString, redHome = 0, redAway = 0, liveLabel }: MatchHeaderProps) {
   const isBR = match.match_format === 'battle_royale';
   const isFootball = match.game_title?.game_types?.slug === 'football';
   const showSeries = !isBR && (!isFootball || match.best_of > 1);
@@ -76,7 +80,7 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
         {!isBR ? (
           <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2 sm:gap-6">
             {/* Home */}
-            <TeamBlock team={match.team_home} teamId={match.team_home_id} fallback="Home Team" />
+            <TeamBlock team={match.team_home} teamId={match.team_home_id} fallback="Home Team" reds={redHome} />
 
             {/* Centre: kickoff time or score */}
             <div className="flex flex-col items-center justify-center self-center shrink-0 min-w-[5.5rem]">
@@ -111,11 +115,11 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
                   </div>
                   <span
                     className={`mt-2 text-[11px] sm:text-xs font-display font-bold tracking-widest flex items-center gap-1.5 ${
-                      isLive ? 'text-accent-primary' : 'text-accent-cyan'
+                      isLive && liveLabel ? 'text-state-alert' : isLive ? 'text-accent-primary' : 'text-accent-cyan'
                     }`}
                   >
-                    {isLive && <StatusDot status="live" size="sm" />}
-                    {isLive ? 'LIVE' : isFootball ? 'FT' : 'ENDED'}
+                    {isLive && !liveLabel && <StatusDot status="live" size="sm" />}
+                    {isLive ? (liveLabel ?? 'LIVE') : isFootball ? 'FT' : 'ENDED'}
                   </span>
                 </>
               )}
@@ -127,7 +131,7 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
             </div>
 
             {/* Away */}
-            <TeamBlock team={match.team_away} teamId={match.team_away_id} fallback="Away Team" />
+            <TeamBlock team={match.team_away} teamId={match.team_away_id} fallback="Away Team" reds={redAway} />
           </div>
         ) : (
           <div className="text-center space-y-3">
@@ -176,10 +180,12 @@ function TeamBlock({
   team,
   teamId,
   fallback,
+  reds = 0,
 }: {
   team?: Match['team_home'];
   teamId: string | null;
   fallback: string;
+  reds?: number;
 }) {
   const name = team?.name ?? fallback;
   return (
@@ -197,6 +203,7 @@ function TeamBlock({
         {name}
       </span>
       </TeamLink>
+      <RedCards count={reds} />
       {teamId && (
         <FavoriteStar entityType="team" entityId={teamId} entityName={name} size="sm" />
       )}

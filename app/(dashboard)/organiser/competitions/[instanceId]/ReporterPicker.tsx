@@ -52,9 +52,9 @@ export default function ReporterPicker({
 							}
 							style={{
 								textAlign: 'left',
-								background: '#1a1a1a',
-								color: '#fff',
-								border: `1px solid ${on ? '#16a34a' : '#333'}`,
+								background: 'var(--color-bg-elevated)',
+								color: 'var(--color-text-primary)',
+								border: `1px solid ${on ? '#16a34a' : 'var(--color-border-strong)'}`,
 								borderRadius: 8,
 								padding: '8px 12px',
 								cursor: 'pointer',
@@ -63,7 +63,7 @@ export default function ReporterPicker({
 							<span style={{ display: 'block', fontSize: 13, fontWeight: 600 }}>
 								{m.title}
 							</span>
-							<span style={{ display: 'block', fontSize: 11, color: '#999', marginTop: 2 }}>
+							<span style={{ display: 'block', fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2 }}>
 								{m.body}
 							</span>
 						</button>
@@ -113,7 +113,7 @@ export default function ReporterPicker({
 						</select>
 					</div>
 					{contributors.length === 0 && (
-						<p style={{ gridColumn: '1 / -1', fontSize: 12, color: '#fbbf24' }}>
+						<p style={{ gridColumn: '1 / -1', fontSize: 12, color: 'var(--c-warn)' }}>
 							No contributors yet. Invite some from the admin dashboard, or leave
 							the match open.
 						</p>
@@ -127,15 +127,15 @@ export default function ReporterPicker({
 const label: React.CSSProperties = {
 	display: 'block',
 	fontSize: 12,
-	color: '#aaa',
+	color: 'var(--color-text-muted)',
 	marginBottom: 4,
 };
 
 const input: React.CSSProperties = {
 	width: '100%',
-	background: '#1a1a1a',
-	color: '#fff',
-	border: '1px solid #333',
+	background: 'var(--color-bg-elevated)',
+	color: 'var(--color-text-primary)',
+	border: '1px solid var(--color-border-strong)',
 	borderRadius: 6,
 	padding: '8px 10px',
 	fontSize: 13,

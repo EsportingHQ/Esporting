@@ -3,7 +3,10 @@
 import Link from 'next/link';
 import { Flame, Clock, Award, ListOrdered } from 'lucide-react';
 import { StatusDot } from '../StatusDot';
+import { FootballTimeline } from './FootballTimeline';
 import {
+	Match,
+	MatchScore,
 	MatchEvent,
 	MatchStatusLog,
 	MatchMap,
@@ -17,6 +20,9 @@ interface TimelineTabProps {
 	isBR: boolean;
 	matchMaps: MatchMap[];
 	brResults: BRResult[];
+	match?: Match;
+	score?: MatchScore | null;
+	isFootball?: boolean;
 }
 
 export function TimelineTab({
@@ -27,6 +33,9 @@ export function TimelineTab({
 	isBR,
 	matchMaps,
 	brResults,
+	match,
+	score = null,
+	isFootball = false,
 }: TimelineTabProps) {
 	const getEventEmoji = (type: string) => {
 		switch (type) {
@@ -93,7 +102,7 @@ export function TimelineTab({
 					<div className="flex items-center gap-2">
 						<Flame className="w-4 h-4 text-accent-signal" />
 						<h3 className="font-display font-black text-lg uppercase tracking-wider">
-							LIVE BROADCAST TIMELINE
+							TIMELINE
 						</h3>
 					</div>
 					{isLive && (
@@ -123,7 +132,9 @@ export function TimelineTab({
 					</div>
 				)}
 
-				{/* Live Timeline Events List */}
+				{isFootball && match ? (
+					<FootballTimeline match={match} score={score} events={events} matchMaps={matchMaps} />
+				) : (
 				<div className="space-y-3 max-h-125 overflow-y-auto pr-2">
 					{events.map((ev) => (
 						<div
@@ -172,6 +183,7 @@ export function TimelineTab({
 						</div>
 					)}
 				</div>
+				)}
 			</div>
 
 			{/* Right Col: Map Matrix / BR Table */}

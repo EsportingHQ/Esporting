@@ -49,6 +49,28 @@ export default function MatchDetailPage({
 		};
 	}, [rawScore, matchMaps]);
 
+	// Red cards per side, and the HT / BREAK label while the match is live
+	const liveState = useMemo(() => {
+		const live = events.filter((e) => !e.is_void);
+		const reds = live.filter((e) => e.event_type === 'red_card');
+		const redHome = reds.filter((e) => e.team_id === match?.team_home_id).length;
+		const redAway = reds.filter((e) => e.team_id && e.team_id !== match?.team_home_id).length;
+		let label: string | undefined;
+		if (match?.status === 'live') {
+			const last = [...live]
+				.filter((e) => !['correction', 'status_change'].includes(e.event_type))
+				.sort((x, y) => (x.sequence_no ?? 0) - (y.sequence_no ?? 0) || String(x.created_at).localeCompare(String(y.created_at)))
+				.pop();
+			const isFb = match.game_title?.game_types?.slug === 'football';
+			if (isFb && last?.event_type === 'half_time') label = 'HT';
+			else if (match.best_of > 1 && matchMaps.length > 1) {
+				const done = matchMaps.filter((m) => m.status === 'completed').length;
+				if (!matchMaps.some((m) => m.status === 'live') && done > 0 && done < matchMaps.length) label = 'BREAK';
+			}
+		}
+		return { redHome, redAway, label };
+	}, [events, matchMaps, match]);
+
 	const [pickedTab, setPickedTab] = useState<string | null>(null);
 
 	const recapString =
@@ -158,6 +180,9 @@ export default function MatchDetailPage({
 				slug={slug}
 				connectionStatus={connectionStatus}
 				recapString={recapString}
+				redHome={liveState.redHome}
+				redAway={liveState.redAway}
+				liveLabel={liveState.label}
 			/>
 
 			<main className="max-w-7xl w-full mx-auto px-4 py-8 flex-1 space-y-8">
@@ -193,6 +218,9 @@ export default function MatchDetailPage({
 							isBR={isBR}
 							matchMaps={matchMaps}
 							brResults={brResults}
+							match={match}
+							score={score}
+							isFootball={isFootball}
 						/>
 					)}
 

@@ -18,11 +18,25 @@ export interface MatchCardProps {
   bestOf?: number;
   status: 'scheduled' | 'delayed' | 'live' | 'completed' | 'cancelled' | 'walkover';
   timeLabel?: string;
+  breakLabel?: string;
+  redHome?: number;
+  redAway?: number;
   scheduledAt?: string | null;
   competitionSlug?: string;
   href?: string;
   onClick?: () => void;
   showFavorites?: boolean;
+}
+
+export function RedCards({ count }: { count: number }) {
+  if (!count) return null;
+  return (
+    <span className="flex items-center gap-0.5 shrink-0" aria-label={`${count} red card${count > 1 ? 's' : ''}`}>
+      {Array.from({ length: Math.min(count, 4) }).map((_, i) => (
+        <span key={i} className="inline-block w-[7px] h-[10px] rounded-[1px] bg-red-600" />
+      ))}
+    </span>
+  );
 }
 
 export function MatchCard({
@@ -38,6 +52,9 @@ export function MatchCard({
   bestOf = 1,
   status,
   timeLabel,
+  breakLabel,
+  redHome = 0,
+  redAway = 0,
   href,
   onClick,
   showFavorites = true,
@@ -93,7 +110,9 @@ export function MatchCard({
           <div className="flex flex-col gap-1 items-start">
             <span
               className={`font-data font-bold text-xs sm:text-sm leading-none ${
-                isLive
+                isLive && breakLabel
+                  ? 'text-state-alert'
+                  : isLive
                   ? 'text-accent-primary animate-pulse'
                   : isEnded
                   ? 'text-accent-cyan'
@@ -142,6 +161,7 @@ export function MatchCard({
                 homeTeam.name
               )}
             </span>
+            <RedCards count={redHome} />
           </div>
 
           {/* Away Team */}
@@ -170,6 +190,7 @@ export function MatchCard({
                 awayTeam.name
               )}
             </span>
+            <RedCards count={redAway} />
           </div>
         </div>
 
