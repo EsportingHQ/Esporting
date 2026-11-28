@@ -27,11 +27,25 @@ export default function ResetPasswordPage() {
         setLinkError(`${problem.replace(/\+/g, ' ')}.`);
         return;
       }
+      // The Supabase client exchanges ?code= by itself when it starts. Calling the exchange again
+      // would fail with "already used", so wait for that result first and only fall back if needed.
       const code = search.get('code');
       if (code) {
+        const first = await supabase.auth.getSession();
+        if (first.data.session) {
+          setReady(true);
+          return;
+        }
         const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
         if (exchangeError) {
-          setLinkError('This reset link has expired or was already used. Request a new one.');
+          const again = await supabase.auth.getSession();
+          if (again.data.session) {
+            setReady(true);
+            return;
+          }
+          setLinkError(
+            'This reset link could not be used. Open it in the same browser where you asked for it, or request a new one.',
+          );
           return;
         }
         setReady(true);
@@ -52,7 +66,14 @@ export default function ResetPasswordPage() {
       if (data.session) setReady(true);
       else setLinkError('This reset link is not valid. Request a new one.');
     }
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setLinkError(null);
+        setReady(true);
+      }
+    });
     prepare();
+    return () => sub.subscription.unsubscribe();
   }, []);
 
   async function submit(event: React.FormEvent) {

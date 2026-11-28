@@ -35,8 +35,11 @@ export default function AuthCallbackPage() {
 			// Email confirmation after public sign-up arrives as ?code=...
 			const code = new URLSearchParams(window.location.search).get('code');
 			if (code) {
-				const { error: exchangeError } =
-					await supabase.auth.exchangeCodeForSession(code);
+				// The client may already have exchanged the code on start-up; check before retrying.
+				const started = await supabase.auth.getSession();
+				const { error: exchangeError } = started.data.session
+					? { error: null }
+					: await supabase.auth.exchangeCodeForSession(code);
 				if (exchangeError) {
 					// The email is already confirmed by this point. This usually means
 					// the link was opened in a different browser than the sign-up.
