@@ -19,6 +19,7 @@ export interface CompetitionDetail {
     organiserName: string;
     organiserId: string | null;
     organiserTier: string | null;
+    champion: { id: string; name: string; slug: string; logoUrl: string | null } | null;
 }
 
 export interface StandingRow {
@@ -154,7 +155,7 @@ export function useCompetitionDetail(slug: string) {
         const { data: instanceRaw, error: instanceErr } = await supabase
             .from('comp_instances')
             .select(`
-                id, name, slug, format, status, prize_pool, description, banner_url, starts_at, ends_at,
+                id, name, slug, format, status, prize_pool, description, banner_url, starts_at, ends_at, champion_team_id,
                 comp_series(name),
                 organiser_id
             `)
@@ -178,6 +179,14 @@ export function useCompetitionDetail(slug: string) {
                 .maybeSingle()
             : { data: null };
 
+        const { data: champ } = instanceRaw.status === 'completed' && instanceRaw.champion_team_id
+            ? await supabase
+                .from('teams')
+                .select('id, name, slug, logo_url')
+                .eq('id', instanceRaw.champion_team_id)
+                .maybeSingle()
+            : { data: null };
+
         const instance: CompetitionDetail = {
         id: instanceRaw.id,
         name: instanceRaw.name,
@@ -193,6 +202,7 @@ export function useCompetitionDetail(slug: string) {
         organiserName: orgProfile?.org_name ?? '',
         organiserId: instanceRaw.organiser_id ?? null,
         organiserTier: orgProfile?.tier ?? null,
+        champion: champ ? { id: champ.id, name: champ.name, slug: champ.slug, logoUrl: champ.logo_url } : null,
         };
         setCompetition(instance);
 

@@ -115,11 +115,25 @@ export default function CompetitionDetailPage({
 									? 'BATTLE ROYALE BRACKET'
 									: 'ROUND-ROBIN DIVISION'}
 							</span>
-							<EventBadge status="ongoing" />
+							<EventBadge status={competition.status === 'completed' ? 'completed' : competition.status === 'cancelled' ? 'cancelled' : 'ongoing'} />
 						</div>
 						<h1 className="font-display font-black text-3xl tracking-wide uppercase">
 							{competition.name}
 						</h1>
+						{competition.champion && (
+							<Link
+								href={`/teams/${competition.champion.slug}`}
+								className="inline-flex items-center gap-2.5 rounded-full border border-amber-400/40 bg-amber-400/10 px-3.5 py-1.5 hover:bg-amber-400/20 transition-colors"
+							>
+								<Trophy className="w-5 h-5 text-amber-400 fill-amber-400/30" aria-hidden="true" />
+								{competition.champion.logoUrl && (
+									// eslint-disable-next-line @next/next/no-img-element
+									<img src={competition.champion.logoUrl} alt="" className="w-6 h-6 rounded object-cover bg-bg-void" />
+								)}
+								<span className="text-[10px] font-display font-bold tracking-widest text-amber-500 uppercase">Champions</span>
+								<span className="font-display font-black text-base text-text-primary">{competition.champion.name}</span>
+							</Link>
+						)}
 						{(competition.organiserName || competition.organiserTier) && (
 							<div className="flex items-center gap-2 flex-wrap">
 								{competition.organiserName && (

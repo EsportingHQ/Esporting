@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { Trophy } from 'lucide-react';
 
 interface Team {
   id: string;
@@ -51,7 +52,7 @@ function when(m: BracketMatch): string {
   return `${d.toLocaleDateString([], { day: 'numeric', month: 'short' })} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })}`;
 }
 
-function TeamRow({ team, score, won, lost }: { team: Team | null; score: number | null; won: boolean; lost: boolean }) {
+function TeamRow({ team, score, won, lost, champion = false }: { team: Team | null; score: number | null; won: boolean; lost: boolean; champion?: boolean }) {
   return (
     <div className="flex items-center gap-2 h-8 px-2.5">
       <div className="w-5 h-5 rounded-md overflow-hidden bg-text-primary/[0.05] border border-text-primary/[0.08] flex items-center justify-center text-[8px] font-display font-black shrink-0">
@@ -71,8 +72,9 @@ function TeamRow({ team, score, won, lost }: { team: Team | null; score: number 
           <Link
             href={`/teams/${team.id}`}
             onClick={(e) => e.stopPropagation()}
-            className="hover:underline"
+            className="hover:underline inline-flex items-center gap-1"
           >
+            {champion && <Trophy className="w-3.5 h-3.5 text-amber-400 fill-amber-400/30 shrink-0" aria-label="Champion" />}
             {team.name}
           </Link>
         ) : (
@@ -86,7 +88,7 @@ function TeamRow({ team, score, won, lost }: { team: Team | null; score: number 
   );
 }
 
-function MatchBox({ m, slug }: { m: BracketMatch; slug: string }) {
+function MatchBox({ m, slug, isFinal = false }: { m: BracketMatch; slug: string; isFinal?: boolean }) {
   const router = useRouter();
   const started = m.status === 'live' || m.status === 'completed' || m.status === 'walkover';
   const done = m.status === 'completed' || m.status === 'walkover';
@@ -118,9 +120,9 @@ function MatchBox({ m, slug }: { m: BracketMatch; slug: string }) {
         </span>
         <span className="text-text-muted">BO{m.best_of}</span>
       </div>
-      <TeamRow team={m.home} score={started ? m.scoreHome : null} won={hWon} lost={aWon} />
+      <TeamRow team={m.home} score={started ? m.scoreHome : null} won={hWon} lost={aWon} champion={isFinal && hWon} />
       <div className="h-px bg-text-primary/[0.06]" />
-      <TeamRow team={m.away} score={started ? m.scoreAway : null} won={aWon} lost={hWon} />
+      <TeamRow team={m.away} score={started ? m.scoreAway : null} won={aWon} lost={hWon} champion={isFinal && aWon} />
       {m.status === 'cancelled' && (
         <p className="border-t border-text-primary/[0.06] px-2.5 py-1 text-[9px] font-semibold text-amber-600 dark:text-amber-400">
           Cancelled, to be rescheduled
@@ -296,7 +298,7 @@ export default function KnockoutBracket({ compId, slug }: { compId: string; slug
                       className="relative flex items-center"
                       style={{ height: rowH * perSlot }}
                     >
-                      {m ? <MatchBox m={m} slug={slug} /> : null}
+                      {m ? <MatchBox m={m} slug={slug} isFinal={isLast} /> : null}
                       {m && !isLast && (
                         <>
                           <span className="absolute -right-5 top-1/2 w-5 border-t border-text-primary/20" />
