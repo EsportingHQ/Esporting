@@ -179,16 +179,29 @@ serve(async (req: Request) => {
         redirectTo,
       })
 
+    let invitedUser = inviteData?.user ?? null
+    let emailWarning: string | null = null
+
     if (inviteError) {
-      if (inviteError.message?.includes('rate limit')) {
+      const reason = (inviteError as { message?: string }).message ?? JSON.stringify(inviteError)
+      if (reason.includes('rate limit')) {
         return json({ error: 'Too many invites sent. Please wait before trying again.' }, 429)
       }
-      throw inviteError
+      // The account is created before the email goes out, so an email-service error can leave a
+      // valid invited user behind. Look for it instead of reporting a false failure.
+      const { data: after } = await adminClient.auth.admin.listUsers({ perPage: 1000 })
+      const created = after?.users?.find(
+        (authUser: { email?: string }) => authUser.email?.toLowerCase() === normalizedEmail,
+      )
+      if (!created) throw inviteError
+      invitedUser = created
+      emailWarning = reason
+      console.error('invite-contributor: user created but email step reported:', reason)
     }
 
-    if (inviteData.user?.id) {
+    if (invitedUser?.id) {
       await assignContributorRole(adminClient, {
-        userId: inviteData.user.id,
+        userId: invitedUser.id,
         compInstanceId: competitionId,
         grantedBy: user.id,
       })
@@ -199,11 +212,11 @@ serve(async (req: Request) => {
       success: true,
       mode: 'invited',
       contributor_scope: competitionId ? 'competition' : 'global',
-      invited_user: {
-        id: inviteData.user.id,
-        email: inviteData.user.email,
-      },
-      message: `Invite sent to ${normalizedEmail} for ${scopeLabel}`,
+      invited_user: invitedUser ? { id: invitedUser.id, email: invitedUser.email } : null,
+      email_warning: emailWarning,
+      message: emailWarning
+        ? `${normalizedEmail} was added as a contributor for ${scopeLabel}, but the email service reported a problem (${emailWarning}). If they don't receive the invite, ask them to use "Forgot password" on the sign-in page.`
+        : `Invite sent to ${normalizedEmail} for ${scopeLabel}`,
     })
   } catch (err) {
     // Supabase client errors are often plain objects, so String(err) would hide the real reason.
