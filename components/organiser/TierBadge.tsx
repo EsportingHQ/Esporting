@@ -8,7 +8,7 @@ export const TIER_INFO: Record<
 > = {
 	business: {
 		label: 'Verified Business',
-		short: 'Verified Business',
+		short: 'Verified',
 		blurb: 'CAC-registered company, checked by Esporting. No limits.',
 		cls: 'border-accent-cyan/40 text-accent-cyan bg-accent-cyan/10',
 	},

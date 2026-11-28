@@ -6,6 +6,7 @@ import { EventBadge } from '../event-badge';
 import { ScoreFlash } from '../ScoreFlash';
 import { FavoriteStar } from '../FavoriteStar';
 import { Match, MatchScore } from '@/hooks/useMatchRealtime';
+import { shortGameName } from '@/lib/games';
 
 interface MatchHeaderProps {
   match: Match;
@@ -30,24 +31,37 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
 
   return (
     <section className="bg-bg-surface border-b border-border-line select-none">
-      {/* Top Breadcrumb Bar */}
+      {/* Competition bar: icon, name (opens the competition) and region */}
       <div className="py-3 px-4 border-b border-border-line/60 bg-bg-void/40">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-3">
-            <Link
-              href={`/competitions/${slug}`}
-              className="font-display font-bold text-accent-readout tracking-wider hover:underline flex items-center gap-1"
-            >
-              <span>←</span>
-              <span>BACK TO DIVISION HUB</span>
-            </Link>
-            <span className="text-text-muted">/</span>
-            <span className="font-display font-semibold text-text-primary uppercase">
-              {match.game_title?.name}{match.notes ? ` — ${match.notes}` : ''}
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 text-xs">
+          <Link
+            href={`/competitions/${match.competition?.slug ?? slug}`}
+            className="flex items-center gap-3 min-w-0 group"
+          >
+            {match.competition?.banner_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={match.competition.banner_url}
+                alt=""
+                loading="lazy"
+                className="w-9 h-9 rounded object-cover bg-bg-void border border-border-line shrink-0"
+              />
+            ) : (
+              <span className="w-9 h-9 rounded bg-bg-void border border-border-line flex items-center justify-center shrink-0 font-display font-black text-text-muted">
+                {(match.competition?.name ?? '?').charAt(0).toUpperCase()}
+              </span>
+            )}
+            <span className="min-w-0">
+              <span className="block font-display font-bold text-sm text-text-primary truncate group-hover:text-accent-readout transition-colors">
+                {match.competition?.name ?? 'Competition'}
+              </span>
+              {match.competition?.region && (
+                <span className="block text-[11px] text-text-muted truncate">{match.competition.region}</span>
+              )}
             </span>
-          </div>
+          </Link>
 
-          <div className="flex items-center gap-3 font-data text-[10px] text-text-muted">
+          <div className="flex items-center gap-3 font-data text-[10px] text-text-muted shrink-0">
             <span className="flex items-center gap-1.5 bg-bg-void px-2 py-1 rounded border border-border-line">
               <span className={`w-1.5 h-1.5 rounded-full ${connectionColor}`} />
               <span className="uppercase">{connectionStatus}</span>
@@ -69,7 +83,7 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
               {match.status === 'scheduled' || match.status === 'delayed' ? (
                 <>
                   <span className="font-data font-bold text-3xl sm:text-5xl text-text-primary tabular-nums">
-                    {new Date(match.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                    {new Date(match.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })}
                   </span>
                   <span className="text-xs sm:text-sm text-text-muted mt-1">
                     {new Date(match.scheduled_at).toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' })}
@@ -107,7 +121,7 @@ export function MatchHeader({ match, score, slug, connectionStatus, recapString 
               )}
               {!isBR && (
                 <span className="text-[9px] sm:text-[10px] text-text-muted font-display tracking-widest mt-1 uppercase">
-                  BO{match.best_of}
+                  {match.game_title?.name ? `${shortGameName(match.game_title.name)} · ` : ''}BO{match.best_of}
                 </span>
               )}
             </div>

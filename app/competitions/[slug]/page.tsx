@@ -120,12 +120,24 @@ export default function CompetitionDetailPage({
 						<h1 className="font-display font-black text-3xl tracking-wide uppercase">
 							{competition.name}
 						</h1>
-						{competition.organiserTier && (
+						{(competition.organiserName || competition.organiserTier) && (
 							<div className="flex items-center gap-2 flex-wrap">
-								<TierBadge tier={competition.organiserTier} />
 								{competition.organiserName && (
-									<span className="text-xs text-text-muted">by {competition.organiserName}</span>
+									<span className="text-xs text-text-muted">
+										by{' '}
+										{competition.organiserId ? (
+											<Link
+												href={`/organisers/${competition.organiserId}`}
+												className="font-semibold text-text-primary hover:text-accent-readout underline-offset-2 hover:underline"
+											>
+												{competition.organiserName}
+											</Link>
+										) : (
+											competition.organiserName
+										)}
+									</span>
 								)}
+								<TierBadge tier={competition.organiserTier} />
 							</div>
 						)}
 						<p className="text-xs text-text-muted max-w-xl font-body leading-relaxed">

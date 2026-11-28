@@ -83,6 +83,7 @@ type Instance = {
 	prize_pool: string | null;
 	description: string | null;
 	banner_url: string | null;
+	region?: string | null;
 	starts_at: string | null;
 	ends_at: string | null;
 	comp_series: { name: string }[] | null;
@@ -117,6 +118,19 @@ export default function CompetitionDetailClient({
 	rescheduleItems,
 }: Props) {
 	const supabase = createClient();
+	const [region, setRegion] = useState(instance.region ?? '');
+	const [savedRegion, setSavedRegion] = useState(instance.region ?? '');
+	const [regionSaved, setRegionSaved] = useState(false);
+	async function saveRegion() {
+		const next = region.trim();
+		if (next === savedRegion) return;
+		const { error } = await supabase.from('comp_instances').update({ region: next || null }).eq('id', instance.id);
+		if (!error) {
+			setSavedRegion(next);
+			setRegionSaved(true);
+			setTimeout(() => setRegionSaved(false), 2000);
+		}
+	}
 
 	const [activeTab, setActiveTab] = useState<
 		'teams' | 'matches' | 'stages' | 'schedule'
@@ -386,6 +400,19 @@ export default function CompetitionDetailClient({
 							</span>
 						</>
 					)}
+					<span>·</span>
+					<label className="flex items-center gap-1.5">
+						<span className="text-[10px] uppercase tracking-wider">Region</span>
+						<input
+							value={region}
+							maxLength={60}
+							onChange={(e) => setRegion(e.target.value)}
+							onBlur={saveRegion}
+							placeholder="e.g. Nigeria, Lagos, Online"
+							className="bg-bg-void border border-border-line rounded px-2 py-0.5 text-xs text-text-primary placeholder-text-muted/40 w-44 focus:outline-none focus:border-accent-readout"
+						/>
+						{regionSaved && <span className="text-state-win text-[10px]">Saved</span>}
+					</label>
 				</div>
 
 				{step && (

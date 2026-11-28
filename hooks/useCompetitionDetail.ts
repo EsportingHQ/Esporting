@@ -17,6 +17,7 @@ export interface CompetitionDetail {
     ends_at: string | null;
     seriesName: string;
     organiserName: string;
+    organiserId: string | null;
     organiserTier: string | null;
 }
 
@@ -92,7 +93,7 @@ function mapTimeLabel(status: string, scheduledAt: string | null): string {
     if (status === 'completed') return 'Finished';
     if (status === 'delayed') return 'Delayed';
     if (status === 'scheduled' && scheduledAt) {
-        return new Date(scheduledAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        return new Date(scheduledAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
     }
     if (status === 'scheduled') return 'Date to be announced';
     return status;
@@ -190,6 +191,7 @@ export function useCompetitionDetail(slug: string) {
         banner_url: instanceRaw.banner_url ?? null,
         seriesName,
         organiserName: orgProfile?.org_name ?? '',
+        organiserId: instanceRaw.organiser_id ?? null,
         organiserTier: orgProfile?.tier ?? null,
         };
         setCompetition(instance);

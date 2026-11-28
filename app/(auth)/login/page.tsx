@@ -2,6 +2,7 @@ import { login } from '@/lib/actions/auth';
 import Image from 'next/image';
 import Link from 'next/link';
 import PasswordInput from '@/components/ui/PasswordInput';
+import GoogleSignInButton from '@/components/ui/GoogleSignInButton';
 import TurnstileWidget from '@/components/ui/TurnstileWidget';
 
 export default async function LoginPage({
@@ -96,6 +97,13 @@ export default async function LoginPage({
             SIGN IN
           </button>
         </form>
+
+        <div className="flex items-center gap-3 my-5">
+          <span className="flex-1 h-px bg-border-line" />
+          <span className="text-[10px] font-display font-bold text-text-muted uppercase tracking-wider">or</span>
+          <span className="flex-1 h-px bg-border-line" />
+        </div>
+        <GoogleSignInButton />
 
         <p className="text-center text-text-muted/50 text-xs mt-6 font-body">
           New here? <Link href="/signup" className="text-accent-readout">Create an account</Link>. Contributors and organisers can also join by invitation.

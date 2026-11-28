@@ -145,7 +145,7 @@ export function TimelineTab({
 									<span className="font-data text-text-muted text-[10px]">
 										{new Date(
 											ev.created_at,
-										).toLocaleTimeString()}
+										).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' })}
 									</span>
 								</div>
 								<p className="font-body text-text-primary text-sm">

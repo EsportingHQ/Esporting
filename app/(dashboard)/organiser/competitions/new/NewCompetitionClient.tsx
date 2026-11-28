@@ -38,6 +38,7 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
   const [editionLabel, setEditionLabel] = useState('');
   const [format, setFormat] = useState('league');
   const [prizePool, setPrizePool] = useState('');
+  const [region, setRegion] = useState('');
   const [description, setDescription] = useState('');
   const [bannerUrl, setBannerUrl] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -165,6 +166,13 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Failed to create competition');
 
+      if (region.trim()) {
+        // Region is saved right after creation (the organiser may update their own competition)
+        await createClient()
+          .from('comp_instances')
+          .update({ region: region.trim() })
+          .eq('id', data.competition.instance.id);
+      }
       router.push(`/organiser/competitions/${data.competition.instance.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
@@ -321,6 +329,20 @@ export default function NewCompetitionClient({ existingSeries, gameTitles }: Pro
               className="w-full bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary placeholder-text-muted/30 focus:outline-none focus:border-accent-readout transition-colors"
             />
           </div>
+        </div>
+
+        <div className="space-y-1">
+          <label className="block text-[10px] font-display font-bold text-text-muted uppercase tracking-wider">
+            Region
+          </label>
+          <input
+            placeholder="e.g. Nigeria, Lagos, West Africa, Online"
+            value={region}
+            maxLength={60}
+            onChange={(e) => setRegion(e.target.value)}
+            className="w-full bg-bg-void border border-border-line rounded px-3 py-2 text-sm text-text-primary placeholder-text-muted/30 focus:outline-none focus:border-accent-readout transition-colors"
+          />
+          <p className="text-[11px] text-text-muted">Shown under the competition name on match pages.</p>
         </div>
 
         {/* Format */}

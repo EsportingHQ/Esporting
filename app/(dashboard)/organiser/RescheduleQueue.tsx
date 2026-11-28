@@ -38,7 +38,7 @@ export default function RescheduleQueue({ items, showCompetition = true }: { ite
 								showCompetition ? m.competitionName : null,
 								m.stage,
 								m.round ? `Round ${m.round}` : null,
-								m.originalAt ? `Was ${new Date(m.originalAt).toLocaleString()}` : null,
+								m.originalAt ? `Was ${new Date(m.originalAt).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })}` : null,
 							]
 								.filter(Boolean)
 								.join(' · ')}

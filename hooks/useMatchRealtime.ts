@@ -39,6 +39,7 @@ export interface Match {
     team_home?: Team;
     team_away?: Team;
     game_title?: GameTitle;
+    competition?: { id: string; name: string; slug: string; banner_url: string | null; region: string | null } | null;
 }
 
 export interface ScoreBreakdown {
@@ -210,7 +211,7 @@ export function useMatchRealtime(matchId: string) {
         try {
             const { data: matchData, error: matchErr } = await supabase
             .from('matches')
-            .select('*, team_home:teams!matches_team_home_id_fkey(*), team_away:teams!matches_team_away_id_fkey(*), game_title:game_titles(*, game_types(*))')
+            .select('*, team_home:teams!matches_team_home_id_fkey(*), team_away:teams!matches_team_away_id_fkey(*), game_title:game_titles(*, game_types(*)), competition:comp_instances(id, name, slug, banner_url, region)')
             .eq('id', matchId)
             .single();
 

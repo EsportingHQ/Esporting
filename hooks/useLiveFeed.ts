@@ -57,7 +57,7 @@ function mapStatusLabel(status: string, scheduledAt: string | null, football: bo
   if (status === 'completed' || status === 'walkover') return football ? 'FT' : 'ENDED';
   if (status === 'cancelled') return 'CANC';
   if (scheduledAt) {
-    return new Date(scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+    return new Date(scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
   }
   return 'TBD';
 }

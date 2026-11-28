@@ -48,7 +48,7 @@ function when(m: BracketMatch): string {
   if (m.status === 'completed' || m.status === 'walkover') return m.football ? 'FT' : 'ENDED';
   if (!m.scheduled_at) return 'TBD';
   const d = new Date(m.scheduled_at);
-  return `${d.toLocaleDateString([], { day: 'numeric', month: 'short' })} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}`;
+  return `${d.toLocaleDateString([], { day: 'numeric', month: 'short' })} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })}`;
 }
 
 function TeamRow({ team, score, won, lost }: { team: Team | null; score: number | null; won: boolean; lost: boolean }) {

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { signup } from '@/lib/actions/auth';
 import PasswordInput from '@/components/ui/PasswordInput';
+import GoogleSignInButton from '@/components/ui/GoogleSignInButton';
 import TurnstileWidget from '@/components/ui/TurnstileWidget';
 
 const field =
@@ -100,6 +101,17 @@ export default async function SignupPage({
               Create account
             </button>
           </form>
+        )}
+
+        {!params.sent && (
+          <>
+            <div className="flex items-center gap-3 my-5">
+              <span className="flex-1 h-px bg-border-line" />
+              <span className="text-[10px] font-display font-bold text-text-muted uppercase tracking-wider">or</span>
+              <span className="flex-1 h-px bg-border-line" />
+            </div>
+            <GoogleSignInButton label="Sign up with Google" />
+          </>
         )}
 
         <p className="text-center text-text-muted/60 text-xs mt-6 font-body">
