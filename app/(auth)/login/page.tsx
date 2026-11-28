@@ -2,6 +2,7 @@ import { login } from '@/lib/actions/auth';
 import Image from 'next/image';
 import Link from 'next/link';
 import PasswordInput from '@/components/ui/PasswordInput';
+import TurnstileWidget from '@/components/ui/TurnstileWidget';
 
 export default async function LoginPage({
   searchParams,
@@ -84,6 +85,8 @@ export default async function LoginPage({
           <div className="text-right -mt-2">
             <Link href="/forgot-password" className="text-accent-readout text-xs">Forgot password?</Link>
           </div>
+
+          <TurnstileWidget />
 
           <button
             formAction={login}

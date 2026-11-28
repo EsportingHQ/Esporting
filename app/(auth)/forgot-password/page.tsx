@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import TurnstileWidget from '@/components/ui/TurnstileWidget';
 
 const inputClass =
   'w-full bg-bg-void border border-border-line rounded px-4 py-2.5 text-text-primary placeholder-text-muted/40 focus:outline-none focus:border-accent-readout text-sm font-body transition-colors';
@@ -12,6 +13,7 @@ export default function ForgotPasswordPage() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [captcha, setCaptcha] = useState('');
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -19,6 +21,7 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     const { error: resetError } = await createClient().auth.resetPasswordForEmail(email.trim(), {
       redirectTo: `${window.location.origin}/reset-password`,
+      captchaToken: captcha || undefined,
     });
     setLoading(false);
     if (resetError) {
@@ -60,6 +63,7 @@ export default function ForgotPasswordPage() {
                 className={inputClass}
               />
             </div>
+            <TurnstileWidget onToken={setCaptcha} />
             <button
               type="submit"
               disabled={loading}

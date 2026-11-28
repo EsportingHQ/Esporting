@@ -16,7 +16,8 @@ export async function login(formData: FormData) {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const captchaToken = ((formData.get('captcha_token') as string) ?? '') || undefined;
+  const { error } = await supabase.auth.signInWithPassword({ email, password, options: { captchaToken } });
 
   if (error) {
     redirect('/login?error=Invalid+email+or+password');
@@ -48,10 +49,12 @@ export async function signup(formData: FormData) {
 
   // Only a display name is sent. Roles are never taken from sign-up data.
   const origin = (await headers()).get('origin') ?? '';
+  const captchaToken = ((formData.get('captcha_token') as string) ?? '') || undefined;
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
+      captchaToken,
       data: { display_name: displayName, wants_organiser: wantsTO },
       emailRedirectTo: origin ? `${origin}/callback` : undefined,
     },

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { signup } from '@/lib/actions/auth';
 import PasswordInput from '@/components/ui/PasswordInput';
+import TurnstileWidget from '@/components/ui/TurnstileWidget';
 
 const field =
   'w-full bg-bg-void border border-border-line rounded px-4 py-2.5 text-text-primary placeholder-text-muted/40 focus:outline-none focus:border-accent-readout text-sm font-body transition-colors';
@@ -88,6 +89,8 @@ export default async function SignupPage({
                 create competitions.
               </span>
             </label>
+
+            <TurnstileWidget />
 
             <button
               formAction={signup}
